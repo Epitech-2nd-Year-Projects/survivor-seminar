@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout code
+      - name: checkout code/
         uses: actions/checkout@v5
 
       - name: set up go
@@ -23,24 +23,27 @@ jobs:
           go-version: stable
 
       - name: install dependencies
+        working-directory: backend
         run: go mod download
 
       - name: verify dependencies
+        working-directory: backend
         run: go mod verify
 
       - name: build
-        run: make build
-
-      - name: run tests
-        run: make test
+        working-directory: backend
+        run: go build ./...
 
       - name: run vet
+        working-directory: backend
         run: go vet ./...
 
       - name: install staticcheck
+        working-directory: backend
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
 
       - name: run staticcheck
+        working-directory: backend
         run: staticcheck ./...
 
       - name: golangci-lint
@@ -49,14 +52,14 @@ jobs:
           version: v2.1
 
       - name: run fmt
+        working-directory: backend
         run: go fmt ./...
 
       - name: Test with coverage
         run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.txt
-          fail_ci_if_error: false
+          slug: Epitech-2nd-Year-Projects/survivor-seminar
