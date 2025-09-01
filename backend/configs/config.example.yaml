@@ -1,0 +1,80 @@
+app:
+  name: jeb-backend
+  env: development  # development | staging | production
+  port: 8080
+  base_url: http://localhost:8080
+  version: v1
+
+database:
+  url: ${DATABASE_URL}
+  pool_size: 10
+  ssl: true
+
+auth:
+  jwt:
+    secret: ${JWT_SECRET}
+    access_token_ttl: 15m
+    refresh_token_ttl: 7d
+  password_reset_ttl: 1h
+  email_verification_ttl: 24h
+
+api:
+  jeb:
+    base_url: https://api.jeb-incubator.com
+    group_token: ${JEB_GROUP_TOKEN}
+    timeout: 10s
+    retry:
+      max_attempts: 3
+      backoff: 5s
+
+sync:
+  full_import: on_startup # on_startup | manual
+  incremental_cron: "0 */6 * * *"
+  soft_delete: true
+
+logging:
+  level: info  # debug | info | warn | error
+  format: json
+  request_id: true
+
+metrics:
+  enabled: true
+  path: /metrics
+
+health:
+  enabled: true
+  path: /health
+
+security:
+  cors:
+    allowed_origins:
+      - "*"
+    allowed_methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+  rate_limit:
+    window: 1m
+    max_requests: 100
+  audit_log: true
+
+storage:
+  media:
+    provider: local # local | s3 | gcs
+    local_path: ./uploads
+
+notifications:
+  email:
+    provider: smtp
+    smtp_url: ${SMTP_URL}
+  in_app: true
+
+jobs:
+  retry_backoff: 30s
+  max_retries: 5
+
+features:
+  enable_messaging: true
+  enable_opportunities: true
+  enable_favorites: true
