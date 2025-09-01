@@ -51,6 +51,7 @@ jobs:
         run: go fmt ./...
 
       - name: Test with coverage
+        working-directory: backend
         run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Upload coverage reports to Codecov
