@@ -1,5 +1,5 @@
 import "@/styles/globals.css";
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "@/components/theme-provider";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
@@ -15,7 +15,11 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <>
       <html lang="en" suppressHydrationWarning className={geist.className}>
@@ -32,6 +36,5 @@ export default function RootLayout({ children }: RootLayoutProps) {
         </body>
       </html>
     </>
-  )
+  );
 }
-

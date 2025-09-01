@@ -13,7 +13,8 @@
     "lint:fix": "next lint --fix",
     "preview": "next build && next start",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Warning: no test specified\" && exit 0"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.7",
