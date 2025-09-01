@@ -133,12 +133,15 @@ type FeaturesConfig struct {
 }
 
 func NewConfig() (*Config, error) {
-	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("./configs")
+	viper.SetConfigName("config")
 
 	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("viper.ReadInConfig(): %w", err)
+		viper.SetConfigName("config.example")
+		if err2 := viper.ReadInConfig(); err2 != nil {
+			return nil, fmt.Errorf("viper.ReadInConfig(): %w", err)
+		}
 	}
 
 	var config *Config
