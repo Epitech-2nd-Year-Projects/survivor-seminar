@@ -1,0 +1,2 @@
+cd web || exit
+npx lint-staged
