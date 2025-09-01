@@ -1,8 +1,5 @@
 import type { Config } from "tailwindcss";
-import safeArea from "tailwindcss-safe-area";
 
-const config: Config = {
-  plugins: [safeArea],
-};
+const config: Config = {};
 
 export default config;
