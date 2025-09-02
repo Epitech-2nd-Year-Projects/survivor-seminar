@@ -204,3 +204,50 @@ func (h *OpportunityHandler) DeleteOpportunity(c *gin.Context) {
 		"message": "opportunity deleted successfully",
 	})
 }
+
+func (h *OpportunityHandler) CreateOpportunity(c *gin.Context) {
+	var req struct {
+		Title        string     `json:"title" binding:"required,max=255"`
+		Type         string     `json:"type" binding:"required,max=100"`
+		Organism     string     `json:"organism" binding:"required,max=255"`
+		Description  *string    `json:"description,omitempty"`
+		Criteria     *string    `json:"criteria,omitempty"`
+		ExternalLink *string    `json:"external_link,omitempty" binding:"omitempty,max=500"`
+		Deadline     *time.Time `json:"deadline,omitempty"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.log.WithError(err).Warn("invalid request payload for opportunity creation")
+		response.JSON(c, http.StatusBadRequest, gin.H{
+			"code":    2100,
+			"message": "invalid request payload",
+			"errors":  err.Error(),
+		})
+		return
+	}
+
+	opportunity := Opportunity{
+		Title:        req.Title,
+		Type:         req.Type,
+		Organism:     req.Organism,
+		Description:  req.Description,
+		Criteria:     req.Criteria,
+		ExternalLink: req.ExternalLink,
+		Deadline:     req.Deadline,
+	}
+
+	if err := h.db.Create(&opportunity).Error; err != nil {
+		h.log.WithError(err).Error("failed to create opportunity")
+		response.JSON(c, http.StatusInternalServerError, gin.H{
+			"code":    "database_error",
+			"message": "failed to create opportunity",
+		})
+		return
+	}
+
+	h.log.WithField("id", opportunity.ID).Info("opportunity created successfully")
+	response.JSON(c, http.StatusCreated, gin.H{
+		"message": "opportunity created successfully",
+		"data":    opportunity,
+	})
+}
