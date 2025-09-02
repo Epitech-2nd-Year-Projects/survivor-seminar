@@ -7,7 +7,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/config"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/response"
 	"github.com/gin-gonic/gin"
@@ -16,21 +15,19 @@ import (
 )
 
 type Opportunity struct {
-	ID           uint           `json:"id" gorm:"primarykey"`
-	Title        string         `json:"title" gorm:"type:varchar(255);not null"`
-	Type         string         `json:"type" gorm:"type:varchar(100);not null;index:idx_opportunities_type"`
-	Organism     string         `json:"organism" gorm:"type:varchar(255);not null"`
-	Description  *string        `json:"description,omitempty" gorm:"type:text"`
-	Criteria     *string        `json:"criteria,omitempty" gorm:"type:text"`
-	ExternalLink *string        `json:"external_link,omitempty" gorm:"type:varchar(500)"`
-	Deadline     *time.Time     `json:"deadline,omitempty" gorm:"index:idx_opportunities_deadline"`
-	CreatedAt    time.Time      `json:"created_at"`
-	UpdatedAt    time.Time      `json:"updated_at"`
-	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
+	ID           uint       `json:"id" gorm:"primarykey"`
+	Title        string     `json:"title" gorm:"type:varchar(255);not null"`
+	Type         string     `json:"type" gorm:"type:varchar(100);not null;index:idx_opportunities_type"`
+	Organism     string     `json:"organism" gorm:"type:varchar(255);not null"`
+	Description  *string    `json:"description,omitempty" gorm:"type:text"`
+	Criteria     *string    `json:"criteria,omitempty" gorm:"type:text"`
+	ExternalLink *string    `json:"external_link,omitempty" gorm:"type:varchar(500)"`
+	Deadline     *time.Time `json:"deadline,omitempty" gorm:"index:idx_opportunities_deadline"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
 }
 
 type OpportunityHandler struct {
-	cfg *config.Config
 	log *logrus.Logger
 	db  *gorm.DB
 }
@@ -45,9 +42,8 @@ var validSortFields = []string{
 	"updated_at",
 }
 
-func NewOpportunityHandler(cfg *config.Config, log *logrus.Logger, db *gorm.DB) *OpportunityHandler {
+func NewOpportunityHandler(log *logrus.Logger, db *gorm.DB) *OpportunityHandler {
 	return &OpportunityHandler{
-		cfg: cfg,
 		log: log,
 		db:  db,
 	}

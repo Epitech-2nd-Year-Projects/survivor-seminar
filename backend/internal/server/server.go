@@ -103,7 +103,7 @@ func (s *HTTPServer) registerRoutes() {
 	v1.Group("/startup")
 	v1.Group("/conversations")
 
-	opportunityHandler := opportunities2.NewOpportunityHandler(s.cfg, s.log, s.db)
+	opportunityHandler := opportunities2.NewOpportunityHandler(s.log, s.db)
 	opportunities := v1.Group("/opportunities")
 	opportunities.GET("", opportunityHandler.GetOpportunities)
 	opportunities.GET("/:id", opportunityHandler.GetOpportunity)
