@@ -105,25 +105,6 @@ func (h *OpportunityHandler) GetOpportunities(c *gin.Context) {
 // GetOpportunity returns a specific opportunity by ID
 func (h *OpportunityHandler) GetOpportunity(c *gin.Context) {
 	id := c.Param("id")
-	if id == "" {
-		h.log.Warn("opportunity id parameter is missing")
-		response.JSON(c, http.StatusBadRequest, gin.H{
-			"code":    2116,
-			"message": "opportunity id is required",
-		})
-		return
-	}
-
-	params := pagination.Parse(c)
-
-	if !slices.Contains(validSortFields, params.Sort) {
-		h.log.WithField("sort", params.Sort).Warn("invalid sort field provided")
-		response.JSON(c, http.StatusBadRequest, gin.H{
-			"code":    2117,
-			"message": fmt.Sprintf("invalid sort field '%s'. Allowed fields: %v", params.Sort, validSortFields),
-		})
-		return
-	}
 
 	var opportunity Opportunity
 	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
@@ -159,14 +140,6 @@ func (h *OpportunityHandler) GetOpportunity(c *gin.Context) {
 // DeleteOpportunity removes an opportunity by ID (Admin only)
 func (h *OpportunityHandler) DeleteOpportunity(c *gin.Context) {
 	id := c.Param("id")
-	if id == "" {
-		h.log.Warn("opportunity id parameter is missing")
-		response.JSON(c, http.StatusBadRequest, gin.H{
-			"code":    2116,
-			"message": "opportunity id is required",
-		})
-		return
-	}
 
 	var opportunity Opportunity
 	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
@@ -250,14 +223,6 @@ func (h *OpportunityHandler) CreateOpportunity(c *gin.Context) {
 
 func (h *OpportunityHandler) UpdateOpportunity(c *gin.Context) {
 	id := c.Param("id")
-	if id == "" {
-		h.log.Warn("opportunity id parameter is missing")
-		response.JSON(c, http.StatusBadRequest, gin.H{
-			"code":    2116,
-			"message": "opportunity id is required",
-		})
-		return
-	}
 
 	var opportunity Opportunity
 	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
