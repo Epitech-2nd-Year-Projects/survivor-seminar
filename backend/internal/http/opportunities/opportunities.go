@@ -65,9 +65,9 @@ func (h *OpportunityHandler) GetOpportunities(c *gin.Context) {
 
 	var total int64
 	if err := h.db.Model(&Opportunity{}).Count(&total).Error; err != nil {
-		h.log.WithError(err).Error("failed to count opportunities")
+		h.log.WithError(err).Error("h.db.Model().Count().Error")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    502,
+			"code":    "internal_error",
 			"message": "failed to retrieve opportunities count",
 		})
 		return
@@ -79,7 +79,7 @@ func (h *OpportunityHandler) GetOpportunities(c *gin.Context) {
 	if err := h.db.Order(orderBy).Offset(offset).Limit(params.PerPage).Find(&opportunities).Error; err != nil {
 		h.log.WithError(err).Error("failed to fetch opportunities")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "database_error",
+			"code":    "internal_error",
 			"message": "failed to retrieve opportunities",
 		})
 		return
@@ -92,12 +92,11 @@ func (h *OpportunityHandler) GetOpportunities(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{
 		"data": opportunities,
 		"pagination": gin.H{
-			"page":        params.Page,
-			"per_page":    params.PerPage,
-			"total":       total,
-			"total_pages": totalPages,
-			"has_next":    hasNext,
-			"has_prev":    hasPrev,
+			"page":     params.Page,
+			"per_page": params.PerPage,
+			"total":    total,
+			"has_next": hasNext,
+			"has_prev": hasPrev,
 		},
 	})
 }
@@ -118,22 +117,14 @@ func (h *OpportunityHandler) GetOpportunity(c *gin.Context) {
 		}
 		h.log.WithError(err).WithField("id", id).Error("failed to fetch opportunity")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    502,
+			"code":    "internal_error",
 			"message": "failed to retrieve opportunity",
 		})
 		return
 	}
 
 	response.JSON(c, http.StatusOK, gin.H{
-		"data": []Opportunity{opportunity},
-		"pagination": gin.H{
-			"page":        1,
-			"per_page":    1,
-			"total":       1,
-			"total_pages": 1,
-			"has_next":    false,
-			"has_prev":    false,
-		},
+		"data": opportunity,
 	})
 }
 
@@ -146,14 +137,14 @@ func (h *OpportunityHandler) DeleteOpportunity(c *gin.Context) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			h.log.WithField("id", id).Warn("opportunity not found for deletion")
 			response.JSON(c, http.StatusNotFound, gin.H{
-				"code":    404,
+				"code":    "not_found",
 				"message": "opportunity not found",
 			})
 			return
 		}
 		h.log.WithError(err).WithField("id", id).Error("failed to fetch opportunity for deletion")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    502,
+			"code":    "internal_error",
 			"message": "failed to retrieve opportunity",
 		})
 		return
@@ -162,7 +153,7 @@ func (h *OpportunityHandler) DeleteOpportunity(c *gin.Context) {
 	if err := h.db.Delete(&opportunity).Error; err != nil {
 		h.log.WithError(err).WithField("id", id).Error("failed to delete opportunity")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    502,
+			"code":    "internal_error",
 			"message": "failed to delete opportunity",
 		})
 		return
@@ -208,7 +199,7 @@ func (h *OpportunityHandler) CreateOpportunity(c *gin.Context) {
 	if err := h.db.Create(&opportunity).Error; err != nil {
 		h.log.WithError(err).Error("failed to create opportunity")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    502,
+			"code":    "internal_error",
 			"message": "failed to create opportunity",
 		})
 		return
@@ -229,14 +220,14 @@ func (h *OpportunityHandler) UpdateOpportunity(c *gin.Context) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			h.log.WithField("id", id).Warn("opportunity not found for update")
 			response.JSON(c, http.StatusNotFound, gin.H{
-				"code":    404,
+				"code":    "not_found",
 				"message": "opportunity not found",
 			})
 			return
 		}
 		h.log.WithError(err).WithField("id", id).Error("failed to fetch opportunity for update")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    502,
+			"code":    "internal_error",
 			"message": "failed to retrieve opportunity",
 		})
 		return
@@ -297,7 +288,7 @@ func (h *OpportunityHandler) UpdateOpportunity(c *gin.Context) {
 	if err := h.db.Model(&opportunity).Updates(updates).Error; err != nil {
 		h.log.WithError(err).WithField("id", id).Error("failed to update opportunity")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "database_error",
+			"code":    "internal_error",
 			"message": "failed to update opportunity",
 		})
 		return
@@ -306,7 +297,7 @@ func (h *OpportunityHandler) UpdateOpportunity(c *gin.Context) {
 	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
 		h.log.WithError(err).WithField("id", id).Error("failed to fetch updated opportunity")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "database_error",
+			"code":    "internal_error",
 			"message": "failed to retrieve updated opportunity",
 		})
 		return
