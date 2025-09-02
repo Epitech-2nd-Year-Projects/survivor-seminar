@@ -7,25 +7,34 @@ import (
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/config"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/response"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type HealthHandler struct {
 	cfg     *config.Config
 	started time.Time
+	db      *gorm.DB
 }
 
-func NewHealthHandler(cfg *config.Config) *HealthHandler {
+func NewHealthHandler(cfg *config.Config, db *gorm.DB) *HealthHandler {
 	return &HealthHandler{
 		cfg:     cfg,
 		started: time.Now(),
+		db:      db,
 	}
 }
 
 func (h *HealthHandler) Health(c *gin.Context) {
-	deps := gin.H{
-		"db":      "ok",
-		"queue":   "ok",
-		"storage": "ok",
+	deps := gin.H{"queue": "ok", "storage": "ok"}
+	if h.db != nil {
+		sqlDB, err := h.db.DB()
+		if err == nil && sqlDB.Ping() == nil {
+			deps["db"] = "ok"
+		} else {
+			deps["db"] = "down"
+		}
+	} else {
+		deps["db"] = "down"
 	}
 
 	response.JSON(c, http.StatusOK, gin.H{
