@@ -110,6 +110,13 @@ func (s *HTTPServer) registerRoutes() {
 
 	v1.Group("/favorites")
 	v1.Group("/admin")
+
+	admin := v1.Group("/admin")
+	{
+		adminOpportunities := admin.Group("/opportunities")
+		adminOpportunities.DELETE("/:id", opportunityHandler.DeleteOpportunity)
+	}
+
 }
 
 func (s *HTTPServer) Start() error {

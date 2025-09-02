@@ -159,3 +159,48 @@ func (h *OpportunityHandler) GetOpportunity(c *gin.Context) {
 		},
 	})
 }
+
+// DeleteOpportunity removes an opportunity by ID (Admin only)
+func (h *OpportunityHandler) DeleteOpportunity(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		h.log.Warn("opportunity id parameter is missing")
+		response.JSON(c, http.StatusBadRequest, gin.H{
+			"code":    2116,
+			"message": "opportunity id is required",
+		})
+		return
+	}
+
+	var opportunity Opportunity
+	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			h.log.WithField("id", id).Warn("opportunity not found for deletion")
+			response.JSON(c, http.StatusNotFound, gin.H{
+				"code":    404,
+				"message": "opportunity not found",
+			})
+			return
+		}
+		h.log.WithError(err).WithField("id", id).Error("failed to fetch opportunity for deletion")
+		response.JSON(c, http.StatusInternalServerError, gin.H{
+			"code":    502,
+			"message": "failed to retrieve opportunity",
+		})
+		return
+	}
+
+	if err := h.db.Delete(&opportunity).Error; err != nil {
+		h.log.WithError(err).WithField("id", id).Error("failed to delete opportunity")
+		response.JSON(c, http.StatusInternalServerError, gin.H{
+			"code":    502,
+			"message": "failed to delete opportunity",
+		})
+		return
+	}
+
+	h.log.WithField("id", id).Info("opportunity deleted successfully")
+	response.JSON(c, http.StatusOK, gin.H{
+		"message": "opportunity deleted successfully",
+	})
+}
