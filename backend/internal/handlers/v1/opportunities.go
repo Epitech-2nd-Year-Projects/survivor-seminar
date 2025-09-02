@@ -1,4 +1,4 @@
-package opportunities
+package v1
 
 import (
 	"errors"
@@ -7,25 +7,13 @@ import (
 	"slices"
 	"time"
 
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/response"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
-
-type Opportunity struct {
-	ID           uint       `json:"id" gorm:"primarykey"`
-	Title        string     `json:"title" gorm:"type:varchar(255);not null"`
-	Type         string     `json:"type" gorm:"type:varchar(100);not null;index:idx_opportunities_type"`
-	Organism     string     `json:"organism" gorm:"type:varchar(255);not null"`
-	Description  *string    `json:"description,omitempty" gorm:"type:text"`
-	Criteria     *string    `json:"criteria,omitempty" gorm:"type:text"`
-	ExternalLink *string    `json:"external_link,omitempty" gorm:"type:varchar(500)"`
-	Deadline     *time.Time `json:"deadline,omitempty" gorm:"index:idx_opportunities_deadline"`
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at"`
-}
 
 type OpportunityHandler struct {
 	log *logrus.Logger
@@ -64,7 +52,7 @@ func (h *OpportunityHandler) GetOpportunities(c *gin.Context) {
 	}
 
 	var total int64
-	if err := h.db.Model(&Opportunity{}).Count(&total).Error; err != nil {
+	if err := h.db.Model(&models.Opportunity{}).Count(&total).Error; err != nil {
 		h.log.WithError(err).Error("h.db.Model().Count().Error")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
 			"code":    "internal_error",
@@ -75,7 +63,7 @@ func (h *OpportunityHandler) GetOpportunities(c *gin.Context) {
 
 	orderBy := fmt.Sprintf("%s %s", params.Sort, params.Order)
 
-	var opportunities []Opportunity
+	var opportunities []models.Opportunity
 	if err := h.db.Order(orderBy).Offset(offset).Limit(params.PerPage).Find(&opportunities).Error; err != nil {
 		h.log.WithError(err).Error("failed to fetch opportunities")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
@@ -105,7 +93,7 @@ func (h *OpportunityHandler) GetOpportunities(c *gin.Context) {
 func (h *OpportunityHandler) GetOpportunity(c *gin.Context) {
 	id := c.Param("id")
 
-	var opportunity Opportunity
+	var opportunity models.Opportunity
 	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			h.log.WithField("id", id).Warn("opportunity not found")
@@ -132,7 +120,7 @@ func (h *OpportunityHandler) GetOpportunity(c *gin.Context) {
 func (h *OpportunityHandler) DeleteOpportunity(c *gin.Context) {
 	id := c.Param("id")
 
-	var opportunity Opportunity
+	var opportunity models.Opportunity
 	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			h.log.WithField("id", id).Warn("opportunity not found for deletion")
@@ -186,7 +174,7 @@ func (h *OpportunityHandler) CreateOpportunity(c *gin.Context) {
 		return
 	}
 
-	opportunity := Opportunity{
+	opportunity := models.Opportunity{
 		Title:        req.Title,
 		Type:         req.Type,
 		Organism:     req.Organism,
@@ -215,7 +203,7 @@ func (h *OpportunityHandler) CreateOpportunity(c *gin.Context) {
 func (h *OpportunityHandler) UpdateOpportunity(c *gin.Context) {
 	id := c.Param("id")
 
-	var opportunity Opportunity
+	var opportunity models.Opportunity
 	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			h.log.WithField("id", id).Warn("opportunity not found for update")

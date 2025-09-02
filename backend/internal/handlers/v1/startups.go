@@ -2,16 +2,17 @@ package v1
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
-	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
+	pagination2 "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type listStartupsParams struct {
-	pagination    pagination.Params
+	pagination    pagination2.Params
 	Sector        string `form:"sector" binding:"omitempty,oneof=tech health finance"`
 	Maturity      string `form:"maturity" binding:"omitempty,oneof=early middle late"`
 	ProjectStatus string `form:"project_status" binding:"omitempty,oneof=ongoing completed"`
@@ -33,7 +34,7 @@ func NewStartupsHandler(db *gorm.DB, log *logrus.Logger) *StartupsHandler {
 
 func (h *StartupsHandler) ListStartups(ctx *gin.Context) {
 	var params listStartupsParams
-	params.pagination = pagination.Parse(ctx)
+	params.pagination = pagination2.Parse(ctx)
 
 	h.log.Info(params.pagination)
 	if err := ctx.ShouldBindQuery(&params); err != nil {
