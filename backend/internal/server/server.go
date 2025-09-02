@@ -8,9 +8,8 @@ import (
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/config"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database"
-	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/handlers"
-	opportunities2 "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/opportunities"
 	v1handlers "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/handlers/v1"
+	opportunities2 "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/opportunities"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/middleware"
 	v1routes "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/server/routes/v1"
 	"github.com/gin-gonic/gin"
