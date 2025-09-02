@@ -11,6 +11,3 @@ CREATE TABLE opportunities (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE INDEX idx_opportunities_type ON opportunities(type);
-CREATE INDEX idx_opportunities_deadline ON opportunities(deadline);
