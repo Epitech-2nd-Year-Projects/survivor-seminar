@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS idx_startups_name_ci;
