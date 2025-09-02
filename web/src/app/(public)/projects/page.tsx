@@ -7,7 +7,6 @@ import {
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -22,13 +21,7 @@ import {
 } from "@/components/ui/select";
 import { capitalize } from "@/lib/utils";
 import type { Project } from "@/types";
-import {
-  GlobeIcon,
-  ListRestartIcon,
-  MailIcon,
-  PhoneCallIcon,
-  RadioTowerIcon,
-} from "lucide-react";
+import { GlobeIcon, ListRestartIcon, MailIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 const projects: Project[] = [
@@ -223,18 +216,13 @@ export default function Projects() {
                     {project.address ?? "No address provided"}
                   </Badge>
                 }
-                {project.legalStatus ? (
-                  <Badge variant="outline">{project.legalStatus}</Badge>
-                ) : null}
               </CardDescription>
               <CardAction className="flex gap-2">
-                {project.socialMediaUrl ? (
-                  <Button variant="secondary" size="icon" className="size-8">
-                    <a href={project.socialMediaUrl}>
-                      <RadioTowerIcon />
-                    </a>
-                  </Button>
-                ) : null}
+                <Button variant="secondary" size="icon" className="size-8">
+                  <a href={`mailto:${project.email}`}>
+                    <MailIcon />
+                  </a>
+                </Button>
                 {project.websiteUrl ? (
                   <Button variant="secondary" size="icon" className="size-8">
                     <a href={project.websiteUrl}>
@@ -247,42 +235,6 @@ export default function Projects() {
             <CardContent>
               {project.description ?? "No description provided."}
             </CardContent>
-            <CardFooter className="flex gap-2">
-              <Button variant="secondary" size="icon" className="size-8">
-                <a href={`mailto:${project.email}`}>
-                  <MailIcon />
-                </a>
-              </Button>
-              {project.phone ? (
-                <Button variant="secondary" size="icon" className="size-8">
-                  <a href={`tel:${project.phone}`}>
-                    <PhoneCallIcon />
-                  </a>
-                </Button>
-              ) : null}
-              <div className="flex flex-wrap gap-2">
-                {project.maturity ? (
-                  <Badge variant="outline" className="capitalize">
-                    {project.maturity}
-                  </Badge>
-                ) : null}
-                {project.projectStatus ? (
-                  <Badge variant="outline" className="capitalize">
-                    {project.projectStatus}
-                  </Badge>
-                ) : null}
-                {project.needs ? (
-                  <Badge variant="outline" className="capitalize">
-                    {project.needs}
-                  </Badge>
-                ) : null}
-                {project.sector ? (
-                  <Badge variant="outline" className="capitalize">
-                    {project.sector}
-                  </Badge>
-                ) : null}
-              </div>
-            </CardFooter>
           </Card>
         ))}
       </div>
