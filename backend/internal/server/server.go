@@ -115,6 +115,7 @@ func (s *HTTPServer) registerRoutes() {
 	{
 		adminOpportunities := admin.Group("/opportunities")
 		adminOpportunities.POST("", opportunityHandler.CreateOpportunity)
+		adminOpportunities.PATCH("/:id", opportunityHandler.UpdateOpportunity)
 		adminOpportunities.GET("", opportunityHandler.GetOpportunities)
 		adminOpportunities.GET("/:id", opportunityHandler.GetOpportunity)
 		adminOpportunities.DELETE("/:id", opportunityHandler.DeleteOpportunity)

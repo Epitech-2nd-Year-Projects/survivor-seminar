@@ -239,7 +239,7 @@ func (h *OpportunityHandler) CreateOpportunity(c *gin.Context) {
 	if err := h.db.Create(&opportunity).Error; err != nil {
 		h.log.WithError(err).Error("failed to create opportunity")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "database_error",
+			"code":    502,
 			"message": "failed to create opportunity",
 		})
 		return
@@ -248,6 +248,112 @@ func (h *OpportunityHandler) CreateOpportunity(c *gin.Context) {
 	h.log.WithField("id", opportunity.ID).Info("opportunity created successfully")
 	response.JSON(c, http.StatusCreated, gin.H{
 		"message": "opportunity created successfully",
+		"data":    opportunity,
+	})
+}
+
+func (h *OpportunityHandler) UpdateOpportunity(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		h.log.Warn("opportunity id parameter is missing")
+		response.JSON(c, http.StatusBadRequest, gin.H{
+			"code":    2116,
+			"message": "opportunity id is required",
+		})
+		return
+	}
+
+	var opportunity Opportunity
+	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			h.log.WithField("id", id).Warn("opportunity not found for update")
+			response.JSON(c, http.StatusNotFound, gin.H{
+				"code":    404,
+				"message": "opportunity not found",
+			})
+			return
+		}
+		h.log.WithError(err).WithField("id", id).Error("failed to fetch opportunity for update")
+		response.JSON(c, http.StatusInternalServerError, gin.H{
+			"code":    502,
+			"message": "failed to retrieve opportunity",
+		})
+		return
+	}
+
+	var req struct {
+		Title        *string    `json:"title,omitempty" binding:"omitempty,max=255"`
+		Type         *string    `json:"type,omitempty" binding:"omitempty,max=100"`
+		Organism     *string    `json:"organism,omitempty" binding:"omitempty,max=255"`
+		Description  *string    `json:"description,omitempty"`
+		Criteria     *string    `json:"criteria,omitempty"`
+		ExternalLink *string    `json:"external_link,omitempty" binding:"omitempty,max=500"`
+		Deadline     *time.Time `json:"deadline,omitempty"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.log.WithError(err).Warn("invalid request payload for opportunity update")
+		response.JSON(c, http.StatusBadRequest, gin.H{
+			"code":    2100,
+			"message": "invalid request payload",
+			"errors":  err.Error(),
+		})
+		return
+	}
+
+	updates := make(map[string]interface{})
+	if req.Title != nil {
+		updates["title"] = *req.Title
+	}
+	if req.Type != nil {
+		updates["type"] = *req.Type
+	}
+	if req.Organism != nil {
+		updates["organism"] = *req.Organism
+	}
+	if req.Description != nil {
+		updates["description"] = *req.Description
+	}
+	if req.Criteria != nil {
+		updates["criteria"] = *req.Criteria
+	}
+	if req.ExternalLink != nil {
+		updates["external_link"] = *req.ExternalLink
+	}
+	if req.Deadline != nil {
+		updates["deadline"] = *req.Deadline
+	}
+
+	if len(updates) == 0 {
+		h.log.WithField("id", id).Warn("no fields provided for update")
+		response.JSON(c, http.StatusBadRequest, gin.H{
+			"code":    2101,
+			"message": "no fields provided for update",
+		})
+		return
+	}
+
+	if err := h.db.Model(&opportunity).Updates(updates).Error; err != nil {
+		h.log.WithError(err).WithField("id", id).Error("failed to update opportunity")
+		response.JSON(c, http.StatusInternalServerError, gin.H{
+			"code":    "database_error",
+			"message": "failed to update opportunity",
+		})
+		return
+	}
+
+	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
+		h.log.WithError(err).WithField("id", id).Error("failed to fetch updated opportunity")
+		response.JSON(c, http.StatusInternalServerError, gin.H{
+			"code":    "database_error",
+			"message": "failed to retrieve updated opportunity",
+		})
+		return
+	}
+
+	h.log.WithField("id", id).Info("opportunity updated successfully")
+	response.JSON(c, http.StatusOK, gin.H{
+		"message": "opportunity updated successfully",
 		"data":    opportunity,
 	})
 }
