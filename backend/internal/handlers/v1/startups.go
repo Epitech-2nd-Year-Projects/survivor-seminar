@@ -2,7 +2,7 @@ package v1
 
 import (
 	"errors"
-	. "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -42,7 +42,7 @@ func (h *StartupsHandler) ListStartups(ctx *gin.Context) {
 		return
 	}
 
-	query := h.db.Model(&Startup{})
+	query := h.db.Model(&models.Startup{})
 	if params.Sector != "" {
 		query = query.Where("sector = ?", params.Sector)
 	}
@@ -64,7 +64,7 @@ func (h *StartupsHandler) ListStartups(ctx *gin.Context) {
 		Limit(params.pagination.PerPage).
 		Order(params.pagination.Sort + " " + params.pagination.Order)
 
-	var result []Startup
+	var result []models.Startup
 	if err := query.Find(&result).Error; err != nil {
 		h.log.WithError(err).Errorf("query.Find(&%+v)", result)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"code": "internal_error", "message": err.Error()})
@@ -72,7 +72,7 @@ func (h *StartupsHandler) ListStartups(ctx *gin.Context) {
 	}
 
 	var total int64
-	if err := h.db.Model(&Startup{}).Count(&total).Error; err != nil {
+	if err := h.db.Model(&models.Startup{}).Count(&total).Error; err != nil {
 		h.log.WithError(err).Errorf("h.db.Model().Count().Error")
 		ctx.JSON(http.StatusInternalServerError, gin.H{"code": "internal_error", "message": err.Error()})
 		return
@@ -97,9 +97,9 @@ func (h *StartupsHandler) ListStartups(ctx *gin.Context) {
 func (h *StartupsHandler) GetStartup(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	var result Startup
+	var result models.Startup
 	err := h.db.
-		Model(&Startup{}).
+		Model(&models.Startup{}).
 		Where("id = ?", id).
 		First(&result).
 		Error
