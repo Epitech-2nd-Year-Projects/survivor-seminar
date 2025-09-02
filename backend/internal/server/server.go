@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/config"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/handlers"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 type HTTPServer struct {
@@ -18,6 +20,7 @@ type HTTPServer struct {
 	cfg    *config.Config
 	log    *logrus.Logger
 	http   *http.Server
+	db     *gorm.DB
 }
 
 func NewHTTPServer(cfg *config.Config) *HTTPServer {
@@ -43,7 +46,20 @@ func NewHTTPServer(cfg *config.Config) *HTTPServer {
 	g.Use(middleware.Logger(logger))
 	g.Use(middleware.CORS(cfg))
 
-	h := &HTTPServer{Engine: g, cfg: cfg, log: logger}
+	var gormDB *gorm.DB
+	if db, err := database.Open(cfg, logger); err != nil {
+		logger.WithError(err).Warn("failed to connect database")
+	} else {
+		gormDB = db
+		logger.Info("database connection established")
+	}
+
+	h := &HTTPServer{
+		Engine: g,
+		cfg:    cfg,
+		log:    logger,
+		db:     gormDB,
+	}
 	h.registerRoutes()
 
 	return h
@@ -64,7 +80,7 @@ func (s *HTTPServer) registerRoutes() {
 	api := g.Group("/api")
 	v1 := api.Group("/" + s.cfg.App.Version)
 
-	health := handlers.NewHealthHandler(s.cfg)
+	health := handlers.NewHealthHandler(s.cfg, s.db)
 	if s.cfg.Health.Enabled {
 		v1.GET(s.cfg.Health.Path, health.Health)
 	}
