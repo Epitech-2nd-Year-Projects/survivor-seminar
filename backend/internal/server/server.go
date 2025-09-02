@@ -8,6 +8,7 @@ import (
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/config"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/handlers"
+	opportunities2 "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/opportunities"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -85,7 +86,10 @@ func (s *HTTPServer) registerRoutes() {
 	v1.Group("/track")
 	v1.Group("/startup")
 	v1.Group("/conversations")
-	v1.Group("/opportunities")
+
+	opportunityHandler := opportunities2.NewOpportunityHandler(s.cfg)
+	opportunities := v1.Group("/opportunities")
+	opportunities.GET("", opportunityHandler.GetOpportunities)
 	v1.Group("/favorites")
 	v1.Group("/admin")
 }
