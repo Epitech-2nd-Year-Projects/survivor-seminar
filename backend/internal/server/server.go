@@ -8,8 +8,9 @@ import (
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/config"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database"
-	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/handlers"
+	v1handlers "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/handlers/v1"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/middleware"
+	v1routes "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/server/routes/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -66,7 +67,7 @@ func NewHTTPServer(cfg *config.Config) *HTTPServer {
 }
 
 func (s *HTTPServer) registerRoutes() {
-	root := handlers.NewRootHandler(s.cfg)
+	root := v1handlers.NewRootHandler(s.cfg)
 	g := s.Engine
 	g.GET("/", root.Info)
 
@@ -80,7 +81,9 @@ func (s *HTTPServer) registerRoutes() {
 	api := g.Group("/api")
 	v1 := api.Group("/" + s.cfg.App.Version)
 
-	health := handlers.NewHealthHandler(s.cfg, s.db)
+	v1.Group("/admin")
+
+	health := v1handlers.NewHealthHandler(s.cfg, s.db)
 	if s.cfg.Health.Enabled {
 		v1.GET(s.cfg.Health.Path, health.Health)
 	}
@@ -92,7 +95,7 @@ func (s *HTTPServer) registerRoutes() {
 		})
 	}
 
-	v1.Group("/startups")
+	v1routes.RegisterStartups(v1, s.db, s.log)
 	v1.Group("/news")
 	v1.Group("/events")
 	v1.Group("/sectors")
