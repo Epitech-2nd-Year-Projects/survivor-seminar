@@ -3,6 +3,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "Survivor",
@@ -31,7 +32,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <Providers>{children}</Providers>
           </ThemeProvider>
         </body>
       </html>
