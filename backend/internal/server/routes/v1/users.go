@@ -15,4 +15,9 @@ func RegisterUsers(r *gin.RouterGroup, db *gorm.DB, logger *logrus.Logger) {
 	g.GET("/:id", h.GetUser)
 	g.GET("/email/:email", h.GetUserByEmail)
 	g.GET("/:id/image", h.GetUserImage)
+
+	admin := r.Group("/admin/users")
+	admin.POST("", h.CreateUser)
+	admin.PATCH("/:id", h.UpdateUser)
+	admin.DELETE("/:id", h.DeleteUser)
 }
