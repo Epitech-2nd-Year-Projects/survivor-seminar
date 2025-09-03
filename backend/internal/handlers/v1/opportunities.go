@@ -98,7 +98,7 @@ func (h *OpportunityHandler) GetOpportunity(c *gin.Context) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			h.log.WithField("id", id).Warn("h.db.Where().First().Error")
 			response.JSON(c, http.StatusNotFound, gin.H{
-				"code":    404,
+				"code":    "not_found",
 				"message": "opportunity not found",
 			})
 			return
