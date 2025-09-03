@@ -11,6 +11,7 @@ import (
 	v1handlers "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/handlers/v1"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/middleware"
 	v1routes "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/server/routes/v1"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/sync"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -22,6 +23,7 @@ type HTTPServer struct {
 	log    *logrus.Logger
 	http   *http.Server
 	db     *gorm.DB
+	sched  sync.Scheduler
 }
 
 func NewHTTPServer(cfg *config.Config) *HTTPServer {
@@ -62,6 +64,7 @@ func NewHTTPServer(cfg *config.Config) *HTTPServer {
 		db:     gormDB,
 	}
 	h.registerRoutes()
+	h.initSync()
 
 	return h
 }
@@ -134,6 +137,13 @@ func (s *HTTPServer) Start() error {
 
 	s.log.WithField("addr", addr).Info("HTTP server starting")
 
+	if s.sched != nil {
+		_ = s.sched.Start(context.Background())
+		if s.cfg.Sync.FullImport == "on_startup" {
+			_ = s.sched.TriggerFullSync(context.Background())
+		}
+	}
+
 	return s.http.ListenAndServe()
 }
 
@@ -145,6 +155,10 @@ func (s *HTTPServer) Shutdown(ctx context.Context) error {
 
 	shutdownCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
+
+	if s.sched != nil {
+		_ = s.sched.Stop(shutdownCtx)
+	}
 
 	return s.http.Shutdown(shutdownCtx)
 }
