@@ -5,6 +5,23 @@
 import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
-const config = {};
+const config = {
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/api/:path*",
+          destination: `http://localhost:1111/api/:path*`,
+        },
+      ],
+      fallback: [
+        {
+          source: "/api/:path*/",
+          destination: `http://localhost:1111/api/:path*`,
+        },
+      ],
+    };
+  },
+};
 
 export default config;

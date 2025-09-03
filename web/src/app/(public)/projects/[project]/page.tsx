@@ -1,3 +1,5 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,80 +10,110 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { fetchProject } from "@/lib/fetchers";
 import type { Project } from "@/types";
+import { useQuery } from "@tanstack/react-query";
 import { GlobeIcon, MapPinnedIcon, RadioTowerIcon } from "lucide-react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { use } from "react";
 
-const projects: Project[] = [
-  {
-    id: 1,
-    name: "Alpha Tech",
-    legalStatus: "LLC",
-    address: "123 Maple Street, Springfield",
-    email: "contact@alphatech.com",
-    phone: "(555) 123-4567",
-    createdAt: "2023-06-15T10:30:00Z",
-    description: "A cutting-edge AI-driven marketing platform.",
-    websiteUrl: "https://www.alphatech.com",
-    socialMediaUrl: "https://twitter.com/alphatech",
-    projectStatus: "active",
-    needs: "seed funding",
-    sector: "Marketing Tech",
-    maturity: "early",
-    founders: [
-      { id: 1, name: "Alice Johnson", startupId: 1 },
-      { id: 2, name: "Bob Smith", startupId: 1 },
-    ],
-  },
-  {
-    id: 2,
-    name: "Beta Innovations",
-    legalStatus: "Corporation",
-    address: null,
-    email: "info@betainnovations.io",
-    phone: null,
-    createdAt: "2022-01-20T14:45:00Z",
-    description: null,
-    websiteUrl: "https://betainnovations.io",
-    socialMediaUrl: null,
-    projectStatus: "pilot",
-    needs: "partnerships",
-    sector: "Healthcare",
-    maturity: "prototype",
-    founders: [{ id: 3, name: "Carlos Reyes", startupId: 2 }],
-  },
-  {
-    id: 3,
-    name: "Gamma Robotics",
-    legalStatus: null,
-    address: "456 Oak Avenue, Metropolis",
-    email: "hello@gammarobotics.com",
-    phone: "(555) 987-6543",
-    createdAt: "2021-11-05T08:15:00Z",
-    description: "Robotic solutions for warehouse automation.",
-    websiteUrl: null,
-    socialMediaUrl: "https://linkedin.com/company/gammarobotics",
-    projectStatus: "development",
-    needs: null,
-    sector: "Robotics",
-    maturity: "growth",
-    founders: [
-      { id: 4, name: "Dana Lee", startupId: 3 },
-      { id: 5, name: "Evan Zhou", startupId: 3 },
-    ],
-  },
-];
+type ProjectPageProps = {
+  params: Promise<{ project: string }>;
+};
 
-export default async function Project({
-  params,
-}: {
-  params: Promise<{ project: number }>;
-}) {
-  const { project: projectId } = await params;
-  const projectData = projects.find((p) => p.id === Number(projectId));
+export default function ProjectPage({ params }: ProjectPageProps) {
+  const { project: projectSlug } = use(params);
+  const projectId = Number(projectSlug);
 
-  if (!projectData) {
+  const {
+    data: project,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<Project, Error>({
+    queryKey: ["project", projectId],
+    queryFn: () => fetchProject(projectId),
+    enabled: !isNaN(projectId),
+    staleTime: 1000 * 60 * 5,
+    retry: 2,
+  });
+
+  if (isError) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <CardTitle>
+                  <Skeleton className="h-12 w-12 rounded-md" />
+                </CardTitle>
+                <div>
+                  <Skeleton className="h-6 w-20" />
+                </div>
+              </div>
+              <CardAction className="flex gap-2">
+                <Skeleton className="h-6 w-20" />
+              </CardAction>
+            </CardHeader>
+          </Card>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Founders</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap justify-center gap-2 md:justify-start">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col items-center justify-center gap-2"
+                >
+                  <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-zinc-800">
+                    <Skeleton className="h-16 w-16 rounded-full" />
+                  </div>
+                  <Badge variant="secondary">
+                    <Skeleton className="h-4 w-1/2" />
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Contact</CardTitle>
+              <CardDescription>
+                <Skeleton className="h-4 w-1/2" />
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-6 w-20" />
+            </CardContent>
+          </Card>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Status</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-6 w-20" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!project) {
     notFound();
   }
 
@@ -101,17 +133,17 @@ export default async function Project({
                 />
               </CardTitle>
               <div>
-                {projectData.name}
+                {project.name}
                 <CardDescription>
-                  {projectData.description ?? "No description provided."}
+                  {project.description ?? "No description provided."}
                 </CardDescription>
               </div>
             </div>
             <CardAction className="flex gap-2">
-              {projectData.address ? (
+              {project.address ? (
                 <Badge variant="secondary" className="whitespace-normal">
                   <MapPinnedIcon className="h-4 w-4" />
-                  {projectData.address}
+                  {project.address}
                 </Badge>
               ) : null}
             </CardAction>
@@ -124,7 +156,7 @@ export default async function Project({
             <CardTitle>Founders</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap justify-center gap-2 md:justify-start">
-            {projectData.founders.map((founder) => (
+            {project.founders.map((founder) => (
               <div
                 key={founder.id}
                 className="flex flex-col items-center justify-center gap-2"
@@ -146,41 +178,41 @@ export default async function Project({
           <CardHeader>
             <CardTitle>Contact</CardTitle>
             <CardDescription>
-              You can contact {projectData.name} by emailing{" "}
+              You can contact {project.name} by emailing{" "}
               <a
-                href={`mailto:${projectData.email}`}
+                href={`mailto:${project.email}`}
                 className="font-white font-bold underline"
               >
-                {projectData.email}
+                {project.email}
               </a>
-              {projectData.phone ? (
+              {project.phone ? (
                 <>
                   <br />
                   or by calling{" "}
                   <a
-                    href={`tel:${projectData.phone}`}
+                    href={`tel:${project.phone}`}
                     className="font-white font-bold underline"
                   >
-                    {projectData.phone}
+                    {project.phone}
                   </a>
                 </>
               ) : null}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            {projectData.websiteUrl ? (
+            {project.website_url ? (
               <Button variant="secondary">
                 <GlobeIcon />
-                <a href={projectData.websiteUrl}>
-                  Visit {projectData.name}&apos;s website
+                <a href={project.website_url}>
+                  Visit {project.name}&apos;s website
                 </a>
               </Button>
             ) : null}
-            {projectData.socialMediaUrl ? (
+            {project.social_media_url ? (
               <Button variant="secondary">
                 <RadioTowerIcon />
-                <a href={projectData.socialMediaUrl}>
-                  Follow {projectData.name} on social media
+                <a href={project.social_media_url}>
+                  Follow {project.name} on social media
                 </a>
               </Button>
             ) : null}
@@ -192,20 +224,20 @@ export default async function Project({
           <CardTitle>Status</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
-          {projectData.legalStatus ? (
-            <Badge variant="secondary">{projectData.legalStatus}</Badge>
+          {project.legal_status ? (
+            <Badge variant="secondary">{project.legal_status}</Badge>
           ) : null}
-          {projectData.projectStatus ? (
-            <Badge variant="secondary">{projectData.projectStatus}</Badge>
+          {project.project_status ? (
+            <Badge variant="secondary">{project.project_status}</Badge>
           ) : null}
-          {projectData.needs ? (
-            <Badge variant="secondary">{projectData.needs}</Badge>
+          {project.needs ? (
+            <Badge variant="secondary">{project.needs}</Badge>
           ) : null}
-          {projectData.sector ? (
-            <Badge variant="secondary">{projectData.sector}</Badge>
+          {project.sector ? (
+            <Badge variant="secondary">{project.sector}</Badge>
           ) : null}
-          {projectData.maturity ? (
-            <Badge variant="secondary">{projectData.maturity}</Badge>
+          {project.maturity ? (
+            <Badge variant="secondary">{project.maturity}</Badge>
           ) : null}
         </CardContent>
       </Card>

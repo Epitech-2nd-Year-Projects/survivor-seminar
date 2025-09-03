@@ -19,72 +19,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { fetchProjects } from "@/lib/fetchers";
 import { capitalize } from "@/lib/utils";
 import type { Project } from "@/types";
+import { useQuery } from "@tanstack/react-query";
 import { GlobeIcon, ListRestartIcon, MailIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-const projects: Project[] = [
-  {
-    id: 1,
-    name: "Alpha Tech",
-    legalStatus: "LLC",
-    address: "123 Maple Street, Springfield",
-    email: "contact@alphatech.com",
-    phone: "(555) 123-4567",
-    createdAt: "2023-06-15T10:30:00Z",
-    description: "A cutting-edge AI-driven marketing platform.",
-    websiteUrl: "https://www.alphatech.com",
-    socialMediaUrl: "https://twitter.com/alphatech",
-    projectStatus: "active",
-    needs: "seed funding",
-    sector: "Marketing Tech",
-    maturity: "early",
-    founders: [
-      { id: 1, name: "Alice Johnson", startupId: 1 },
-      { id: 2, name: "Bob Smith", startupId: 1 },
-    ],
-  },
-  {
-    id: 2,
-    name: "Beta Innovations",
-    legalStatus: "Corporation",
-    address: null,
-    email: "info@betainnovations.io",
-    phone: null,
-    createdAt: "2022-01-20T14:45:00Z",
-    description: null,
-    websiteUrl: "https://betainnovations.io",
-    socialMediaUrl: null,
-    projectStatus: "pilot",
-    needs: "partnerships",
-    sector: "Healthcare",
-    maturity: "prototype",
-    founders: [{ id: 3, name: "Carlos Reyes", startupId: 2 }],
-  },
-  {
-    id: 3,
-    name: "Gamma Robotics",
-    legalStatus: null,
-    address: "456 Oak Avenue, Metropolis",
-    email: "hello@gammarobotics.com",
-    phone: "(555) 987-6543",
-    createdAt: "2021-11-05T08:15:00Z",
-    description: "Robotic solutions for warehouse automation.",
-    websiteUrl: null,
-    socialMediaUrl: "https://linkedin.com/company/gammarobotics",
-    projectStatus: "development",
-    needs: null,
-    sector: "Robotics",
-    maturity: "growth",
-    founders: [
-      { id: 4, name: "Dana Lee", startupId: 3 },
-      { id: 5, name: "Evan Zhou", startupId: 3 },
-    ],
-  },
-];
-
 export default function Projects() {
+  const router = useRouter();
+
+  const {
+    data: projects = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery<Project[], Error>({
+    queryKey: ["projects"],
+    queryFn: fetchProjects,
+    staleTime: 1000 * 60 * 5,
+    retry: 2,
+  });
+
   const [selectedMaturity, setSelectedMaturity] = useState<string | undefined>(
     undefined,
   );
@@ -101,7 +59,7 @@ export default function Projects() {
         projects.map((p) => p.maturity).filter((m): m is string => m != null),
       ),
     ).sort();
-  }, []);
+  }, [projects]);
 
   const sectorOptions = useMemo(() => {
     return Array.from(
@@ -109,7 +67,7 @@ export default function Projects() {
         projects.map((p) => p.sector).filter((m): m is string => m != null),
       ),
     ).sort();
-  }, []);
+  }, [projects]);
 
   const locationOptions = useMemo(
     () =>
@@ -120,7 +78,7 @@ export default function Projects() {
             .filter((c): c is string => !!c),
         ),
       ).sort(),
-    [],
+    [projects],
   );
 
   const visibleProjects = useMemo(
@@ -133,7 +91,7 @@ export default function Projects() {
           (!selectedLocation || city === selectedLocation)
         );
       }),
-    [selectedMaturity, selectedSector, selectedLocation],
+    [projects, selectedMaturity, selectedSector, selectedLocation],
   );
 
   const resetFilters = () => {
@@ -142,10 +100,15 @@ export default function Projects() {
     setSelectedLocation(undefined);
   };
 
+  if (isError) {
+    return <div>Error: {error.message}</div>;
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <Select
+          disabled={isLoading}
           value={selectedMaturity ?? ""}
           onValueChange={setSelectedMaturity}
         >
@@ -163,7 +126,11 @@ export default function Projects() {
             </SelectGroup>
           </SelectContent>
         </Select>
-        <Select value={selectedSector ?? ""} onValueChange={setSelectedSector}>
+        <Select
+          disabled={isLoading}
+          value={selectedSector ?? ""}
+          onValueChange={setSelectedSector}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select a sector" />
           </SelectTrigger>
@@ -179,6 +146,7 @@ export default function Projects() {
           </SelectContent>
         </Select>
         <Select
+          disabled={isLoading}
           value={selectedLocation ?? ""}
           onValueChange={setSelectedLocation}
         >
@@ -197,6 +165,7 @@ export default function Projects() {
           </SelectContent>
         </Select>
         <Button
+          disabled={isLoading}
           variant="secondary"
           size="icon"
           className="size-8"
@@ -206,37 +175,61 @@ export default function Projects() {
         </Button>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {visibleProjects.map((project) => (
-          <Card key={project.id}>
-            <CardHeader>
-              <CardTitle>{project.name}</CardTitle>
-              <CardDescription className="flex gap-1">
-                {
-                  <Badge variant="secondary">
-                    {project.address ?? "No address provided"}
-                  </Badge>
-                }
-              </CardDescription>
-              <CardAction className="flex gap-2">
-                <Button variant="secondary" size="icon" className="size-8">
-                  <a href={`mailto:${project.email}`}>
-                    <MailIcon />
-                  </a>
-                </Button>
-                {project.websiteUrl ? (
-                  <Button variant="secondary" size="icon" className="size-8">
-                    <a href={project.websiteUrl}>
-                      <GlobeIcon />
-                    </a>
-                  </Button>
-                ) : null}
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              {project.description ?? "No description provided."}
-            </CardContent>
-          </Card>
-        ))}
+        {isLoading
+          ? Array.from({ length: 12 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <CardTitle>
+                    <Skeleton className="h-5 w-3/4" />
+                  </CardTitle>
+                  <CardDescription>
+                    <Skeleton className="h-4 w-1/2" />
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-6 w-5/6" />
+                </CardContent>
+              </Card>
+            ))
+          : visibleProjects.map((project) => (
+              <Card
+                key={project.id}
+                className="focus:ring-primary transform cursor-pointer transition duration-200 ease-out hover:scale-105 hover:shadow-lg focus:scale-105 focus:ring-2 focus:outline-none"
+                onClick={() => router.push(`/projects/${project.id}`)}
+              >
+                <CardHeader>
+                  <CardTitle>{project.name}</CardTitle>
+                  <CardDescription className="flex gap-1">
+                    {
+                      <Badge variant="secondary">
+                        {project.address ?? "No address provided"}
+                      </Badge>
+                    }
+                  </CardDescription>
+                  <CardAction className="flex gap-2">
+                    <Button variant="secondary" size="icon" className="size-8">
+                      <a href={`mailto:${project.email}`}>
+                        <MailIcon />
+                      </a>
+                    </Button>
+                    {project.website_url ? (
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        className="size-8"
+                      >
+                        <a href={project.website_url}>
+                          <GlobeIcon />
+                        </a>
+                      </Button>
+                    ) : null}
+                  </CardAction>
+                </CardHeader>
+                <CardContent>
+                  {project.description ?? "No description provided."}
+                </CardContent>
+              </Card>
+            ))}
       </div>
     </div>
   );
