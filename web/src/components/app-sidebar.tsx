@@ -59,7 +59,7 @@ const data: {
       items: [
         { title: "Dashboard", href: "/dashboard/statistics" },
         { title: "Admin Back Office", href: "/dashboard/admin-bak-office" },
-        { title: "Content Management:", href: "/dashboard/content-management:" },
+        { title: "Content Management", href: "/dashboard/content" },
         { title: "User Management", href: "/dashboard/user-Management" },
         // { title: "Users", href: "/dashboard/admin/users", perm: "adminArea" }, // exemple d'item protégé
       ],
