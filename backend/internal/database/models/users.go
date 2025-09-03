@@ -10,7 +10,7 @@ type User struct {
 	PasswordHash string    `json:"-" gorm:"type:text;not null"`
 	FounderID    *uint64   `json:"founder_id,omitempty" gorm:"type:bigint"`
 	InvestorID   *uint64   `json:"investor_id,omitempty" gorm:"type:bigint"`
-	ImagePath    *string   `json:"image_path,omitempty" gorm:"type:text"`
+	ImageURL     *string   `json:"image_url,omitempty" gorm:"type:text"`
 	CreatedAt    time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt    time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
