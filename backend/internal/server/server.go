@@ -99,6 +99,7 @@ func (s *HTTPServer) registerRoutes() {
 	}
 
 	v1routes.RegisterStartups(v1, s.db, s.log)
+	v1routes.RegisterFounders(v1, s.db, s.log)
 	v1routes.RegisterUsers(v1, s.db, s.log)
 	v1.Group("/news")
 	v1.Group("/events")
