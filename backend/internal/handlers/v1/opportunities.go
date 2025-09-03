@@ -43,7 +43,7 @@ func (h *OpportunityHandler) GetOpportunities(c *gin.Context) {
 	offset := (params.Page - 1) * params.PerPage
 
 	if !slices.Contains(validSortFields, params.Sort) {
-		h.log.WithField("sort", params.Sort).Warn("invalid sort field provided")
+		h.log.WithField("sort", params.Sort).Warn("slices.Contains()")
 		response.JSON(c, http.StatusBadRequest, gin.H{
 			"code":    2117,
 			"message": fmt.Sprintf("invalid sort field '%s'. Allowed fields: %v", params.Sort, validSortFields),
@@ -65,7 +65,7 @@ func (h *OpportunityHandler) GetOpportunities(c *gin.Context) {
 
 	var opportunities []models.Opportunity
 	if err := h.db.Order(orderBy).Offset(offset).Limit(params.PerPage).Find(&opportunities).Error; err != nil {
-		h.log.WithError(err).Error("failed to fetch opportunities")
+		h.log.WithError(err).Error("h.db.Order().Offset().Limit().Find().Error")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
 			"code":    "internal_error",
 			"message": "failed to retrieve opportunities",
@@ -96,7 +96,7 @@ func (h *OpportunityHandler) GetOpportunity(c *gin.Context) {
 	var opportunity models.Opportunity
 	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			h.log.WithField("id", id).Warn("opportunity not found")
+			h.log.WithField("id", id).Warn("h.db.Where().First().Error")
 			response.JSON(c, http.StatusNotFound, gin.H{
 				"code":    404,
 				"message": "opportunity not found",
@@ -123,7 +123,7 @@ func (h *OpportunityHandler) DeleteOpportunity(c *gin.Context) {
 	var opportunity models.Opportunity
 	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			h.log.WithField("id", id).Warn("opportunity not found for deletion")
+			h.log.WithField("id", id).Warn("h.db.Where().First().Error")
 			response.JSON(c, http.StatusNotFound, gin.H{
 				"code":    "not_found",
 				"message": "opportunity not found",
@@ -139,7 +139,7 @@ func (h *OpportunityHandler) DeleteOpportunity(c *gin.Context) {
 	}
 
 	if err := h.db.Delete(&opportunity).Error; err != nil {
-		h.log.WithError(err).WithField("id", id).Error("failed to delete opportunity")
+		h.log.WithError(err).WithField("id", id).Error("h.db.Delete().Error")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
 			"code":    "internal_error",
 			"message": "failed to delete opportunity",
@@ -165,7 +165,7 @@ func (h *OpportunityHandler) CreateOpportunity(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.log.WithError(err).Warn("invalid request payload for opportunity creation")
+		h.log.WithError(err).Warn(" c.ShouldBindJSON()")
 		response.JSON(c, http.StatusBadRequest, gin.H{
 			"code":    2100,
 			"message": "invalid request payload",
@@ -185,7 +185,7 @@ func (h *OpportunityHandler) CreateOpportunity(c *gin.Context) {
 	}
 
 	if err := h.db.Create(&opportunity).Error; err != nil {
-		h.log.WithError(err).Error("failed to create opportunity")
+		h.log.WithError(err).Error(" h.db.Create().Error")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
 			"code":    "internal_error",
 			"message": "failed to create opportunity",
@@ -206,7 +206,7 @@ func (h *OpportunityHandler) UpdateOpportunity(c *gin.Context) {
 	var opportunity models.Opportunity
 	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			h.log.WithField("id", id).Warn("opportunity not found for update")
+			h.log.WithField("id", id).Warn("h.db.Where().First().Error")
 			response.JSON(c, http.StatusNotFound, gin.H{
 				"code":    "not_found",
 				"message": "opportunity not found",
@@ -274,7 +274,7 @@ func (h *OpportunityHandler) UpdateOpportunity(c *gin.Context) {
 	}
 
 	if err := h.db.Model(&opportunity).Updates(updates).Error; err != nil {
-		h.log.WithError(err).WithField("id", id).Error("failed to update opportunity")
+		h.log.WithError(err).WithField("id", id).Error("h.db.Model().Updates().Error")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
 			"code":    "internal_error",
 			"message": "failed to update opportunity",
@@ -283,7 +283,7 @@ func (h *OpportunityHandler) UpdateOpportunity(c *gin.Context) {
 	}
 
 	if err := h.db.Where("id = ?", id).First(&opportunity).Error; err != nil {
-		h.log.WithError(err).WithField("id", id).Error("failed to fetch updated opportunity")
+		h.log.WithError(err).WithField("id", id).Error("h.db.Where().First().Error")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
 			"code":    "internal_error",
 			"message": "failed to retrieve updated opportunity",
