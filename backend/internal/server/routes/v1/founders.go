@@ -12,7 +12,7 @@ func RegisterFounders(r *gin.RouterGroup, db *gorm.DB, logger *logrus.Logger) {
 
 	r.GET("/founders", h.GetFounders)
 	r.GET("/founders/:id", h.GetFounder)
-	r.GET("/startups/:startup_id/founders", h.GetFoundersByStartup)
+	r.GET("/startups/:id/founders", h.GetFoundersByStartup)
 	r.GET("/founders/:id/image", h.GetFounderImage)
 
 	admin := r.Group("/admin/founders")
