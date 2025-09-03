@@ -11,6 +11,6 @@ func RegisterStartups(r *gin.RouterGroup, db *gorm.DB, logger *logrus.Logger) {
 	h := v1handlers.NewStartupsHandler(db, logger)
 
 	g := r.Group("/startups")
-	g.GET("/", h.ListStartups)
+	g.GET("", h.ListStartups)
 	g.GET("/:id", h.GetStartup)
 }

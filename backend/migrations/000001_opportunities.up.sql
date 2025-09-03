@@ -1,4 +1,4 @@
-CREATE TABLE opportunities (
+CREATE TABLE IF NOT EXISTS  opportunities (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     type VARCHAR(100) NOT NULL,
