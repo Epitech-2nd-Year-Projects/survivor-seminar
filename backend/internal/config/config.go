@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 	"time"
 )
@@ -145,7 +146,9 @@ func NewConfig() (*Config, error) {
 	}
 
 	var config *Config
-	if err := viper.Unmarshal(&config); err != nil {
+	if err := viper.Unmarshal(&config, func(config *mapstructure.DecoderConfig) {
+		config.TagName = "yaml"
+	}); err != nil {
 		return nil, fmt.Errorf("viper.Unmarshal(&config): %w", err)
 	}
 
