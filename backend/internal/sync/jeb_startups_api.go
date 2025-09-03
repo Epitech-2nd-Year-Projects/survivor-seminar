@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/api/jeb"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/client/jeb"
 )
 
 const (

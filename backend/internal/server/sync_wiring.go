@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	jeb "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/api/jeb"
+	jeb "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/client/jeb"
 	v1handlers "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/handlers/v1"
 	syc "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/sync"
 )
