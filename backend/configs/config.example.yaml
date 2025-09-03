@@ -14,7 +14,7 @@ auth:
   jwt:
     secret: ${JWT_SECRET}
     access_token_ttl: 15m
-    refresh_token_ttl: 7d
+    refresh_token_ttl: 10000m
   password_reset_ttl: 1h
   email_verification_ttl: 24h
 
