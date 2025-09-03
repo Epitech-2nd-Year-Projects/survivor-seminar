@@ -65,13 +65,13 @@ func (r *GormStartupsRepo) UpsertBatch(ctx context.Context, items []UpstreamItem
 		}
 
 		if s, ok := it.Payload["created_at"].(*string); ok && s != nil && *s != "" {
-			if t, perr := time.Parse("2005-01-02", *s); perr == nil {
+			if t, perr := time.Parse("2006-01-02", *s); perr == nil {
 				m.CreatedAt = t
 			} else {
 				m.CreatedAt = time.Now().UTC()
 			}
 		} else if v, ok := it.Payload["created_at"].(string); ok && v != "" {
-			if t, perr := time.Parse("2005-01-02", v); perr == nil {
+			if t, perr := time.Parse("2006-01-02", v); perr == nil {
 				m.CreatedAt = t
 			} else {
 				m.CreatedAt = time.Now().UTC()
