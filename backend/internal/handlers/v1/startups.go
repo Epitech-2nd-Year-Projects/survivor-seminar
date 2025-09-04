@@ -6,6 +6,7 @@ import (
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/response"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -117,5 +118,90 @@ func (h *StartupsHandler) GetStartup(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"data": result,
+	})
+}
+
+func (h *StartupsHandler) CreateStartup(ctx *gin.Context) {
+	var req models.Startup
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response.JSONError(ctx, http.StatusBadRequest,
+			"invalid_payload", "invalid request payload", err.Error())
+		return
+	}
+
+	if err := h.db.Create(&req).Error; err != nil {
+		h.log.WithError(err).Error("h.db.Create().Error")
+		response.JSONError(ctx, http.StatusInternalServerError,
+			"internal_error", "failed to create startup", nil)
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{
+		"message": "startup created successfully",
+		"data":    req,
+	})
+}
+
+func (h *StartupsHandler) UpdateStartup(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	var startup models.Startup
+	if err := h.db.Where("id = ?", id).First(&startup).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			response.JSONError(ctx, http.StatusNotFound, "not_found", "startup not found", nil)
+			return
+		}
+		response.JSONError(ctx, http.StatusInternalServerError, "internal_error", "failed to retrieve startup", nil)
+		return
+	}
+
+	var req map[string]interface{}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response.JSONError(ctx, http.StatusBadRequest,
+			"invalid_payload", "invalid request payload", err.Error())
+		return
+	}
+
+	if len(req) == 0 {
+		response.JSONError(ctx, http.StatusBadRequest,
+			"no_fields", "no fields provided for update", nil)
+		return
+	}
+
+	if err := h.db.Model(&startup).Updates(req).Error; err != nil {
+		response.JSONError(ctx, http.StatusInternalServerError,
+			"internal_error", "failed to update startup", nil)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "startup updated successfully",
+		"data":    startup,
+	})
+}
+
+func (h *StartupsHandler) DeleteStartup(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	var startup models.Startup
+	if err := h.db.Where("id = ?", id).First(&startup).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			response.JSONError(ctx, http.StatusNotFound,
+				"not_found", "startup not found", nil)
+			return
+		}
+		response.JSONError(ctx, http.StatusInternalServerError,
+			"internal_error", "failed to retrieve startup", nil)
+		return
+	}
+
+	if err := h.db.Delete(&startup).Error; err != nil {
+		response.JSONError(ctx, http.StatusInternalServerError,
+			"internal_error", "failed to delete startup", nil)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "startup deleted successfully",
 	})
 }
