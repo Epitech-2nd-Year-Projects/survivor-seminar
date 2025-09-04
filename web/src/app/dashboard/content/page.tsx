@@ -127,7 +127,7 @@ export default function ContentPage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-xl font-semibold">Content Management</h1>
-          <p className="text-sm text-muted-foreground">Gérez vos fiches projets (données factices).</p>
+          <p className="text-sm text-muted-foreground">Manage your projects (dummy data).</p>
         </div>
         <Link href="/dashboard/content/new">
           <Button className="gap-2">

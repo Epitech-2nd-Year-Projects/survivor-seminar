@@ -46,7 +46,7 @@ export default function StatisticsPage() {
       <div>
         <h1 className="text-xl font-semibold">Statistics</h1>
         <p className="text-sm text-muted-foreground">
-          Indicateurs clés (données factices pour la démo).
+          Statistics (dummy data for demo purposes).
         </p>
       </div>
 
