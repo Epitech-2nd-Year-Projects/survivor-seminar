@@ -13,4 +13,9 @@ func RegisterStartups(r *gin.RouterGroup, db *gorm.DB, logger *logrus.Logger) {
 	g := r.Group("/startups")
 	g.GET("", h.ListStartups)
 	g.GET("/:id", h.GetStartup)
+
+	admin := r.Group("/admin/startups")
+	admin.POST("", h.CreateStartup)
+	admin.PATCH("/:id", h.UpdateStartup)
+	admin.DELETE("/:id", h.DeleteStartup)
 }
