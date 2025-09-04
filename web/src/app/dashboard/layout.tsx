@@ -2,14 +2,6 @@ import * as React from "react"
 
 import { AppSidebar } from "@/components/app-sidebar"
 import DynamicBreadcrumbs from "@/components/dynamic-breadcrumbs";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
