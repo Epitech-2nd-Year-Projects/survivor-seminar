@@ -8,19 +8,23 @@ import (
 )
 
 type Service struct {
-	api        ExternalAPI
-	repo       Repository
-	log        *logrus.Logger
-	softDelete bool
+	api  ExternalAPI
+	repo Repository
+	log  *logrus.Logger
+}
+
+// Syncer is the minimal interface needed by the scheduler to run syncs.
+type Syncer interface {
+	FullSync(ctx context.Context) (int, error)
+	IncrementalSync(ctx context.Context) (int, error)
 }
 
 // NewService initializes a new Service instance with the given API, repository, logger, and soft delete configuration.
-func NewService(api ExternalAPI, repo Repository, log *logrus.Logger, softDelete bool) *Service {
+func NewService(api ExternalAPI, repo Repository, log *logrus.Logger) *Service {
 	return &Service{
-		api:        api,
-		repo:       repo,
-		log:        log,
-		softDelete: softDelete,
+		api:  api,
+		repo: repo,
+		log:  log,
 	}
 }
 
@@ -43,16 +47,7 @@ func (s *Service) FullSync(ctx context.Context) (int, error) {
 	}
 	s.log.Info("sync: all data upsert")
 
-	if s.softDelete {
-		ids := make(map[string]struct{}, len(items))
-		for _, it := range items {
-			ids[it.ExternalID] = struct{}{}
-		}
-		if err := s.repo.SoftDeleteMissing(ctx, ids); err != nil {
-			s.log.WithError(err).WithField("kept", len(ids)).Error("s.repo.SoftDeleteMissing()")
-			return len(items), err
-		}
-	}
+	// note: no deletion of records missing upstream; local DB is the source of truth
 
 	if err := s.repo.UpdateIncrementalWatermark(ctx, time.Now().UTC()); err != nil {
 		s.log.WithError(err).Warn("s.repo.UpdateIncrementalWatermark")

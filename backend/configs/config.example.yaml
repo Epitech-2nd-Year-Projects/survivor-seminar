@@ -30,7 +30,6 @@ api:
 sync:
   full_import: on_startup # on_startup | manual
   incremental_cron: "0 */6 * * *"
-  soft_delete: true
 
 logging:
   level: info  # debug | info | warn | error
@@ -61,8 +60,14 @@ security:
 
 storage:
   media:
-    provider: local # local | s3 | gcs
+    provider: s3 # local | s3 | gcs
     local_path: ./uploads
+    public_base_url: https://<your-cloudfront-domain>
+    s3:
+      bucket: <your-bucket-name>
+      region: <aws-region>
+      endpoint: ""
+      force_path_style: false
 
 notifications:
   email:
