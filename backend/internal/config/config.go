@@ -68,7 +68,6 @@ type RetryConfig struct {
 type SyncConfig struct {
 	FullImport      string `yaml:"full_import"`
 	IncrementalCron string `yaml:"incremental_cron"`
-	SoftDelete      bool   `yaml:"soft_delete"`
 }
 
 type LoggingConfig struct {
@@ -108,8 +107,17 @@ type StorageConfig struct {
 }
 
 type MediaConfig struct {
-	Provider  string `yaml:"provider"`
-	LocalPath string `yaml:"local_path"`
+	Provider      string    `yaml:"provider"`
+	LocalPath     string    `yaml:"local_path"`
+	S3            *S3Config `yaml:"s3"`
+	PublicBaseURL string    `yaml:"public_base_url"`
+}
+
+type S3Config struct {
+	Bucket         string `yaml:"bucket"`
+	Region         string `yaml:"region"`
+	Endpoint       string `yaml:"endpoint"`
+	ForcePathStyle bool   `yaml:"force_path_style"`
 }
 
 type NotificationsConfig struct {
