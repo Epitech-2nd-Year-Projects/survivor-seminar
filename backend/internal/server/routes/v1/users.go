@@ -10,11 +10,11 @@ import (
 func RegisterUsers(r *gin.RouterGroup, db *gorm.DB, logger *logrus.Logger) {
 	h := v1handlers.NewUsersHandler(db, logger)
 
-	g := r.Group("/users")
-	g.GET("", h.GetUsers)
-	g.GET("/:id", h.GetUser)
-	g.GET("/email/:email", h.GetUserByEmail)
-	g.GET("/:id/image", h.GetUserImage)
+	users := r.Group("/users")
+	users.GET("", h.GetUsers)
+	users.GET("/:id", h.GetUser)
+	users.GET("/email/:email", h.GetUserByEmail)
+	users.GET("/:id/image", h.GetUserImage)
 
 	admin := r.Group("/admin/users")
 	admin.POST("", h.CreateUser)

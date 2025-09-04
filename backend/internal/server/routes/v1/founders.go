@@ -10,10 +10,11 @@ import (
 func RegisterFounders(r *gin.RouterGroup, db *gorm.DB, logger *logrus.Logger) {
 	h := v1handlers.NewFoundersHandler(db, logger)
 
-	r.GET("/founders", h.GetFounders)
-	r.GET("/founders/:id", h.GetFounder)
-	r.GET("/startups/:id/founders", h.GetFoundersByStartup)
-	r.GET("/founders/:id/image", h.GetFounderImage)
+	founders := r.Group("/founders")
+	founders.GET("", h.GetFounders)
+	founders.GET("/:id", h.GetFounder)
+	founders.GET("/startups/:id/founders", h.GetFoundersByStartup)
+	founders.GET("/:id/image", h.GetFounderImage)
 
 	admin := r.Group("/admin/founders")
 	admin.POST("", h.CreateFounder)
