@@ -19,7 +19,7 @@ type Props = {
 };
 
 function humanize(segment: string, titleMap?: Record<string, string>) {
-  if (titleMap && titleMap[segment]) return titleMap[segment];
+  if (titleMap?.[segment]) return titleMap[segment];
   const s = segment.replace(/-/g, " ");
   return s.charAt(0).toUpperCase() + s.slice(1);
 }

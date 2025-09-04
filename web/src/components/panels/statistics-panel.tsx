@@ -1,8 +1,6 @@
 "use client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { BoomBox } from "lucide-react";
 import { redirect } from "next/navigation";
 
 export function StatisticsPanel() {
