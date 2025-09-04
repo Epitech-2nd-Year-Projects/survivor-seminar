@@ -105,6 +105,7 @@ func (s *HTTPServer) registerRoutes() {
 	v1routes.RegisterEvents(v1, s.db, s.log)
 	v1routes.RegisterOpportunities(v1, s.db, s.log)
 	v1routes.RegisterPartners(v1, s.db, s.log)
+	v1routes.RegisterFounders(v1, s.db, s.log)
 	v1.Group("/sectors")
 	v1.Group("/locations")
 	v1.Group("/tags")
