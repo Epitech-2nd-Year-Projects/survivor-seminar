@@ -5,6 +5,7 @@ import (
 
 	jeb "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/client/jeb"
 	v1handlers "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/handlers/v1"
+	storageS3 "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/storage/s3"
 	syc "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/sync"
 )
 
@@ -16,10 +17,22 @@ func (h *HTTPServer) initSync() {
 	}
 
 	jebClient := jeb.NewClient(h.cfg)
-	api := syc.NewJEBStartupsAPI(jebClient)
-	repo := syc.NewGormStartupsRepo(h.db, h.log)
-	svc := syc.NewService(api, repo, h.log, h.cfg.Sync.SoftDelete)
-	sched := syc.NewScheduler(svc, h.log)
+
+	var uploader storageS3.Uploader
+	if h.cfg.Storage.Media.Provider == "s3" && h.cfg.Storage.Media.S3 != nil {
+		if up, err := storageS3.NewUploader(context.Background(), h.cfg.Storage.Media); err != nil {
+			h.log.WithError(err).Warn("failed to initialize S3 uploader; image sync disabled")
+		} else {
+			uploader = up
+		}
+	}
+
+	svcStartups := syc.NewService(syc.NewJEBStartupsAPI(jebClient), syc.NewGormStartupsRepo(h.db, h.log), h.log, h.cfg.Sync.SoftDelete)
+	svcNews := syc.NewService(syc.NewJEBNewsAPI(jebClient), syc.NewGormNewsRepo(h.db, h.log, uploader, jebClient), h.log, h.cfg.Sync.SoftDelete)
+	svcEvents := syc.NewService(syc.NewJEBEventsAPI(jebClient), syc.NewGormEventsRepo(h.db, h.log, uploader, jebClient), h.log, h.cfg.Sync.SoftDelete)
+	svcUsers := syc.NewService(syc.NewJEBUsersAPI(jebClient), syc.NewGormUsersRepo(h.db, h.log, uploader, jebClient), h.log, h.cfg.Sync.SoftDelete)
+	multi := syc.NewMultiService([]syc.Syncer{svcStartups, svcNews, svcEvents, svcUsers}, h.log)
+	sched := syc.NewScheduler(multi, h.log)
 	h.sched = sched
 
 	g := h.Engine
@@ -36,7 +49,7 @@ func (h *HTTPServer) initSync() {
 
 	if h.cfg.Sync.IncrementalCron != "" {
 		if _, err := sched.Schedule(h.cfg.Sync.IncrementalCron, func(ctx context.Context) {
-			if n, err := svc.IncrementalSync(ctx); err != nil {
+			if n, err := multi.IncrementalSync(ctx); err != nil {
 				h.log.WithError(err).Error("scheduled incremental sync failed")
 			} else {
 				h.log.WithField("count", n).Info("scheduled incremental sync completed")
