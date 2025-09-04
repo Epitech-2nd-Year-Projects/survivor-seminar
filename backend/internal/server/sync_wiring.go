@@ -27,10 +27,10 @@ func (h *HTTPServer) initSync() {
 		}
 	}
 
-	svcStartups := syc.NewService(syc.NewJEBStartupsAPI(jebClient), syc.NewGormStartupsRepo(h.db, h.log), h.log, h.cfg.Sync.SoftDelete)
-	svcNews := syc.NewService(syc.NewJEBNewsAPI(jebClient), syc.NewGormNewsRepo(h.db, h.log, uploader, jebClient), h.log, h.cfg.Sync.SoftDelete)
-	svcEvents := syc.NewService(syc.NewJEBEventsAPI(jebClient), syc.NewGormEventsRepo(h.db, h.log, uploader, jebClient), h.log, h.cfg.Sync.SoftDelete)
-	svcUsers := syc.NewService(syc.NewJEBUsersAPI(jebClient), syc.NewGormUsersRepo(h.db, h.log, uploader, jebClient), h.log, h.cfg.Sync.SoftDelete)
+	svcStartups := syc.NewService(syc.NewJEBStartupsAPI(jebClient), syc.NewGormStartupsRepo(h.db, h.log), h.log)
+	svcNews := syc.NewService(syc.NewJEBNewsAPI(jebClient), syc.NewGormNewsRepo(h.db, h.log, uploader, jebClient), h.log)
+	svcEvents := syc.NewService(syc.NewJEBEventsAPI(jebClient), syc.NewGormEventsRepo(h.db, h.log, uploader, jebClient), h.log)
+	svcUsers := syc.NewService(syc.NewJEBUsersAPI(jebClient), syc.NewGormUsersRepo(h.db, h.log, uploader, jebClient), h.log)
 	multi := syc.NewMultiService([]syc.Syncer{svcStartups, svcNews, svcEvents, svcUsers}, h.log)
 	sched := syc.NewScheduler(multi, h.log)
 	h.sched = sched
