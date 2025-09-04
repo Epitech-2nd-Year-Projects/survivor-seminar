@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS startups (
-    id               BIGINT     PRIMARY KEY,
+    id               BIGSERIAL     PRIMARY KEY,
     name             TEXT       NOT NULL,
     legal_status     TEXT,
     address          TEXT,
