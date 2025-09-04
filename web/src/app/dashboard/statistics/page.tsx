@@ -50,7 +50,6 @@ export default function StatisticsPage() {
         </p>
       </div>
 
-      {/* 3 stats principales */}
       <div className="grid gap-4 md:grid-cols-3">
           <Link href="/dashboard/projects">
         <Card>
