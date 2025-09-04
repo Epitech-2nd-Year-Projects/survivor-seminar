@@ -13,17 +13,13 @@ import {
 } from "@/components/ui/breadcrumb";
 
 type Props = {
-  /** Préfixe du layout (ex: "/dashboard"). */
   basePath?: string;
-  /** Libellé du premier maillon (ex: "Dashboard"). */
   rootLabel?: string;
-  /** Pour renommer joliment certains segments. */
   titleMap?: Record<string, string>;
 };
 
 function humanize(segment: string, titleMap?: Record<string, string>) {
   if (titleMap && titleMap[segment]) return titleMap[segment];
-  // "data-fetching" -> "Data fetching"
   const s = segment.replace(/-/g, " ");
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
@@ -35,20 +31,17 @@ export default function DynamicBreadcrumbs({
 }: Props) {
   const pathname = usePathname();
 
-  // On retire le préfixe du layout pour ne garder que la partie variable
   const relative = pathname.startsWith(basePath)
     ? pathname.slice(basePath.length)
     : pathname;
 
   const segments = relative.split("/").filter(Boolean);
 
-  // on reconstruit les href cumulativement
   let acc = basePath === "/" ? "" : basePath;
 
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        {/* Racine */}
         <BreadcrumbItem className="hidden md:block">
           {segments.length ? (
             <BreadcrumbLink asChild>
@@ -58,8 +51,6 @@ export default function DynamicBreadcrumbs({
             <BreadcrumbPage>{rootLabel}</BreadcrumbPage>
           )}
         </BreadcrumbItem>
-
-        {/* Segments dynamiques */}
         {segments.map((seg, i) => {
           acc += `/${seg}`;
           const isLast = i === segments.length - 1;
