@@ -101,33 +101,15 @@ func (s *HTTPServer) registerRoutes() {
 	v1routes.RegisterStartups(v1, s.db, s.log)
 	v1routes.RegisterFounders(v1, s.db, s.log)
 	v1routes.RegisterUsers(v1, s.db, s.log)
+	v1routes.RegisterEvents(v1, s.db, s.log)
+	v1routes.RegisterOpportunities(v1, s.db, s.log)
 	v1.Group("/news")
-	v1.Group("/events")
 	v1.Group("/sectors")
 	v1.Group("/locations")
 	v1.Group("/tags")
 	v1.Group("/track")
 	v1.Group("/startup")
 	v1.Group("/conversations")
-
-	opportunityHandler := v1handlers.NewOpportunityHandler(s.log, s.db)
-	opportunities := v1.Group("/opportunities")
-	opportunities.GET("", opportunityHandler.GetOpportunities)
-	opportunities.GET("/:id", opportunityHandler.GetOpportunity)
-
-	v1.Group("/favorites")
-	v1.Group("/admin")
-
-	admin := v1.Group("/admin")
-	{
-		adminOpportunities := admin.Group("/opportunities")
-		adminOpportunities.POST("", opportunityHandler.CreateOpportunity)
-		adminOpportunities.PATCH("/:id", opportunityHandler.UpdateOpportunity)
-		adminOpportunities.GET("", opportunityHandler.GetOpportunities)
-		adminOpportunities.GET("/:id", opportunityHandler.GetOpportunity)
-		adminOpportunities.DELETE("/:id", opportunityHandler.DeleteOpportunity)
-	}
-
 }
 
 func (s *HTTPServer) Start() error {

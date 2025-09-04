@@ -9,4 +9,7 @@ CREATE TABLE IF NOT EXISTS events (
     end_date TIMESTAMP,
     capacity INT,
     image_url TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
