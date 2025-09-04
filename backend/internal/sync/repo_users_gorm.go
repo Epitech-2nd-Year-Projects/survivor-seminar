@@ -83,17 +83,26 @@ func (r *GormUsersRepo) UpsertBatch(ctx context.Context, items []UpstreamItem) e
 			}
 		}
 
+		updates := map[string]interface{}{
+			"name": m.Name,
+			"role": m.Role,
+		}
+
+		if m.FounderID != nil {
+			updates["founder_id"] = m.FounderID
+		}
+
+		if m.InvestorID != nil {
+			updates["investor_id"] = m.InvestorID
+		}
+
 		if err := r.db.WithContext(ctx).Clauses(clause.OnConflict{
-			Columns: []clause.Column{{Name: "email"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{
-				"name":        m.Name,
-				"role":        m.Role,
-				"founder_id":  m.FounderID,
-				"investor_id": m.InvestorID,
-			}),
+			Columns:   []clause.Column{{Name: "email"}},
+			DoUpdates: clause.Assignments(updates),
 		}).Create(&m).Error; err != nil {
 			return fmt.Errorf("r.db.WithContext(ctx).Clauses(OnConflict email).Create(): %w", err)
 		}
+
 		if m.ImageURL != nil && *m.ImageURL != "" {
 			_ = r.db.WithContext(ctx).Model(&models.User{}).
 				Where("email = ? AND (image_url IS NULL OR image_url = '')", m.Email).
