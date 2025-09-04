@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS founders (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(100),
+    email VARCHAR(255),
+    startup_id BIGINT NOT NULL,
+    image_url TEXT,
+    visibility BOOLEAN DEFAULT true,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
