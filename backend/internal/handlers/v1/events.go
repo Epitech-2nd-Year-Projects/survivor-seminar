@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
@@ -109,5 +110,196 @@ func (h *EventsHandler) GetEvent(c *gin.Context) {
 
 	response.JSON(c, http.StatusOK, gin.H{
 		"data": event,
+	})
+}
+
+func (h *EventsHandler) CreateEvent(c *gin.Context) {
+	var req struct {
+		Name           string     `json:"name" binding:"required,max=255"`
+		Description    *string    `json:"description,omitempty"`
+		EventType      *string    `json:"event_type,omitempty"`
+		Location       *string    `json:"location,omitempty"`
+		TargetAudience *string    `json:"target_audience,omitempty"`
+		StartDate      *time.Time `json:"start_date,omitempty"`
+		EndDate        *time.Time `json:"end_date,omitempty"`
+		Capacity       *int       `json:"capacity,omitempty"`
+		ImageURL       *string    `json:"image_url,omitempty"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.log.WithError(err).Warn("invalid request payload")
+		response.JSON(c, http.StatusBadRequest, gin.H{
+			"code":    2100,
+			"message": "invalid request payload",
+			"errors":  err.Error(),
+		})
+		return
+	}
+
+	event := models.Event{
+		Name:           req.Name,
+		Description:    req.Description,
+		EventType:      req.EventType,
+		Location:       req.Location,
+		TargetAudience: req.TargetAudience,
+		StartDate:      req.StartDate,
+		EndDate:        req.EndDate,
+		Capacity:       req.Capacity,
+		ImageURL:       req.ImageURL,
+	}
+
+	if err := h.db.Create(&event).Error; err != nil {
+		h.log.WithError(err).Error("h.db.Create().Error")
+		response.JSON(c, http.StatusInternalServerError, gin.H{
+			"code":    "internal_error",
+			"message": "failed to create event",
+		})
+		return
+	}
+
+	h.log.WithField("id", event.ID).Info("event created successfully")
+	response.JSON(c, http.StatusCreated, gin.H{
+		"message": "event created successfully",
+		"data":    event,
+	})
+}
+
+func (h *EventsHandler) UpdateEvent(c *gin.Context) {
+	id := c.Param("id")
+
+	var event models.Event
+	if err := h.db.Where("id = ?", id).First(&event).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			response.JSON(c, http.StatusNotFound, gin.H{
+				"code":    "not_found",
+				"message": "event not found",
+			})
+			return
+		}
+		h.log.WithError(err).WithField("id", id).Error("failed to fetch event for update")
+		response.JSON(c, http.StatusInternalServerError, gin.H{
+			"code":    "internal_error",
+			"message": "failed to retrieve event",
+		})
+		return
+	}
+
+	var req struct {
+		Name           *string    `json:"name,omitempty" binding:"omitempty,max=255"`
+		Description    *string    `json:"description,omitempty"`
+		EventType      *string    `json:"event_type,omitempty"`
+		Location       *string    `json:"location,omitempty"`
+		TargetAudience *string    `json:"target_audience,omitempty"`
+		StartDate      *time.Time `json:"start_date,omitempty"`
+		EndDate        *time.Time `json:"end_date,omitempty"`
+		Capacity       *int       `json:"capacity,omitempty"`
+		ImageURL       *string    `json:"image_url,omitempty"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.log.WithError(err).Warn("invalid request payload for event update")
+		response.JSON(c, http.StatusBadRequest, gin.H{
+			"code":    2100,
+			"message": "invalid request payload",
+			"errors":  err.Error(),
+		})
+		return
+	}
+
+	updates := make(map[string]interface{})
+	if req.Name != nil {
+		updates["name"] = *req.Name
+	}
+	if req.Description != nil {
+		updates["description"] = *req.Description
+	}
+	if req.EventType != nil {
+		updates["event_type"] = *req.EventType
+	}
+	if req.Location != nil {
+		updates["location"] = *req.Location
+	}
+	if req.TargetAudience != nil {
+		updates["target_audience"] = *req.TargetAudience
+	}
+	if req.StartDate != nil {
+		updates["start_date"] = *req.StartDate
+	}
+	if req.EndDate != nil {
+		updates["end_date"] = *req.EndDate
+	}
+	if req.Capacity != nil {
+		updates["capacity"] = *req.Capacity
+	}
+	if req.ImageURL != nil {
+		updates["image_url"] = *req.ImageURL
+	}
+
+	if len(updates) == 0 {
+		h.log.WithField("id", id).Warn("len(updates) == 0")
+		response.JSON(c, http.StatusBadRequest, gin.H{
+			"code":    2101,
+			"message": "no fields provided for update",
+		})
+		return
+	}
+
+	if err := h.db.Model(&event).Updates(updates).Error; err != nil {
+		h.log.WithError(err).WithField("id", id).Error("failed to update event")
+		response.JSON(c, http.StatusInternalServerError, gin.H{
+			"code":    "internal_error",
+			"message": "failed to update event",
+		})
+		return
+	}
+
+	if err := h.db.Where("id = ?", id).First(&event).Error; err != nil {
+		h.log.WithError(err).WithField("id", id).Error("failed to fetch updated event")
+		response.JSON(c, http.StatusInternalServerError, gin.H{
+			"code":    "internal_error",
+			"message": "failed to retrieve updated event",
+		})
+		return
+	}
+
+	h.log.WithField("id", id).Info("event updated successfully")
+	response.JSON(c, http.StatusOK, gin.H{
+		"message": "event updated successfully",
+		"data":    event,
+	})
+}
+
+func (h *EventsHandler) DeleteEvent(c *gin.Context) {
+	id := c.Param("id")
+
+	var event models.Event
+	if err := h.db.Where("id = ?", id).First(&event).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			response.JSON(c, http.StatusNotFound, gin.H{
+				"code":    "not_found",
+				"message": "event not found",
+			})
+			return
+		}
+		h.log.WithError(err).WithField("id", id).Error("failed to fetch event for deletion")
+		response.JSON(c, http.StatusInternalServerError, gin.H{
+			"code":    "internal_error",
+			"message": "failed to retrieve event",
+		})
+		return
+	}
+
+	if err := h.db.Delete(&event).Error; err != nil {
+		h.log.WithError(err).WithField("id", id).Error("failed to delete event")
+		response.JSON(c, http.StatusInternalServerError, gin.H{
+			"code":    "internal_error",
+			"message": "failed to delete event",
+		})
+		return
+	}
+
+	h.log.WithField("id", id).Info("event deleted successfully")
+	response.JSON(c, http.StatusOK, gin.H{
+		"message": "event deleted successfully",
 	})
 }
