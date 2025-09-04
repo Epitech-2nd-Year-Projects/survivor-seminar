@@ -126,8 +126,16 @@ type NotificationsConfig struct {
 }
 
 type EmailConfig struct {
-	Provider string `yaml:"provider"`
-	SMTPURL  string `yaml:"smtp_url"`
+	Provider string       `yaml:"provider"`
+	SMTPURL  string       `yaml:"smtp_url"`
+	From     string       `yaml:"from"`
+	Gmail    *GmailConfig `yaml:"gmail"`
+}
+
+type GmailConfig struct {
+	ClientID     string `yaml:"client_id"`
+	ClientSecret string `yaml:"client_secret"`
+	RefreshToken string `yaml:"refresh_token"`
 }
 
 type JobsConfig struct {
