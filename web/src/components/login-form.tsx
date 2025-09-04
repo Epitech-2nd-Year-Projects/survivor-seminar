@@ -1,9 +1,9 @@
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Image from "next/image"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Image from "next/image";
 
 export function LoginForm({
   className,
@@ -62,7 +62,7 @@ export function LoginForm({
                 </Button>
               </div>
               <div className="text-center text-sm">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <a href="#" className="underline underline-offset-4">
                   Sign up
                 </a>
@@ -70,7 +70,13 @@ export function LoginForm({
             </div>
           </form>
           <div className="bg-muted relative hidden md:block">
-            <Image src="/LoginImage.png" alt="Image" width={1000} height={1000} className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.8]" />
+            <Image
+              src="/LoginImage.png"
+              alt="Image"
+              width={1000}
+              height={1000}
+              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.8]"
+            />
           </div>
         </CardContent>
       </Card>
@@ -79,5 +85,5 @@ export function LoginForm({
         and <a href="#">Privacy Policy</a>.
       </div>
     </div>
-  )
+  );
 }

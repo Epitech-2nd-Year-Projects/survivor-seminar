@@ -1,0 +1,5 @@
+.vscode/
+.idea/
+back
+configs/config.yaml
+.env

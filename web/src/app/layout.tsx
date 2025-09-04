@@ -1,8 +1,9 @@
 import "@/styles/globals.css";
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "@/components/theme-provider";
 
 import { type Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Inter } from "next/font/google";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "Survivor",
@@ -10,15 +11,19 @@ export const metadata: Metadata = {
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-const geist = Geist({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-geist-sans",
+  variable: "--font-inter",
 });
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <>
-      <html lang="en" suppressHydrationWarning className={geist.className}>
+      <html lang="en" suppressHydrationWarning className={inter.className}>
         <head />
         <body>
           <ThemeProvider
@@ -27,11 +32,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <Providers>{children}</Providers>
           </ThemeProvider>
         </body>
       </html>
     </>
-  )
+  );
 }
-

@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS sync_state (
+    name TEXT PRIMARY KEY,
+    watermark TIMESTAMPTZ NOT NULL
+);
+
