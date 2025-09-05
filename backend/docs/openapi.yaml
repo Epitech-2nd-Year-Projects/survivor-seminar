@@ -999,6 +999,14 @@ definitions:
     type: object
   response.PageMeta:
     properties:
+      has_next:
+        description: Whether there is a next page
+        example: true
+        type: boolean
+      has_prev:
+        description: Whether there is a previous page
+        example: false
+        type: boolean
       page:
         description: Current page number (1-based)
         example: 1

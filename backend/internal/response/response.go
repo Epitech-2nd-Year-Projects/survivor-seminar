@@ -20,6 +20,10 @@ type PageMeta struct {
 	PerPage int `json:"per_page" example:"20" minimum:"1"`
 	// Total number of items available
 	Total int `json:"total" example:"123" minimum:"0"`
+	// Whether there is a next page
+	HasNext bool `json:"has_next" example:"true"`
+	// Whether there is a previous page
+	HasPrev bool `json:"has_prev" example:"false"`
 }
 
 func JSON(c *gin.Context, status int, data interface{}) {
