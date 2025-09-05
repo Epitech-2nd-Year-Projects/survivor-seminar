@@ -28,7 +28,7 @@ api:
       backoff: 5s
 
 sync:
-  full_import: on_startup # on_startup | manual
+  full_import: manual # on_startup | manual
   incremental_cron: "0 */6 * * *"
 
 logging:
