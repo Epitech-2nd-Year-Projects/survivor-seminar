@@ -10,7 +10,7 @@ import (
 
 type scheduler struct {
 	c       *cron.Cron
-	svc     *Service
+	svc     Syncer
 	log     *logrus.Logger
 	status  *statusStore
 	queueCh chan queuedJob
@@ -22,7 +22,7 @@ type queuedJob struct {
 }
 
 // NewScheduler creates a new Scheduler instance with a cron job dispatcher, service, and logger.
-func NewScheduler(svc *Service, log *logrus.Logger) Scheduler {
+func NewScheduler(svc Syncer, log *logrus.Logger) Scheduler {
 	clog := cronLogger{
 		log: log,
 	}

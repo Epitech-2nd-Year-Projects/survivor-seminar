@@ -67,9 +67,6 @@ export function NavUser({ user }: { user: User }) {
                 <Settings />
                 Settings
               </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
               <DropdownMenuItem>
                 <Bell />
                 Notifications
