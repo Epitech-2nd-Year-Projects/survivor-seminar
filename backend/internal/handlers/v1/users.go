@@ -8,6 +8,7 @@ import (
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/middleware"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/response"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -139,6 +140,26 @@ func (h *UsersHandler) GetUserByEmail(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{
 		"data": user,
 	})
+}
+
+// GetMe returns the current authenticated user's profile
+func (h *UsersHandler) GetMe(c *gin.Context) {
+	claims := middleware.GetClaims(c)
+	if claims == nil {
+		response.JSON(c, http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "missing or invalid token"})
+		return
+	}
+	var user models.User
+	if err := h.db.Where("id = ?", claims.UserID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			response.JSON(c, http.StatusNotFound, gin.H{"code": "not_found", "message": "user not found"})
+			return
+		}
+		h.log.WithError(err).Error("failed to fetch current user")
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to retrieve profile"})
+		return
+	}
+	response.JSON(c, http.StatusOK, gin.H{"data": user})
 }
 
 // GetUserImage returns a specific user's image by ID'
