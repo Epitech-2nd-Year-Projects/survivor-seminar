@@ -37,7 +37,18 @@ func NewOpportunityHandler(log *logrus.Logger, db *gorm.DB) *OpportunityHandler 
 	}
 }
 
-// GetOpportunities returns a list of opportunities
+// GetOpportunities godoc
+// @Summary      List opportunities
+// @Description  Returns a paginated list of opportunities with sorting.
+// @Tags         Opportunities
+// @Param        page      query int    false "Page" default(1)
+// @Param        per_page  query int    false "Page size" default(20)
+// @Param        sort      query string false "Sort field" Enums(id,title,type,organism,deadline,created_at,updated_at) default(created_at)
+// @Param        order     query string false "Sort order" Enums(asc,desc) default(desc)
+// @Success      200 {object} response.OpportunityListResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /opportunities [get]
 func (h *OpportunityHandler) GetOpportunities(c *gin.Context) {
 	params := pagination.Parse(c)
 	offset := (params.Page - 1) * params.PerPage
@@ -89,7 +100,15 @@ func (h *OpportunityHandler) GetOpportunities(c *gin.Context) {
 	})
 }
 
-// GetOpportunity returns a specific opportunity by ID
+// GetOpportunity godoc
+// @Summary      Get opportunity
+// @Description  Retrieves an opportunity by ID.
+// @Tags         Opportunities
+// @Param        id path int true "Opportunity ID"
+// @Success      200 {object} response.OpportunityObjectResponse
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /opportunities/{id} [get]
 func (h *OpportunityHandler) GetOpportunity(c *gin.Context) {
 	id := c.Param("id")
 
@@ -116,7 +135,17 @@ func (h *OpportunityHandler) GetOpportunity(c *gin.Context) {
 	})
 }
 
-// DeleteOpportunity removes an opportunity by ID (Admin only)
+// DeleteOpportunity godoc
+// @Summary      Delete opportunity
+// @Description  Deletes an opportunity (admin required).
+// @Tags         Opportunities
+// @Security     BearerAuth
+// @Param        id path int true "Opportunity ID"
+// @Success      200 {object} response.MessageResponse
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/opportunities/{id} [delete]
 func (h *OpportunityHandler) DeleteOpportunity(c *gin.Context) {
 	id := c.Param("id")
 
@@ -153,6 +182,19 @@ func (h *OpportunityHandler) DeleteOpportunity(c *gin.Context) {
 	})
 }
 
+// CreateOpportunity godoc
+// @Summary      Create opportunity
+// @Description  Creates an opportunity (admin required).
+// @Tags         Opportunities
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.OpportunityCreateRequest true "Opportunity" Example({"title":"AI Grant","type":"grant","organism":"EU","deadline":"2025-12-31T00:00:00Z"})
+// @Success      201 {object} response.OpportunityObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/opportunities [post]
 func (h *OpportunityHandler) CreateOpportunity(c *gin.Context) {
 	var req struct {
 		Title        string     `json:"title" binding:"required,max=255"`
@@ -199,6 +241,22 @@ func (h *OpportunityHandler) CreateOpportunity(c *gin.Context) {
 		"data":    opportunity,
 	})
 }
+
+// UpdateOpportunity godoc
+// @Summary      Update opportunity
+// @Description  Updates an opportunity (admin required).
+// @Tags         Opportunities
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id      path   int    true  "Opportunity ID"
+// @Param        payload body   requests.OpportunityUpdateRequest true  "Fields to update" Example({"criteria":"New criteria","external_link":"https://..."})
+// @Success      200 {object} response.OpportunityObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/opportunities/{id} [patch]
 
 func (h *OpportunityHandler) UpdateOpportunity(c *gin.Context) {
 	id := c.Param("id")

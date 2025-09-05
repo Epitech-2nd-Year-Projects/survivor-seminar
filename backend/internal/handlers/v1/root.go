@@ -20,6 +20,13 @@ func NewRootHandler(cfg *config.Config) *RootHandler {
 	}
 }
 
+// Info godoc
+// @Summary      Basic information
+// @Description  Returns general information about the service and the API entrypoint.
+// @Tags         Health
+// @Produce      json
+// @Success      200 {object} map[string]interface{}
+// @Router       / [get]
 func (h *RootHandler) Info(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"name":    h.cfg.App.Name,

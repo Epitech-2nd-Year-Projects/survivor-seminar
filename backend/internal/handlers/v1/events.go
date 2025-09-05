@@ -37,6 +37,18 @@ func NewEventsHandler(log *logrus.Logger, db *gorm.DB) *EventsHandler {
 	}
 }
 
+// GetEvents godoc
+// @Summary      List events
+// @Description  Returns a paginated list of events with sorting.
+// @Tags         Events
+// @Param        page      query int    false "Page" default(1)
+// @Param        per_page  query int    false "Page size" default(20)
+// @Param        sort      query string false "Sort field" Enums(id,name,event_type,start_date,end_date,created_at,updated_at) default(start_date)
+// @Param        order     query string false "Sort order" Enums(asc,desc) default(desc)
+// @Success      200 {object} response.EventListResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /events [get]
 func (h *EventsHandler) GetEvents(c *gin.Context) {
 	params := pagination.Parse(c)
 	offset := (params.Page - 1) * params.PerPage
@@ -87,6 +99,15 @@ func (h *EventsHandler) GetEvents(c *gin.Context) {
 	})
 }
 
+// GetEvent godoc
+// @Summary      Get event
+// @Description  Retrieves an event by ID.
+// @Tags         Events
+// @Param        id path int true "Event ID"
+// @Success      200 {object} response.EventObjectResponse
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /events/{id} [get]
 func (h *EventsHandler) GetEvent(c *gin.Context) {
 	id := c.Param("id")
 
@@ -113,6 +134,19 @@ func (h *EventsHandler) GetEvent(c *gin.Context) {
 	})
 }
 
+// CreateEvent godoc
+// @Summary      Create event
+// @Description  Creates an event (admin required).
+// @Tags         Events
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.EventCreateRequest true "Event" Example({"name":"Conf 2025","start_date":"2025-10-01T09:00:00Z","event_type":"conference"})
+// @Success      201 {object} response.EventObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/events [post]
 func (h *EventsHandler) CreateEvent(c *gin.Context) {
 	var req struct {
 		Name           string     `json:"name" binding:"required,max=255"`
@@ -164,6 +198,21 @@ func (h *EventsHandler) CreateEvent(c *gin.Context) {
 	})
 }
 
+// UpdateEvent godoc
+// @Summary      Update event
+// @Description  Updates an event (admin required).
+// @Tags         Events
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id      path   int    true  "Event ID"
+// @Param        payload body   requests.EventUpdateRequest true  "Fields to update" Example({"location":"Paris","capacity":300})
+// @Success      200 {object} response.EventObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/events/{id} [patch]
 func (h *EventsHandler) UpdateEvent(c *gin.Context) {
 	id := c.Param("id")
 
@@ -269,6 +318,17 @@ func (h *EventsHandler) UpdateEvent(c *gin.Context) {
 	})
 }
 
+// DeleteEvent godoc
+// @Summary      Delete event
+// @Description  Deletes an event (admin required).
+// @Tags         Events
+// @Security     BearerAuth
+// @Param        id path int true "Event ID"
+// @Success      200 {object} response.MessageResponse
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/events/{id} [delete]
 func (h *EventsHandler) DeleteEvent(c *gin.Context) {
 	id := c.Param("id")
 

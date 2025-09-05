@@ -35,7 +35,18 @@ var validInvestorSortFields = []string{
 	"investment_focus",
 }
 
-// GetInvestors returns a list of investors
+// GetInvestors godoc
+// @Summary      List investors
+// @Description  Returns a paginated list of investors with sorting.
+// @Tags         Investors
+// @Param        page      query int    false "Page" default(1)
+// @Param        per_page  query int    false "Page size" default(20)
+// @Param        sort      query string false "Sort field" Enums(id,name,email,created_at,investor_type,investment_focus) default(created_at)
+// @Param        order     query string false "Sort order" Enums(asc,desc) default(desc)
+// @Success      200 {object} response.InvestorListResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /investors [get]
 func (h *InvestorsHandler) GetInvestors(c *gin.Context) {
 	params := pagination.Parse(c)
 	offset := (params.Page - 1) * params.PerPage
@@ -80,7 +91,15 @@ func (h *InvestorsHandler) GetInvestors(c *gin.Context) {
 	})
 }
 
-// GetInvestor returns a specific investor by ID
+// GetInvestor godoc
+// @Summary      Get investor
+// @Description  Retrieves an investor by ID.
+// @Tags         Investors
+// @Param        id path int true "Investor ID"
+// @Success      200 {object} response.InvestorObjectResponse
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /investors/{id} [get]
 func (h *InvestorsHandler) GetInvestor(c *gin.Context) {
 	id := c.Param("id")
 
@@ -100,7 +119,19 @@ func (h *InvestorsHandler) GetInvestor(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"data": investor})
 }
 
-// CreateInvestor creates a new investor
+// CreateInvestor godoc
+// @Summary      Create investor
+// @Description  Creates an investor (admin required).
+// @Tags         Investors
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.InvestorCreateRequest true "Investor" Example({"name":"VC Alpha","email":"contact@vcalpha.tld","investor_type":"VC","investment_focus":"Seed"})
+// @Success      201 {object} response.InvestorObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/investors [post]
 func (h *InvestorsHandler) CreateInvestor(c *gin.Context) {
 	var req struct {
 		Name            string  `json:"name" binding:"required"`
@@ -142,7 +173,21 @@ func (h *InvestorsHandler) CreateInvestor(c *gin.Context) {
 		"data":    investor})
 }
 
-// UpdateInvestor updates an investor by ID
+// UpdateInvestor godoc
+// @Summary      Update investor
+// @Description  Updates an investor (admin required).
+// @Tags         Investors
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id      path   int    true  "Investor ID"
+// @Param        payload body   requests.InvestorUpdateRequest true  "Fields to update" Example({"phone":"+33 1 23 45 67 89","description":"Early-stage investor"})
+// @Success      200 {object} response.InvestorObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/investors/{id} [patch]
 func (h *InvestorsHandler) UpdateInvestor(c *gin.Context) {
 	id := c.Param("id")
 
@@ -216,7 +261,17 @@ func (h *InvestorsHandler) UpdateInvestor(c *gin.Context) {
 	})
 }
 
-// DeleteInvestor removes an investor by ID (Admin only)
+// DeleteInvestor godoc
+// @Summary      Delete investor
+// @Description  Deletes an investor (admin required).
+// @Tags         Investors
+// @Security     BearerAuth
+// @Param        id path int true "Investor ID"
+// @Success      200 {object} response.MessageResponse
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/investors/{id} [delete]
 func (h *InvestorsHandler) DeleteInvestor(c *gin.Context) {
 	id := c.Param("id")
 

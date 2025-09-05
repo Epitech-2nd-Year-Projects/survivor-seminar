@@ -32,7 +32,18 @@ func NewAuthHandler(cfg *config.Config, db *gorm.DB, log *logrus.Logger, mailer 
 	return &AuthHandler{cfg: cfg, db: db, log: log, mailer: mailer}
 }
 
-// Register handles user registration with email, name, role, and password validation
+// Register godoc
+// @Summary      Sign up
+// @Description  Creates a user and returns the profile plus JWT tokens.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.AuthRegisterRequest true "Registration data" Example({"email":"john@doe.tld","name":"John Doe","role":"founder","password":"secret123"})
+// @Success      201 {object} response.AuthRegisterResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      409 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req struct {
 		Email      string  `json:"email" binding:"required,email"`
@@ -126,7 +137,18 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	response.JSON(c, http.StatusCreated, gin.H{"user": u, "tokens": pair})
 }
 
-// Login verifies credentials and returns a token pair
+// Login godoc
+// @Summary      Sign in
+// @Description  Verifies credentials and returns a JWT token pair.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.AuthLoginRequest true "Credentials" Example({"email":"john@doe.tld","password":"secret123"})
+// @Success      200 {object} response.AuthRegisterResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req struct {
 		Email    string `json:"email" binding:"required,email"`
@@ -160,7 +182,18 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"user": u, "tokens": pair})
 }
 
-// Refresh exchanges a valid refresh token for a new access token (and refresh token)
+// Refresh godoc
+// @Summary      Refresh tokens
+// @Description  Exchanges a valid refresh token for a new token pair.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.AuthRefreshRequest true "Refresh token" Example({"refresh_token":"<jwt>"})
+// @Success      200 {object} response.TokenPairResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req struct {
 		RefreshToken string `json:"refresh_token" binding:"required"`
@@ -191,7 +224,20 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"tokens": pair})
 }
 
-// VerifyEmail verifies the user's email using a token (from query or JSON)
+// VerifyEmail godoc
+// @Summary      Verify email
+// @Description  Verifies the user's email using a one-time token.
+// @Tags         Auth
+// @Produce      json
+// @Param        token query string false "Verification token"
+// @Param        payload body requests.AuthVerifyRequest false "Token in body" Example({"token":"<token>"})
+// @Success      200 {object} response.MessageResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /auth/verify [get]
+// @Router       /auth/verify [post]
 func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 	type reqBody struct {
 		Token string `json:"token"`
@@ -228,7 +274,16 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"message": "email verified"})
 }
 
-// ForgotPassword sends a password reset email if the user exists
+// ForgotPassword godoc
+// @Summary      Forgot password
+// @Description  Sends a password reset email (if the user exists).
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.AuthForgotPasswordRequest true "Email" Example({"email":"john@doe.tld"})
+// @Success      200 {object} response.MessageResponse
+// @Failure      400 {object} response.ErrorBody
+// @Router       /auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	var req struct {
 		Email string `json:"email" binding:"required,email"`
@@ -263,7 +318,19 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"message": "if the email exists, a reset link was sent"})
 }
 
-// ResetPassword resets a user's password using a valid reset token
+// ResetPassword godoc
+// @Summary      Reset password
+// @Description  Updates the password using a valid reset token.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.AuthResetPasswordRequest true "New password" Example({"token":"<token>","new_password":"secret123"})
+// @Success      200 {object} response.MessageResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var req struct {
 		Token       string `json:"token" binding:"required"`

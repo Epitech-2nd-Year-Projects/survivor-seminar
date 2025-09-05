@@ -36,7 +36,18 @@ func NewPartnersHandler(log *logrus.Logger, db *gorm.DB) *PartnersHandler {
 	}
 }
 
-// GetPartners returns a list of partners
+// GetPartners godoc
+// @Summary      List partners
+// @Description  Returns a paginated list of partners with sorting.
+// @Tags         Partners
+// @Param        page      query int    false "Page" default(1)
+// @Param        per_page  query int    false "Page size" default(20)
+// @Param        sort      query string false "Sort field" Enums(id,name,email,legal_status,partnership_type,created_at) default(created_at)
+// @Param        order     query string false "Sort order" Enums(asc,desc) default(desc)
+// @Success      200 {object} response.PartnerListResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /partners [get]
 func (h *PartnersHandler) GetPartners(c *gin.Context) {
 	params := pagination.Parse(c)
 	offset := (params.Page - 1) * params.PerPage
@@ -88,7 +99,15 @@ func (h *PartnersHandler) GetPartners(c *gin.Context) {
 	})
 }
 
-// GetPartner returns a specific partner by ID
+// GetPartner godoc
+// @Summary      Get partner
+// @Description  Retrieves a partner by ID.
+// @Tags         Partners
+// @Param        id path int true "Partner ID"
+// @Success      200 {object} response.PartnerObjectResponse
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /partners/{id} [get]
 func (h *PartnersHandler) GetPartner(c *gin.Context) {
 	id := c.Param("id")
 
@@ -115,6 +134,19 @@ func (h *PartnersHandler) GetPartner(c *gin.Context) {
 	})
 }
 
+// CreatePartner godoc
+// @Summary      Create partner
+// @Description  Creates a partner (admin required).
+// @Tags         Partners
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.PartnerCreateRequest true "Partner" Example({"name":"ACME Corp","email":"partners@acme.tld","partnership_type":"sponsor"})
+// @Success      201 {object} response.PartnerObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/partners [post]
 func (h *PartnersHandler) CreatePartner(c *gin.Context) {
 	var req struct {
 		Name            string     `json:"name" binding:"required,max=255"`
@@ -164,7 +196,21 @@ func (h *PartnersHandler) CreatePartner(c *gin.Context) {
 	})
 }
 
-// UpdatePartner updates a partner by ID
+// UpdatePartner godoc
+// @Summary      Update partner
+// @Description  Updates a partner (admin required).
+// @Tags         Partners
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id      path   int    true  "Partner ID"
+// @Param        payload body   requests.PartnerUpdateRequest true  "Fields to update" Example({"description":"Updated description"})
+// @Success      200 {object} response.PartnerObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/partners/{id} [patch]
 func (h *PartnersHandler) UpdatePartner(c *gin.Context) {
 	id := c.Param("id")
 
@@ -267,7 +313,17 @@ func (h *PartnersHandler) UpdatePartner(c *gin.Context) {
 	})
 }
 
-// DeletePartner removes a partner by ID (Admin only)
+// DeletePartner godoc
+// @Summary      Delete partner
+// @Description  Deletes a partner (admin required).
+// @Tags         Partners
+// @Security     BearerAuth
+// @Param        id path int true "Partner ID"
+// @Success      200 {object} response.MessageResponse
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/partners/{id} [delete]
 func (h *PartnersHandler) DeletePartner(c *gin.Context) {
 	id := c.Param("id")
 
