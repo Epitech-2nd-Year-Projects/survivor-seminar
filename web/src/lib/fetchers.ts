@@ -1,5 +1,4 @@
-import type { Project } from "@/types/projects";
-import type { User } from "@/types/users";
+import type { Project, User } from "@/types";
 
 interface GetProjectsApiResponse {
   data: Project[];
