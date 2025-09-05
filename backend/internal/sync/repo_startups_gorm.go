@@ -21,14 +21,14 @@ type syncState struct {
 
 func (syncState) TableName() string { return "sync_state" }
 
-// GormStartupsRepo persists startups into DB and tracks watermark.
+// GormStartupsRepo persists startups into DB and tracks watermark
 type GormStartupsRepo struct {
 	db    *gorm.DB
 	log   *logrus.Logger
 	scope string
 }
 
-// NewGormStartupsRepo initializes and returns a new instance of GormStartupsRepo with the given database and logger.
+// NewGormStartupsRepo initializes and returns a new instance of GormStartupsRepo with the given database and logger
 func NewGormStartupsRepo(db *gorm.DB, log *logrus.Logger) *GormStartupsRepo {
 	return &GormStartupsRepo{
 		db:    db,
@@ -37,7 +37,7 @@ func NewGormStartupsRepo(db *gorm.DB, log *logrus.Logger) *GormStartupsRepo {
 	}
 }
 
-// UpsertBatch inserts or updates a batch of upstream items in the database using their primary keys.
+// UpsertBatch inserts or updates a batch of upstream items in the database using their primary keys
 func (r *GormStartupsRepo) UpsertBatch(ctx context.Context, items []UpstreamItem) error {
 	if len(items) == 0 {
 		return nil
@@ -104,7 +104,7 @@ func (r *GormStartupsRepo) UpsertBatch(ctx context.Context, items []UpstreamItem
 	return nil
 }
 
-// LastIncrementalWatermark retrieves the last saved incremental watermark timestamp for the current repository scope.
+// LastIncrementalWatermark retrieves the last saved incremental watermark timestamp for the current repository scope
 func (r *GormStartupsRepo) LastIncrementalWatermark(ctx context.Context) (time.Time, error) {
 	var st syncState
 	if err := r.db.WithContext(ctx).First(&st, "name = ?", r.scope).Error; err != nil {
@@ -116,7 +116,7 @@ func (r *GormStartupsRepo) LastIncrementalWatermark(ctx context.Context) (time.T
 	return st.Watermark, nil
 }
 
-// UpdateIncrementalWatermark updates or inserts the current incremental watermark timestamp for the repository scope in the database.
+// UpdateIncrementalWatermark updates or inserts the current incremental watermark timestamp for the repository scope in the database
 func (r *GormStartupsRepo) UpdateIncrementalWatermark(ctx context.Context, ts time.Time) error {
 	st := syncState{Name: r.scope, Watermark: ts}
 	if err := r.db.WithContext(ctx).Clauses(clause.OnConflict{

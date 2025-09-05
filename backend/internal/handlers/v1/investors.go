@@ -106,7 +106,7 @@ func (h *InvestorsHandler) CreateInvestor(c *gin.Context) {
 		Name            string  `json:"name" binding:"required"`
 		LegalStatus     *string `json:"legal_status,omitempty"`
 		Address         *string `json:"address,omitempty"`
-		Email           string  `json:"email" binding:"required"`
+		Email           string  `json:"email,omitempty" binding:"omitempty,email,required"`
 		Phone           *string `json:"phone,omitempty"`
 		Description     *string `json:"description,omitempty"`
 		InvestorType    *string `json:"investor_type,omitempty"`
@@ -160,7 +160,7 @@ func (h *InvestorsHandler) UpdateInvestor(c *gin.Context) {
 		Name            *string `json:"name,omitempty"`
 		LegalStatus     *string `json:"legal_status,omitempty"`
 		Address         *string `json:"address,omitempty"`
-		Email           *string `json:"email,omitempty"`
+		Email           *string `json:"email,omitempty" binding:"omitempty,email"`
 		Phone           *string `json:"phone,omitempty"`
 		Description     *string `json:"description,omitempty"`
 		InvestorType    *string `json:"investor_type,omitempty"`

@@ -11,12 +11,12 @@ type cronLogger struct {
 	log *logrus.Logger
 }
 
-// Info logs a message at the Info log level with optional key-value pairs for structured logging.
+// Info logs a message at the Info log level with optional key-value pairs for structured logging
 func (l cronLogger) Info(msg string, keysAndValues ...interface{}) {
 	l.log.WithFields(kvToFields(keysAndValues...)).Info(msg)
 }
 
-// Error logs an error message with an associated error, message, and optional key-value pairs for structured logging.
+// Error logs an error message with an associated error, message, and optional key-value pairs for structured logging
 func (l cronLogger) Error(err error, msg string, keysAndValues ...interface{}) {
 	l.log.WithError(err).WithFields(kvToFields(keysAndValues...)).Error(msg)
 }

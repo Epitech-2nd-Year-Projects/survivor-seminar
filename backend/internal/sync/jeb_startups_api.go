@@ -17,14 +17,14 @@ type JEBStartupsAPI struct {
 	c *jeb.Client
 }
 
-// NewJEBStartupsAPI creates a new instance of JEBStartupsAPI with the provided JEB client.
+// NewJEBStartupsAPI creates a new instance of JEBStartupsAPI with the provided JEB client
 func NewJEBStartupsAPI(c *jeb.Client) *JEBStartupsAPI {
 	return &JEBStartupsAPI{
 		c: c,
 	}
 }
 
-// FetchFull retrieves all startups and their detailed information from the JEB API, returning a list of UpstreamItems.
+// FetchFull retrieves all startups and their detailed information from the JEB API, returning a list of UpstreamItems
 func (a *JEBStartupsAPI) FetchFull(ctx context.Context) ([]UpstreamItem, error) {
 	skip := 0
 	items := make([]UpstreamItem, 0, 256)
@@ -70,8 +70,8 @@ func (a *JEBStartupsAPI) FetchFull(ctx context.Context) ([]UpstreamItem, error) 
 }
 
 func (a *JEBStartupsAPI) FetchIncremental(ctx context.Context, since time.Time) ([]UpstreamItem, error) {
-	// The public API does not expose updated/modified timestamps nor since filters.
-	// For now, fallback to full fetch.
+	// The public API does not expose updated/modified timestamps nor since filters
+	// For now, fallback to full fetch
 	return a.FetchFull(ctx)
 }
 

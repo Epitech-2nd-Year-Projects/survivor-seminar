@@ -2,7 +2,7 @@ app:
   name: jeb-backend
   env: development  # development | staging | production
   port: 8080
-  base_url: http://localhost:8080
+  base_url: http://localhost:1111
   version: v1
 
 database:
@@ -14,7 +14,7 @@ auth:
   jwt:
     secret: ${JWT_SECRET}
     access_token_ttl: 15m
-    refresh_token_ttl: 10000m
+    refresh_token_ttl: 168h
   password_reset_ttl: 1h
   email_verification_ttl: 24h
 
@@ -72,7 +72,8 @@ storage:
 notifications:
   email:
     provider: smtp
-    smtp_url: ${SMTP_URL}
+    from: <your-mail>
+    smtp_url: <your-smtp-link>
   in_app: true
 
 jobs:

@@ -7,13 +7,13 @@ import (
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/client/jeb"
 )
 
-// JEBUsersAPI implements ExternalAPI for users using the JEB client.
+// JEBUsersAPI implements ExternalAPI for users using the JEB client
 type JEBUsersAPI struct{ c *jeb.Client }
 
-// NewJEBUsersAPI creates a new instance of JEBUsersAPI using the provided JEB client.
+// NewJEBUsersAPI creates a new instance of JEBUsersAPI using the provided JEB client
 func NewJEBUsersAPI(c *jeb.Client) *JEBUsersAPI { return &JEBUsersAPI{c: c} }
 
-// FetchFull retrieves the complete list of users from the JEB API as a single operation since pagination is not supported.
+// FetchFull retrieves the complete list of users from the JEB API as a single operation since pagination is not supported
 func (a *JEBUsersAPI) FetchFull(ctx context.Context) ([]UpstreamItem, error) {
 	lst, err := a.c.ReadUsers(ctx, 0, 0)
 	if err != nil {
