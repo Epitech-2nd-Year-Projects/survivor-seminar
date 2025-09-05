@@ -1,18 +1,27 @@
-import type { Project } from "@/types";
+import type { Event, News, Opportunity, Pagination, Project } from "@/types";
 
 interface GetProjectsApiResponse {
   data: Project[];
-  pagination: {
-    has_next: boolean;
-    has_prev: boolean;
-    page: number;
-    per_page: number;
-    total: number;
-  };
+  pagination: Pagination;
 }
 
 interface GetProjectApiResponse {
   data: Project;
+}
+
+interface GetEventsApiResponse {
+  data: Event[];
+  pagination: Pagination;
+}
+
+interface GetNewsApiResponse {
+  data: News[];
+  pagination: Pagination;
+}
+
+interface GetOpportunitiesApiResponse {
+  data: Opportunity[];
+  pagination: Pagination;
 }
 
 export async function fetchProjects(): Promise<Project[]> {
@@ -34,5 +43,38 @@ export async function fetchProject(id: number): Promise<Project> {
   }
 
   const json = (await res.json()) as GetProjectApiResponse;
+  return json.data;
+}
+
+export async function fetchEvents(): Promise<Event[]> {
+  const res = await fetch("/api/v1/events");
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch events: ${res.status}`);
+  }
+
+  const json = (await res.json()) as GetEventsApiResponse;
+  return json.data;
+}
+
+export async function fetchNews(): Promise<News[]> {
+  const res = await fetch("/api/v1/news");
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch news: ${res.status}`);
+  }
+
+  const json = (await res.json()) as GetNewsApiResponse;
+  return json.data;
+}
+
+export async function fetchOpportunities(): Promise<Opportunity[]> {
+  const res = await fetch("/api/v1/opportunities");
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch opportunities: ${res.status}`);
+  }
+
+  const json = (await res.json()) as GetOpportunitiesApiResponse;
   return json.data;
 }
