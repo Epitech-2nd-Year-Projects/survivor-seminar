@@ -1,4 +1,11 @@
-import type { Project, User, Event, News, Opportunity, Pagination, Project } from "@/types";
+import type {
+  User,
+  Event,
+  News,
+  Opportunity,
+  Pagination,
+  Project,
+} from "@/types";
 
 interface GetProjectsApiResponse {
   data: Project[];

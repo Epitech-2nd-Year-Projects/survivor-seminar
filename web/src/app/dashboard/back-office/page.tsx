@@ -11,8 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fetchProjects, fetchUsers } from "@/lib/fetchers";
-import type { Project } from "@/types/projects";
-import type { User } from "@/types/users";
+import type { Project, User } from "@/types";
 import UsersTable from "@/components/tables/usersTable";
 
 export default function BackOfficePage() {
