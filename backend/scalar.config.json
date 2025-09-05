@@ -1,12 +1,6 @@
 {
   "$schema": "https://cdn.scalar.com/schema/scalar-config.json",
-  "subdomain": "my-awesome-documentation",
-  "references": [
-    {
-      "name": "API Reference",
-      "path": "docs/openapi.yaml"
-    }
-  ],
+  "subdomain": "survival-seminar-api-doc",
   "guides": [
     {
       "name": "Survivor Seminar Documentation",
@@ -18,4 +12,12 @@
       ]
     }
   ],
+  "references": [
+    {
+      "name": "API Reference",
+      "path": "docs/openapi.yaml"
+    }
+  ],
+  "publishOnMerge": true,
+  "theme": "purple"
 }
