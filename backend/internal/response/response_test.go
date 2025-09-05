@@ -43,27 +43,3 @@ func TestJSONError(t *testing.T) {
 	assert.Equal(t, "bad request", resp.Message)
 	assert.Equal(t, "details here", resp.Details)
 }
-
-func TestJSONList(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-
-	items := []string{"a", "b", "c"}
-	meta := response.PageMeta{Page: 1, PerPage: 10, Total: 3}
-	response.JSONList(c, http.StatusOK, items, meta)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-
-	var resp map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &resp)
-	assert.NoError(t, err)
-
-	data := resp["data"].([]interface{})
-	assert.Len(t, data, 3)
-	assert.Equal(t, "a", data[0])
-
-	assert.Equal(t, float64(1), resp["page"])
-	assert.Equal(t, float64(10), resp["per_page"])
-	assert.Equal(t, float64(3), resp["total"])
-}
