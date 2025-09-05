@@ -24,6 +24,13 @@ func NewHealthHandler(cfg *config.Config, db *gorm.DB) *HealthHandler {
 	}
 }
 
+// Health godoc
+// @Summary      API health status
+// @Description  Returns dependencies state (DB, etc.), uptime, environment and version.
+// @Tags         Health
+// @Produce      json
+// @Success      200 {object} map[string]interface{}
+// @Router       /health [get]
 func (h *HealthHandler) Health(c *gin.Context) {
 	deps := gin.H{"queue": "ok", "storage": "ok"}
 	if h.db != nil {

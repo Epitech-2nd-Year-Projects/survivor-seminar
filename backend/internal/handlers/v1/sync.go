@@ -19,7 +19,14 @@ func NewSyncHandler(log *logrus.Logger, sched sync.Scheduler) *SyncHandler {
 	return &SyncHandler{log: log, sched: sched}
 }
 
-// Status provides the current state of the scheduler, including running state, queue length, and sync timestamps.
+// Status godoc
+// @Summary      Sync status
+// @Description  Returns the scheduler state (running flag, queue length, last runs).
+// @Tags         Admin/Sync
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200 {object} response.SyncStatusResponse
+// @Router       /admin/sync/status [get]
 func (h *SyncHandler) Status(c *gin.Context) {
 	st := h.sched.Status()
 	response.JSON(c, http.StatusOK, gin.H{
@@ -30,7 +37,15 @@ func (h *SyncHandler) Status(c *gin.Context) {
 	})
 }
 
-// TriggerFull handles the initiation of a full synchronization process and returns the queued status upon success or an error.
+// TriggerFull godoc
+// @Summary      Trigger full sync
+// @Description  Queues a full synchronization.
+// @Tags         Admin/Sync
+// @Security     BearerAuth
+// @Produce      json
+// @Success      202 {object} map[string]string
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/sync/full [post]
 func (h *SyncHandler) TriggerFull(c *gin.Context) {
 	if err := h.sched.TriggerFullSync(c.Request.Context()); err != nil {
 		response.JSON(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -39,7 +54,15 @@ func (h *SyncHandler) TriggerFull(c *gin.Context) {
 	response.JSON(c, http.StatusAccepted, gin.H{"status": "queued", "type": "full"})
 }
 
-// TriggerIncremental handles the initiation of an incremental synchronization process and returns the queued status or an error.
+// TriggerIncremental godoc
+// @Summary      Trigger incremental sync
+// @Description  Queues an incremental synchronization.
+// @Tags         Admin/Sync
+// @Security     BearerAuth
+// @Produce      json
+// @Success      202 {object} map[string]string
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/sync/incremental [post]
 func (h *SyncHandler) TriggerIncremental(c *gin.Context) {
 	if err := h.sched.TriggerIncrementalSync(c.Request.Context()); err != nil {
 		response.JSON(c, http.StatusInternalServerError, gin.H{"error": err.Error()})

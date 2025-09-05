@@ -33,6 +33,23 @@ func NewStartupsHandler(db *gorm.DB, log *logrus.Logger) *StartupsHandler {
 	}
 }
 
+// ListStartups godoc
+// @Summary      List startups
+// @Description  Returns a paginated list of startups with filters and sorting.
+// @Tags         Startups
+// @Param        page           query int    false "Page" default(1)
+// @Param        per_page       query int    false "Page size" default(20)
+// @Param        sort           query string false "Sort field" default(created_at)
+// @Param        order          query string false "Sort order" Enums(asc,desc) default(desc)
+// @Param        sector         query string false "Sector filter" Enums(tech,health,finance)
+// @Param        maturity       query string false "Maturity filter" Enums(early,middle,late)
+// @Param        project_status query string false "Project status" Enums(ongoing,completed)
+// @Param        founder        query string false "Founder filter"
+// @Param        created_at     query string false "CreatedAt filter"
+// @Success      200 {object} response.StartupListResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /startups [get]
 func (h *StartupsHandler) ListStartups(ctx *gin.Context) {
 	var params listStartupsParams
 	params.pagination = pagination.Parse(ctx)
@@ -96,6 +113,15 @@ func (h *StartupsHandler) ListStartups(ctx *gin.Context) {
 	})
 }
 
+// GetStartup godoc
+// @Summary      Get startup
+// @Description  Retrieves a startup by ID.
+// @Tags         Startups
+// @Param        id   path int true "Startup ID"
+// @Success      200 {object} response.StartupObjectResponse
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /startups/{id} [get]
 func (h *StartupsHandler) GetStartup(ctx *gin.Context) {
 	id := ctx.Param("id")
 
@@ -121,6 +147,19 @@ func (h *StartupsHandler) GetStartup(ctx *gin.Context) {
 	})
 }
 
+// CreateStartup godoc
+// @Summary      Create startup
+// @Description  Creates a startup (admin required).
+// @Tags         Startups
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.StartupCreateRequest true "Startup" Example({"name":"Acme","email":"contact@acme.tld","sector":"tech","maturity":"early","project_status":"ongoing"})
+// @Success      201 {object} response.StartupObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/startups [post]
 func (h *StartupsHandler) CreateStartup(ctx *gin.Context) {
 	var req struct {
 		Name          string  `json:"name" binding:"required"`
@@ -159,6 +198,21 @@ func (h *StartupsHandler) CreateStartup(ctx *gin.Context) {
 	})
 }
 
+// UpdateStartup godoc
+// @Summary      Update startup
+// @Description  Updates a startup by ID (admin required).
+// @Tags         Startups
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id      path   int    true  "Startup ID"
+// @Param        payload body   requests.StartupUpdateRequest true  "Fields to update" Example({"description":"New description","maturity":"middle"})
+// @Success      200 {object} response.StartupObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/startups/{id} [patch]
 func (h *StartupsHandler) UpdateStartup(ctx *gin.Context) {
 	id := ctx.Param("id")
 
@@ -226,6 +280,17 @@ func (h *StartupsHandler) UpdateStartup(ctx *gin.Context) {
 	})
 }
 
+// DeleteStartup godoc
+// @Summary      Delete startup
+// @Description  Deletes a startup by ID (admin required).
+// @Tags         Startups
+// @Security     BearerAuth
+// @Param        id   path int true "Startup ID"
+// @Success      200 {object} response.MessageResponse
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/startups/{id} [delete]
 func (h *StartupsHandler) DeleteStartup(ctx *gin.Context) {
 	id := ctx.Param("id")
 

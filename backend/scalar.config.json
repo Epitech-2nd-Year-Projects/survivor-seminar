@@ -1,0 +1,23 @@
+{
+  "$schema": "https://cdn.scalar.com/schema/scalar-config.json",
+  "subdomain": "survival-seminar-api-doc",
+  "guides": [
+    {
+      "name": "Survivor Seminar Documentation",
+      "sidebar": [
+        {
+          "path": "docs/introduction.md",
+          "type": "page"
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "name": "API Reference",
+      "path": "docs/openapi.yaml"
+    }
+  ],
+  "publishOnMerge": true,
+  "theme": "purple"
+}
