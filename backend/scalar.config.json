@@ -15,7 +15,7 @@
   "references": [
     {
       "name": "API Reference",
-      "path": "docs/openapi.yaml"
+      "path": "backend/docs/openapi.yaml"
     }
   ],
   "publishOnMerge": true,
