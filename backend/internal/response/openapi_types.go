@@ -23,7 +23,6 @@ type AuthRegisterResponse struct {
 type TokenPairResponse struct {
 	Tokens auth.TokenPair `json:"tokens"`
 }
-
 type SyncStatusResponse struct {
 	Running  bool       `json:"running"`
 	Queue    int        `json:"queue"`
