@@ -29,12 +29,14 @@ export function RegisterForm({
     const name = getString(form, "name");
     const email = getString(form, "email");
     const password = getString(form, "password");
+    const role = "investor";
 
     mutate(
       {
         name,
         email,
         password,
+        role,
       },
       {
         onError(err: Error) {
@@ -64,6 +66,7 @@ export function RegisterForm({
               <div className="grid gap-3">
                 <Label htmlFor="email">Email</Label>
                 <Input
+                  name="email"
                   id="email"
                   type="email"
                   placeholder="survivor@example.com"
@@ -72,13 +75,18 @@ export function RegisterForm({
               </div>
               <div className="grid gap-3">
                 <Label htmlFor="username">Name</Label>
-                <Input id="name" type="name" placeholder="John Doe" required />
+                <Input
+                  name="name"
+                  id="name"
+                  type="name"
+                  placeholder="John Doe"
+                />
               </div>
               <div className="grid gap-3">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                 </div>
-                <Input id="password" type="password" required />
+                <Input name="password" id="password" type="password" required />
               </div>
               <Button
                 type="submit"
