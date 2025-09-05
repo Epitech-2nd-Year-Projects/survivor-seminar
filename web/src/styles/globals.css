@@ -125,3 +125,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+.ppt-container { display: none; }
+.slide {
+  width: 1122px;  /* ~297mm @ 96dpi */
+  height: 793px;  /* ~210mm @ 96dpi */
+  page-break-after: always;
+}
+.ppt-container,
+.ppt-container * {
+  color: #000 !important;
+  background-color: #fff !important;
+  border-color: #000 !important;
+}
