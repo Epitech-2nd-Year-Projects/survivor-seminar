@@ -1,0 +1,21 @@
+{
+  "$schema": "https://cdn.scalar.com/schema/scalar-config.json",
+  "subdomain": "my-awesome-documentation",
+  "references": [
+    {
+      "name": "API Reference",
+      "path": "docs/openapi.yaml"
+    }
+  ],
+  "guides": [
+    {
+      "name": "Survivor Seminar Documentation",
+      "sidebar": [
+        {
+          "path": "docs/introduction.md",
+          "type": "page"
+        }
+      ]
+    }
+  ],
+}
