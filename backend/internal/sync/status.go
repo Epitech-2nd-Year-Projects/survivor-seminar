@@ -6,7 +6,7 @@ import (
 )
 
 type RunInfo struct {
-	Type      string // full | incremental
+	Type      string
 	StartedAt time.Time
 	EndedAt   time.Time
 	Success   bool
@@ -45,7 +45,7 @@ func (s *statusStore) setLast(run RunInfo) {
 	}
 }
 
-// snapshot returns a StatusSnapshot containing the current state of the statusStore, including the last full and incremental runs.
+// snapshot returns a StatusSnapshot containing the current state of the statusStore, including the last full and incremental runs
 func (s *statusStore) snapshot() StatusSnapshot {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

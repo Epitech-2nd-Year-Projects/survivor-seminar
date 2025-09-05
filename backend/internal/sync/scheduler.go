@@ -21,7 +21,7 @@ type queuedJob struct {
 	label string
 }
 
-// NewScheduler creates a new Scheduler instance with a cron job dispatcher, service, and logger.
+// NewScheduler creates a new Scheduler instance with a cron job dispatcher, service, and logger
 func NewScheduler(svc Syncer, log *logrus.Logger) Scheduler {
 	clog := cronLogger{
 		log: log,
@@ -44,7 +44,7 @@ func NewScheduler(svc Syncer, log *logrus.Logger) Scheduler {
 	}
 }
 
-// Start initializes the scheduler and begins processing queued jobs in a separate goroutine.
+// Start initializes the scheduler and begins processing queued jobs in a separate goroutine
 func (s *scheduler) Start(ctx context.Context) error {
 	s.log.Info("scheduler: starting")
 
@@ -63,21 +63,21 @@ func (s *scheduler) Start(ctx context.Context) error {
 	return nil
 }
 
-// Stop halts all scheduled tasks and stops the scheduler gracefully. Returns any encountered error during the process.
+// Stop halts all scheduled tasks and stops the scheduler gracefully. Returns any encountered error during the process
 func (s *scheduler) Stop(ctx context.Context) error {
 	s.log.Info("scheduler: stopping")
 	s.c.Stop()
 	return nil
 }
 
-// Schedule adds a job to the scheduler with a specified cron expression and label, returning the job's EntryID or an error.
+// Schedule adds a job to the scheduler with a specified cron expression and label, returning the job's EntryID or an error
 func (s *scheduler) Schedule(spec string, job func(context.Context), label string) (cron.EntryID, error) {
 	return s.c.AddFunc(spec, func() {
 		s.runJob(context.Background(), job, label)
 	})
 }
 
-// runJob executes a job function within the provided context and logs its lifecycle using the specified label.
+// runJob executes a job function within the provided context and logs its lifecycle using the specified label
 func (s *scheduler) runJob(ctx context.Context, job func(context.Context), label string) {
 	s.status.setRunning(true)
 	started := time.Now()
@@ -107,13 +107,13 @@ func (s *scheduler) runJob(ctx context.Context, job func(context.Context), label
 	info.Success = true
 }
 
-// safeRun safely executes a job within the provided context and returns an error if the job fails or panics.
+// safeRun safely executes a job within the provided context and returns an error if the job fails or panics
 func (s *scheduler) safeRun(ctx context.Context, job func(context.Context)) (err error) {
 	job(ctx)
 	return nil
 }
 
-// TriggerFullSync enqueues a full synchronization job to the scheduler's queue. Returns an error if the queue is full.
+// TriggerFullSync enqueues a full synchronization job to the scheduler's queue. Returns an error if the queue is full
 func (s *scheduler) TriggerFullSync(ctx context.Context) error {
 	select {
 	case s.queueCh <- queuedJob{label: "full", fn: func(ctx context.Context) {
@@ -130,7 +130,7 @@ func (s *scheduler) TriggerFullSync(ctx context.Context) error {
 	}
 }
 
-// TriggerIncrementalSync enqueues an incremental synchronization job in the scheduler's queue. Returns an error if the queue is full.
+// TriggerIncrementalSync enqueues an incremental synchronization job in the scheduler's queue. Returns an error if the queue is full
 func (s *scheduler) TriggerIncrementalSync(ctx context.Context) error {
 	select {
 	case s.queueCh <- queuedJob{label: "incremental", fn: func(ctx context.Context) {

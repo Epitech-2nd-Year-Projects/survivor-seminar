@@ -7,12 +7,12 @@ import (
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/client/jeb"
 )
 
-// JEBEventsAPI implements ExternalAPI for events using the JEB client.
+// JEBEventsAPI implements ExternalAPI for events using the JEB client
 type JEBEventsAPI struct {
 	c *jeb.Client
 }
 
-// NewJEBEventsAPI creates a new instance of JEBEventsAPI with the provided JEB client.
+// NewJEBEventsAPI creates a new instance of JEBEventsAPI with the provided JEB client
 func NewJEBEventsAPI(c *jeb.Client) *JEBEventsAPI { return &JEBEventsAPI{c: c} }
 
 // FetchFull retrieves all events from the JEB API; the list contains all fields so no detail calls.
@@ -48,7 +48,7 @@ func (a *JEBEventsAPI) FetchFull(ctx context.Context) ([]UpstreamItem, error) {
 	return items, nil
 }
 
-// FetchIncremental falls back to full fetch as the public API does not provide updated filters.
+// FetchIncremental falls back to full fetch as the public API does not provide updated filters
 func (a *JEBEventsAPI) FetchIncremental(ctx context.Context, since time.Time) ([]UpstreamItem, error) {
 	return a.FetchFull(ctx)
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database"
 	v1handlers "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/handlers/v1"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/middleware"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/notifications/email"
 	v1routes "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/server/routes/v1"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/sync"
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,7 @@ type HTTPServer struct {
 	http   *http.Server
 	db     *gorm.DB
 	sched  sync.Scheduler
+	mailer email.Mailer
 }
 
 func NewHTTPServer(cfg *config.Config) *HTTPServer {
@@ -63,6 +65,7 @@ func NewHTTPServer(cfg *config.Config) *HTTPServer {
 		log:    logger,
 		db:     gormDB,
 	}
+	h.initMailer()
 	h.registerRoutes()
 	h.initSync()
 
@@ -106,12 +109,29 @@ func (s *HTTPServer) registerRoutes() {
 	v1routes.RegisterOpportunities(v1, s.db, s.log)
 	v1routes.RegisterPartners(v1, s.db, s.log)
 	v1routes.RegisterStatistics(v1, s.db, s.log)
+	v1routes.RegisterAuth(v1, s.cfg, s.db, s.log, s.mailer)
 	v1.Group("/sectors")
 	v1.Group("/locations")
 	v1.Group("/tags")
 	v1.Group("/track")
-	v1.Group("/startup")
 	v1.Group("/conversations")
+}
+
+func (s *HTTPServer) initMailer() {
+	if s.cfg.Notifications.Email.Provider == "smtp" {
+		ctx := context.Background()
+		m, err := email.NewSMTPMailer(ctx, s.cfg)
+		if err != nil {
+			s.log.WithError(err).Warn("failed to initialize SMTP mailer")
+			return
+		}
+		s.mailer = m
+		s.log.Info("email mailer initialized (smtp)")
+	} else if s.cfg.Notifications.Email.Provider == "" {
+		s.log.Info("email provider not set; mailer disabled")
+	} else {
+		s.log.WithField("provider", s.cfg.Notifications.Email.Provider).Warn("unsupported email provider; mailer disabled")
+	}
 }
 
 func (s *HTTPServer) Start() error {

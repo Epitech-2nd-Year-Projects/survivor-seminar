@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// GormEventsRepo persists events into DB and tracks watermark.
+// GormEventsRepo persists events into DB and tracks watermark
 type GormEventsRepo struct {
 	db    *gorm.DB
 	log   *logrus.Logger
@@ -24,14 +24,14 @@ type GormEventsRepo struct {
 	jeb   *jebc.Client
 }
 
-// NewGormEventsRepo initializes and returns a new instance of GormEventsRepo with the given database and logger.
+// NewGormEventsRepo initializes and returns a new instance of GormEventsRepo with the given database and logger
 func NewGormEventsRepo(db *gorm.DB, log *logrus.Logger, media storeS3.Uploader, jeb *jebc.Client) *GormEventsRepo {
 	return &GormEventsRepo{db: db, log: log, scope: "events", media: media, jeb: jeb}
 }
 
 var isoDateRe = regexp.MustCompile(`\d{4}-\d{2}-\d{2}`)
 
-// UpsertBatch inserts or updates a batch of upstream items in the database using their primary keys.
+// UpsertBatch inserts or updates a batch of upstream items in the database using their primary keys
 func (r *GormEventsRepo) UpsertBatch(ctx context.Context, items []UpstreamItem) error {
 	if len(items) == 0 {
 		return nil
@@ -90,7 +90,7 @@ func (r *GormEventsRepo) UpsertBatch(ctx context.Context, items []UpstreamItem) 
 	return nil
 }
 
-// LastIncrementalWatermark retrieves the last incremental watermark timestamp for the current scope from the database.
+// LastIncrementalWatermark retrieves the last incremental watermark timestamp for the current scope from the database
 func (r *GormEventsRepo) LastIncrementalWatermark(ctx context.Context) (time.Time, error) {
 	var st syncState
 	if err := r.db.WithContext(ctx).First(&st, "name = ?", r.scope).Error; err != nil {
@@ -99,7 +99,7 @@ func (r *GormEventsRepo) LastIncrementalWatermark(ctx context.Context) (time.Tim
 	return st.Watermark, nil
 }
 
-// UpdateIncrementalWatermark updates the syncState table with the provided timestamp for the current scope using upsert logic.
+// UpdateIncrementalWatermark updates the syncState table with the provided timestamp for the current scope using upsert logic
 func (r *GormEventsRepo) UpdateIncrementalWatermark(ctx context.Context, ts time.Time) error {
 	st := syncState{Name: r.scope, Watermark: ts}
 	if err := r.db.WithContext(ctx).Clauses(clause.OnConflict{UpdateAll: true}).Create(&st).Error; err != nil {
