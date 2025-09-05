@@ -27,17 +27,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
-
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  founder_id?: string | null;
-  investor_id?: string | null;
-  createdAt?: string | Date | null;
-  avatarUrl?: string | null;
-};
+import type { User } from "@/types/users";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"; // ⬅️ scroll shadcn
 
 type Props = {
   users: User[];
@@ -49,7 +40,7 @@ type Props = {
   emptyLabel?: string;
 };
 
-const formatDateFR = (date?: string | Date | null) =>
+const formatDateFR = (date?: string | null) =>
   date
     ? new Intl.DateTimeFormat("fr-FR", {
         dateStyle: "medium",
@@ -93,142 +84,161 @@ export default function UsersTable({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <div>
-          <CardTitle>{title}</CardTitle>
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <CardTitle className="text-lg sm:text-xl">{title}</CardTitle>
           <CardDescription>List of users, roles & IDs.</CardDescription>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search users, mails"
-            className="w-56"
+            className="w-full sm:w-56"
           />
-          <Button onClick={onCreate}>New User</Button>
+          <Button onClick={onCreate} className="w-full sm:w-auto">
+            New User
+          </Button>
         </div>
       </CardHeader>
 
       <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[280px]">User</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="text-center">Founder ID</TableHead>
-                <TableHead className="text-center">Investor ID</TableHead>
-                <TableHead className="text-center">ID</TableHead>
-                {showActions && (
-                  <TableHead className="text-right">Actions</TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {filteredUsers.length === 0 ? (
+        <div className="rounded-md border">
+          <ScrollArea className="h-[60vh] w-full">
+            <Table className="min-w-[900px]">
+              <TableHeader className="bg-background sticky top-0 z-10">
                 <TableRow>
-                  <TableCell
-                    colSpan={6 + (showActions ? 1 : 0)}
-                    className="text-muted-foreground text-center"
-                  >
-                    {emptyLabel}
-                  </TableCell>
+                  <TableHead className="min-w-[220px]">User</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="hidden md:table-cell">Role</TableHead>
+                  <TableHead className="hidden text-center lg:table-cell">
+                    Founder ID
+                  </TableHead>
+                  <TableHead className="hidden text-center lg:table-cell">
+                    Investor ID
+                  </TableHead>
+                  <TableHead className="hidden text-center md:table-cell">
+                    ID
+                  </TableHead>
+                  {showActions && (
+                    <TableHead className="text-right">Actions</TableHead>
+                  )}
                 </TableRow>
-              ) : (
-                filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage
-                            src={user.avatarUrl ?? ""}
-                            alt={user.name}
-                          />
-                          <AvatarFallback>{initials(user.name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="grid">
-                          <span className="font-medium">{user.name}</span>
-                          <span className="text-muted-foreground text-xs">
-                            {formatDateFR(user.createdAt)
-                              ? `Member since ${formatDateFR(user.createdAt)}`
-                              : "Former member"}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
+              </TableHeader>
 
-                    <TableCell>{user.email}</TableCell>
-
-                    <TableCell>
-                      <Badge
-                        variant={
-                          user.role === "manager"
-                            ? "secondary"
-                            : user.role === "member"
-                              ? "outline"
-                              : "default"
-                        }
-                      >
-                        {user.role}
-                      </Badge>
+              <TableBody>
+                {filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6 + (showActions ? 1 : 0)}
+                      className="text-muted-foreground text-center"
+                    >
+                      {emptyLabel}
                     </TableCell>
-
-                    <TableCell className="text-center">
-                      {user.founder_id ?? "-"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {user.investor_id ?? "-"}
-                    </TableCell>
-                    <TableCell className="text-center">{user.id}</TableCell>
-
-                    {showActions && (
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-40">
-                            {onView && (
-                              <DropdownMenuItem
-                                className="gap-2"
-                                onClick={() => onView(user)}
-                              >
-                                <Eye className="h-4 w-4" /> View
-                              </DropdownMenuItem>
-                            )}
-                            {onEdit && (
-                              <DropdownMenuItem
-                                className="gap-2"
-                                onClick={() => onEdit(user)}
-                              >
-                                <Pencil className="h-4 w-4" /> Edit
-                              </DropdownMenuItem>
-                            )}
-                            {onDelete && (
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive gap-2"
-                                onClick={() => onDelete(user)}
-                              >
-                                <Trash2 className="h-4 w-4" /> Delete
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    )}
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <TableRow key={user.id} className="text-sm">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8 shrink-0">
+                            <AvatarImage
+                              src={user.image_url ?? ""}
+                              alt={user.name}
+                            />
+                            <AvatarFallback>
+                              {initials(user.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="grid">
+                            <span className="leading-tight font-medium">
+                              {user.name}
+                            </span>
+                            <span className="text-muted-foreground text-xs">
+                              {formatDateFR(user.created_at)
+                                ? `Member since ${formatDateFR(user.created_at)}`
+                                : "—"}
+                            </span>
+                          </div>
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="whitespace-nowrap">
+                        {user.email}
+                      </TableCell>
+
+                      <TableCell className="hidden md:table-cell">
+                        <Badge
+                          variant={
+                            user.role === "manager"
+                              ? "secondary"
+                              : user.role === "member"
+                                ? "outline"
+                                : "default"
+                          }
+                        >
+                          {user.role}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="hidden text-center lg:table-cell">
+                        {user.founder_id}
+                      </TableCell>
+                      <TableCell className="hidden text-center lg:table-cell">
+                        {user.investor_id}
+                      </TableCell>
+                      <TableCell className="hidden text-center md:table-cell">
+                        {user.id}
+                      </TableCell>
+
+                      {showActions && (
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                              {onView && (
+                                <DropdownMenuItem
+                                  className="gap-2"
+                                  onClick={() => onView(user)}
+                                >
+                                  <Eye className="h-4 w-4" /> View
+                                </DropdownMenuItem>
+                              )}
+                              {onEdit && (
+                                <DropdownMenuItem
+                                  className="gap-2"
+                                  onClick={() => onEdit(user)}
+                                >
+                                  <Pencil className="h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                              )}
+                              {onDelete && (
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive gap-2"
+                                  onClick={() => onDelete(user)}
+                                >
+                                  <Trash2 className="h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </div>
       </CardContent>
     </Card>
