@@ -101,29 +101,25 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		}
 	}
 
-	pair, err := auth.GenerateTokenPair(h.cfg, u.ID, u.Email, u.Role)
-	if err != nil {
-		h.log.WithError(err).Error("GenerateTokenPair")
-		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to issue tokens"})
-		return
-	}
+    if h.mailer != nil {
+        if token, err := h.createOneTimeToken(c, u.ID, "verify", h.cfg.Auth.EmailVerificationTTL); err != nil {
+            h.log.WithError(err).Warn("createOneTimeToken verify failed")
+        } else {
+            link := fmt.Sprintf("%s/api/%s/auth/verify?token=%s", strings.TrimRight(h.cfg.App.BaseURL, "/"), h.cfg.App.Version, token)
+            subject := "Verify your email"
+            body := fmt.Sprintf("<p>Welcome %s,</p><p>Please verify your email by clicking the link below:</p><p><a href=\"%s\">Verify Email</a></p>", u.Name, link)
+            if err := h.mailer.Send(c.Request.Context(), u.Email, subject, body); err != nil {
+                h.log.WithError(err).Warn("mailer.Send verify email failed")
+            }
+        }
+    } else {
+        h.log.Warn("mailer is nil; skipping verification email")
+    }
 
-	if h.mailer != nil {
-		if token, err := h.createOneTimeToken(c, u.ID, "verify", h.cfg.Auth.EmailVerificationTTL); err != nil {
-			h.log.WithError(err).Warn("createOneTimeToken verify failed")
-		} else {
-			link := fmt.Sprintf("%s/api/%s/auth/verify?token=%s", strings.TrimRight(h.cfg.App.BaseURL, "/"), h.cfg.App.Version, token)
-			subject := "Verify your email"
-			body := fmt.Sprintf("<p>Welcome %s,</p><p>Please verify your email by clicking the link below:</p><p><a href=\"%s\">Verify Email</a></p>", u.Name, link)
-			if err := h.mailer.Send(c.Request.Context(), u.Email, subject, body); err != nil {
-				h.log.WithError(err).Warn("mailer.Send verify email failed")
-			}
-		}
-	} else {
-		h.log.Warn("mailer is nil; skipping verification email")
-	}
-
-	response.JSON(c, http.StatusCreated, gin.H{"user": u, "tokens": pair})
+    response.JSON(c, http.StatusCreated, gin.H{
+        "user":    u,
+        "message": "verification email sent; please verify before logging in",
+    })
 }
 
 // Login verifies credentials and returns a token pair
@@ -147,17 +143,22 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to process request"})
 		return
 	}
-	if bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(req.Password)) != nil {
-		response.JSON(c, http.StatusUnauthorized, gin.H{"code": "invalid_credentials", "message": "invalid credentials"})
-		return
-	}
-	pair, err := auth.GenerateTokenPair(h.cfg, u.ID, u.Email, u.Role)
-	if err != nil {
-		h.log.WithError(err).Error("GenerateTokenPair")
-		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to issue tokens"})
-		return
-	}
-	response.JSON(c, http.StatusOK, gin.H{"user": u, "tokens": pair})
+    if bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(req.Password)) != nil {
+        response.JSON(c, http.StatusUnauthorized, gin.H{"code": "invalid_credentials", "message": "invalid credentials"})
+        return
+    }
+
+	if !u.EmailVerified {
+        response.JSON(c, http.StatusForbidden, gin.H{"code": "email_not_verified", "message": "please verify your email before logging in"})
+        return
+    }
+    pair, err := auth.GenerateTokenPair(h.cfg, u.ID, u.Email, u.Role)
+    if err != nil {
+        h.log.WithError(err).Error("GenerateTokenPair")
+        response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to issue tokens"})
+        return
+    }
+    response.JSON(c, http.StatusOK, gin.H{"user": u, "tokens": pair})
 }
 
 // Refresh exchanges a valid refresh token for a new access token (and refresh token)
@@ -176,19 +177,24 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	var u models.User
-	if err := h.db.First(&u, claims.UserID).Error; err != nil {
-		response.JSON(c, http.StatusUnauthorized, gin.H{"code": "invalid_token", "message": "user no longer exists"})
-		return
-	}
+    var u models.User
+    if err := h.db.First(&u, claims.UserID).Error; err != nil {
+        response.JSON(c, http.StatusUnauthorized, gin.H{"code": "invalid_token", "message": "user no longer exists"})
+        return
+    }
 
-	pair, err := auth.GenerateTokenPair(h.cfg, u.ID, u.Email, u.Role)
-	if err != nil {
-		h.log.WithError(err).Error("GenerateTokenPair")
-		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to issue tokens"})
-		return
-	}
-	response.JSON(c, http.StatusOK, gin.H{"tokens": pair})
+    if !u.EmailVerified {
+        response.JSON(c, http.StatusUnauthorized, gin.H{"code": "email_not_verified", "message": "email not verified"})
+        return
+    }
+
+    pair, err := auth.GenerateTokenPair(h.cfg, u.ID, u.Email, u.Role)
+    if err != nil {
+        h.log.WithError(err).Error("GenerateTokenPair")
+        response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to issue tokens"})
+        return
+    }
+    response.JSON(c, http.StatusOK, gin.H{"tokens": pair})
 }
 
 // VerifyEmail verifies the user's email using a token (from query or JSON)
