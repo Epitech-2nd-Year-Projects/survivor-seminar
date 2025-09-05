@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
 import type { User } from "@/types";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"; // ⬅️ scroll shadcn
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type Props = {
   users: User[];
