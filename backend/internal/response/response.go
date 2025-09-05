@@ -27,12 +27,3 @@ func JSONError(c *gin.Context, status int, code, message string, details interfa
 		Details: details,
 	})
 }
-
-func JSONList(c *gin.Context, status int, items interface{}, meta PageMeta) {
-	c.JSON(status, gin.H{
-		"data":     items,
-		"page":     meta.Page,
-		"per_page": meta.PerPage,
-		"total":    meta.Total,
-	})
-}
