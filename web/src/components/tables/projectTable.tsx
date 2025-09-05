@@ -60,7 +60,6 @@ const truncate = (s?: string | null, n = 40) =>
   !s ? "—" : s.length > n ? s.slice(0, n - 1) + "…" : s;
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
-
 const maturityVariant = (m?: string | null): BadgeVariant => {
   const v = (m ?? "").toLowerCase();
   if (v.includes("pre") || v.includes("idea") || v.includes("proto"))
@@ -102,23 +101,25 @@ export default function ProjectsTable({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <div>
-          <CardTitle>{title}</CardTitle>
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <CardTitle className="text-lg sm:text-xl">{title}</CardTitle>
           <CardDescription>
             List of startups (projects) & details.
           </CardDescription>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <Input
             value={query}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setQuery(e.target.value)
             }
             placeholder="Search name, email, sector..."
-            className="w-64"
+            className="w-full sm:w-64"
           />
-          <Button onClick={onCreate}>New Project</Button>
+          <Button onClick={onCreate} className="w-full sm:w-auto">
+            New Project
+          </Button>
         </div>
       </CardHeader>
 
@@ -126,19 +127,27 @@ export default function ProjectsTable({
         <div className="rounded-md border">
           <ScrollArea className="h-[60vh] w-full">
             <Table className="min-w-[1100px]">
-              <TableHeader>
+              <TableHeader className="bg-background sticky top-0 z-10">
                 <TableRow>
-                  <TableHead className="w-[280px]">Project</TableHead>
+                  <TableHead className="min-w-[220px]">Project</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Legal status</TableHead>
+                  <TableHead className="hidden md:table-cell">Phone</TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    Legal status
+                  </TableHead>
                   <TableHead>Sector</TableHead>
                   <TableHead>Maturity</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Needs</TableHead>
-                  <TableHead>Website</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead className="text-center">Founders</TableHead>
+                  <TableHead className="hidden lg:table-cell">Status</TableHead>
+                  <TableHead className="hidden xl:table-cell">Needs</TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    Website
+                  </TableHead>
+                  <TableHead className="hidden xl:table-cell">
+                    Address
+                  </TableHead>
+                  <TableHead className="hidden text-center md:table-cell">
+                    Founders
+                  </TableHead>
                   <TableHead className="text-center">ID</TableHead>
                   {showActions && (
                     <TableHead className="text-right">Actions</TableHead>
@@ -158,14 +167,16 @@ export default function ProjectsTable({
                   </TableRow>
                 ) : (
                   filtered.map((p) => (
-                    <TableRow key={p.id}>
+                    <TableRow key={p.id} className="text-sm">
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
+                          <Avatar className="h-8 w-8 shrink-0">
                             <AvatarFallback>{initials(p.name)}</AvatarFallback>
                           </Avatar>
                           <div className="grid">
-                            <span className="font-medium">{p.name}</span>
+                            <span className="leading-tight font-medium">
+                              {p.name}
+                            </span>
                             <span className="text-muted-foreground text-xs">
                               {p.sector ?? "—"}
                               {p.created_at
@@ -176,9 +187,15 @@ export default function ProjectsTable({
                         </div>
                       </TableCell>
 
-                      <TableCell>{p.email}</TableCell>
-                      <TableCell>{p.phone ?? "—"}</TableCell>
-                      <TableCell>{p.legal_status ?? "—"}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {p.email}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {p.phone ?? "—"}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {p.legal_status ?? "—"}
+                      </TableCell>
 
                       <TableCell>
                         {p.sector ? (
@@ -198,10 +215,14 @@ export default function ProjectsTable({
                         )}
                       </TableCell>
 
-                      <TableCell>{p.project_status ?? "—"}</TableCell>
-                      <TableCell>{truncate(p.needs, 28)}</TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {p.project_status ?? "—"}
+                      </TableCell>
+                      <TableCell className="hidden xl:table-cell">
+                        {truncate(p.needs, 28)}
+                      </TableCell>
 
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         {p.website_url ? (
                           <a
                             href={p.website_url}
@@ -216,9 +237,11 @@ export default function ProjectsTable({
                         )}
                       </TableCell>
 
-                      <TableCell>{truncate(p.address, 28)}</TableCell>
+                      <TableCell className="hidden xl:table-cell">
+                        {truncate(p.address, 28)}
+                      </TableCell>
 
-                      <TableCell className="text-center">
+                      <TableCell className="hidden text-center md:table-cell">
                         {Array.isArray(p.founders) ? p.founders.length : 0}
                       </TableCell>
 
