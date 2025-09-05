@@ -6,7 +6,7 @@
       "name": "Survivor Seminar Documentation",
       "sidebar": [
         {
-          "path": "docs/BASE.md",
+          "path": "backend/docs/BASE.md",
           "type": "page"
         }
       ]
