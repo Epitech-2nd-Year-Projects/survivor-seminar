@@ -1,4 +1,5 @@
-import type { Project } from "@/types";
+import type { Project } from "@/types/projects";
+import type { User } from "@/types/users";
 
 interface GetProjectsApiResponse {
   data: Project[];
@@ -13,6 +14,14 @@ interface GetProjectsApiResponse {
 
 interface GetProjectApiResponse {
   data: Project;
+}
+
+interface GetUsersApiResponse {
+  data: User[];
+}
+
+interface GetUserApiResponse {
+  data: User;
 }
 
 export async function fetchProjects(): Promise<Project[]> {
@@ -34,5 +43,27 @@ export async function fetchProject(id: number): Promise<Project> {
   }
 
   const json = (await res.json()) as GetProjectApiResponse;
+  return json.data;
+}
+
+export async function fetchUsers(): Promise<User[]> {
+  const res = await fetch("/api/v1/users");
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch projects: ${res.status}`);
+  }
+
+  const json = (await res.json()) as GetUsersApiResponse;
+  return json.data;
+}
+
+export async function fetchUser(id: number): Promise<User> {
+  const res = await fetch(`/api/v1/users/${id}`);
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch project: ${res.status}`);
+  }
+
+  const json = (await res.json()) as GetUserApiResponse;
   return json.data;
 }
