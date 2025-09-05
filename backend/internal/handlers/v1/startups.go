@@ -122,14 +122,31 @@ func (h *StartupsHandler) GetStartup(ctx *gin.Context) {
 }
 
 func (h *StartupsHandler) CreateStartup(ctx *gin.Context) {
-	var req models.Startup
+	var req struct {
+		Name          string  `json:"name" binding:"required"`
+		Email         *string `json:"email,omitempty" binding:"omitempty,email"`
+		Sector        *string `json:"sector,omitempty"`
+		Maturity      *string `json:"maturity,omitempty"`
+		ProjectStatus *string `json:"project_status,omitempty"`
+		Description   *string `json:"description,omitempty"`
+	}
+
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.JSONError(ctx, http.StatusBadRequest,
 			"invalid_payload", "invalid request payload", err.Error())
 		return
 	}
 
-	if err := h.db.Create(&req).Error; err != nil {
+	startup := models.Startup{
+		Name:          req.Name,
+		Email:         req.Email,
+		Sector:        req.Sector,
+		Maturity:      req.Maturity,
+		ProjectStatus: req.ProjectStatus,
+		Description:   req.Description,
+	}
+
+	if err := h.db.Create(&startup).Error; err != nil {
 		h.log.WithError(err).Error("h.db.Create().Error")
 		response.JSONError(ctx, http.StatusInternalServerError,
 			"internal_error", "failed to create startup", nil)
@@ -138,7 +155,7 @@ func (h *StartupsHandler) CreateStartup(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, gin.H{
 		"message": "startup created successfully",
-		"data":    req,
+		"data":    startup,
 	})
 }
 
@@ -155,20 +172,49 @@ func (h *StartupsHandler) UpdateStartup(ctx *gin.Context) {
 		return
 	}
 
-	var req map[string]interface{}
+	var req struct {
+		Name          *string `json:"name,omitempty"`
+		Email         *string `json:"email,omitempty" binding:"omitempty,email"`
+		Sector        *string `json:"sector,omitempty"`
+		Maturity      *string `json:"maturity,omitempty"`
+		ProjectStatus *string `json:"project_status,omitempty"`
+		Description   *string `json:"description,omitempty"`
+	}
+
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		h.log.WithError(err).Warn("invalid request payload for startup update")
 		response.JSONError(ctx, http.StatusBadRequest,
 			"invalid_payload", "invalid request payload", err.Error())
 		return
 	}
 
-	if len(req) == 0 {
+	updates := make(map[string]interface{})
+	if req.Name != nil {
+		updates["name"] = *req.Name
+	}
+	if req.Email != nil {
+		updates["email"] = *req.Email
+	}
+	if req.Sector != nil {
+		updates["sector"] = *req.Sector
+	}
+	if req.Maturity != nil {
+		updates["maturity"] = *req.Maturity
+	}
+	if req.ProjectStatus != nil {
+		updates["project_status"] = *req.ProjectStatus
+	}
+	if req.Description != nil {
+		updates["description"] = *req.Description
+	}
+
+	if len(updates) == 0 {
 		response.JSONError(ctx, http.StatusBadRequest,
 			"no_fields", "no fields provided for update", nil)
 		return
 	}
 
-	if err := h.db.Model(&startup).Updates(req).Error; err != nil {
+	if err := h.db.Model(&startup).Updates(updates).Error; err != nil {
 		response.JSONError(ctx, http.StatusInternalServerError,
 			"internal_error", "failed to update startup", nil)
 		return
