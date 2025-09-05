@@ -70,7 +70,6 @@ func TestRecovery_CatchesPanic(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	assert.Contains(t, buf.String(), "panic recovered")
 
-	// Vérifie que le JSON d'erreur est bien renvoyé
 	assert.Contains(t, w.Body.String(), response.ErrorBody{Code: "internal_error"}.Code)
 }
 
