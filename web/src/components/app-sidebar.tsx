@@ -18,6 +18,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { LayoutDashboard, Mail, Pencil, ShieldUser, Users } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 type User = {
   name: string;
@@ -31,6 +33,7 @@ type NavItem = {
   title: string;
   href: string;
   perm?: keyof User;
+  icon?: React.ReactNode;
 };
 
 type NavGroup = {
@@ -54,31 +57,65 @@ const data: {
   },
   navMain: [
     {
-      title: "Admin Area",
+      title: "Admin",
       perm: "adminArea",
       items: [
-        { title: "Dashboard", href: "/dashboard/statistics" },
-        { title: "Admin Back Office", href: "/dashboard/admin-bak-office" },
-        { title: "Content Management", href: "/dashboard/content" },
-        { title: "User Management", href: "/dashboard/user-Management" },
+        { title: "Dashboard", href: "/dashboard/", icon: <LayoutDashboard /> },
+        {
+          title: "Back Office",
+          href: "/dashboard/admin-back-office",
+          icon: <ShieldUser />,
+        },
+        {
+          title: "Content Management",
+          href: "/dashboard/content-management",
+          icon: <Pencil />,
+        },
+        {
+          title: "User Management",
+          href: "/dashboard/user-management",
+          icon: <Users />,
+        },
         // { title: "Users", href: "/dashboard/admin/users", perm: "adminArea" }, // exemple d'item protégé
       ],
     },
     {
-      title: "Satrupt Area",
+      title: "Startup",
       perm: "startupArea",
-      items: [{ title: "Messages", href: "/dashboard/messages" }],
+      items: [
+        { title: "Messages", href: "/dashboard/messages", icon: <Mail /> },
+      ],
     },
   ],
 };
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const { data: user, isLoading, error } = useCurrentUser();
+
+  if (isLoading) {
+    return (
+      <Sidebar {...props}>
+        <SidebarContent>
+          <div className="p-4">Loading…</div>
+        </SidebarContent>
+      </Sidebar>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <Sidebar {...props}>
+        <SidebarContent>
+          <div className="p-4 text-sm text-red-600">Unable to load user</div>
+        </SidebarContent>
+      </Sidebar>
+    );
+  }
 
   return (
     <Sidebar {...props}>
-      <SidebarHeader>
-      </SidebarHeader>
+      <SidebarHeader></SidebarHeader>
       <SidebarContent>
         {data.navMain
           .filter((group) => !group.perm || data.user[group.perm])
@@ -96,7 +133,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                       return (
                         <SidebarMenuItem key={item.title}>
                           <SidebarMenuButton asChild isActive={isActive}>
-                            <Link href={item.href}>{item.title}</Link>
+                            <Link href={item.href}>
+                              {item.icon}
+                              {item.title}
+                            </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       );
@@ -107,7 +147,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
