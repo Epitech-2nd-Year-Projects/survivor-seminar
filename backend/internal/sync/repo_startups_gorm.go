@@ -21,14 +21,14 @@ type syncState struct {
 
 func (syncState) TableName() string { return "sync_state" }
 
-// GormStartupsRepo persists startups into DB and tracks watermark.
+// GormStartupsRepo persists startups into DB and tracks watermark
 type GormStartupsRepo struct {
 	db    *gorm.DB
 	log   *logrus.Logger
 	scope string
 }
 
-// NewGormStartupsRepo initializes and returns a new instance of GormStartupsRepo with the given database and logger.
+// NewGormStartupsRepo initializes and returns a new instance of GormStartupsRepo with the given database and logger
 func NewGormStartupsRepo(db *gorm.DB, log *logrus.Logger) *GormStartupsRepo {
 	return &GormStartupsRepo{
 		db:    db,
@@ -37,7 +37,7 @@ func NewGormStartupsRepo(db *gorm.DB, log *logrus.Logger) *GormStartupsRepo {
 	}
 }
 
-// UpsertBatch inserts or updates a batch of upstream items in the database using their primary keys.
+// UpsertBatch inserts or updates a batch of upstream items in the database using their primary keys
 func (r *GormStartupsRepo) UpsertBatch(ctx context.Context, items []UpstreamItem) error {
 	if len(items) == 0 {
 		return nil
@@ -104,38 +104,7 @@ func (r *GormStartupsRepo) UpsertBatch(ctx context.Context, items []UpstreamItem
 	return nil
 }
 
-// SoftDeleteMissing removes startups from the database that are not present in the provided external IDs list.
-func (r *GormStartupsRepo) SoftDeleteMissing(ctx context.Context, existingExternalIDs map[string]struct{}) error {
-	keep := make(map[uint64]struct{}, len(existingExternalIDs))
-	for k := range existingExternalIDs {
-		if id, err := strconv.ParseUint(k, 10, 64); err == nil {
-			keep[id] = struct{}{}
-		}
-	}
-
-	var ids []uint64
-	if err := r.db.WithContext(ctx).Model(&models.Startup{}).Select("id").Find(&ids).Error; err != nil {
-		return fmt.Errorf("r.db.WithContext(ctx).Model(&models.Startup{}).Select(\"id\").Find(&ids): %w", err)
-	}
-	toDelete := make([]uint64, 0, len(ids))
-	for _, id := range ids {
-		if _, ok := keep[id]; !ok {
-			toDelete = append(toDelete, id)
-		}
-	}
-	if len(toDelete) == 0 {
-		return nil
-	}
-	tx := r.db.WithContext(ctx).Where("id IN ?", toDelete).Delete(&models.Startup{})
-	if err := tx.Error; err != nil {
-		return fmt.Errorf("tx: %w", err)
-	}
-	r.log.WithFields(logrus.Fields{
-		"deleted": tx.RowsAffected,
-	}).Info("repo: deleted missing startups")
-	return nil
-}
-
+// LastIncrementalWatermark retrieves the last saved incremental watermark timestamp for the current repository scope
 func (r *GormStartupsRepo) LastIncrementalWatermark(ctx context.Context) (time.Time, error) {
 	var st syncState
 	if err := r.db.WithContext(ctx).First(&st, "name = ?", r.scope).Error; err != nil {
@@ -147,6 +116,7 @@ func (r *GormStartupsRepo) LastIncrementalWatermark(ctx context.Context) (time.T
 	return st.Watermark, nil
 }
 
+// UpdateIncrementalWatermark updates or inserts the current incremental watermark timestamp for the repository scope in the database
 func (r *GormStartupsRepo) UpdateIncrementalWatermark(ctx context.Context, ts time.Time) error {
 	st := syncState{Name: r.scope, Watermark: ts}
 	if err := r.db.WithContext(ctx).Clauses(clause.OnConflict{

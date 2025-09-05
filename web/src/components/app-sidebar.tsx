@@ -19,6 +19,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { LayoutDashboard, Mail, Pencil, ShieldUser, Users } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 type User = {
   name: string;
@@ -90,6 +91,27 @@ const data: {
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const { data: user, isLoading, error } = useCurrentUser();
+
+  if (isLoading) {
+    return (
+      <Sidebar {...props}>
+        <SidebarContent>
+          <div className="p-4">Loading…</div>
+        </SidebarContent>
+      </Sidebar>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <Sidebar {...props}>
+        <SidebarContent>
+          <div className="p-4 text-sm text-red-600">Unable to load user</div>
+        </SidebarContent>
+      </Sidebar>
+    );
+  }
 
   return (
     <Sidebar {...props}>
@@ -125,7 +147,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

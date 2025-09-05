@@ -14,7 +14,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchProject } from "@/lib/fetchers";
 import type { Project } from "@/types";
 import { useQuery } from "@tanstack/react-query";
-import { GlobeIcon, MapPinnedIcon, RadioTowerIcon } from "lucide-react";
+import {
+  DownloadIcon,
+  GlobeIcon,
+  MapPinnedIcon,
+  RadioTowerIcon,
+} from "lucide-react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { use } from "react";
@@ -117,6 +122,16 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     notFound();
   }
 
+  const exportPDF = () => {
+    const url = "/pitch-deck.pdf";
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "pitch-deck.pdf");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div>
@@ -146,6 +161,10 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                   {project.address}
                 </Badge>
               ) : null}
+              <Button variant="secondary" onClick={exportPDF}>
+                <DownloadIcon className="h-4 w-4" />
+                Export PDF
+              </Button>
             </CardAction>
           </CardHeader>
         </Card>

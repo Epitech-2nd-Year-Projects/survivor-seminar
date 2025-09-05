@@ -8,25 +8,29 @@ import (
 )
 
 type Service struct {
-	api        ExternalAPI
-	repo       Repository
-	log        *logrus.Logger
-	softDelete bool
+	api  ExternalAPI
+	repo Repository
+	log  *logrus.Logger
 }
 
-// NewService initializes a new Service instance with the given API, repository, logger, and soft delete configuration.
-func NewService(api ExternalAPI, repo Repository, log *logrus.Logger, softDelete bool) *Service {
+// Syncer is the minimal interface needed by the scheduler to run syncs
+type Syncer interface {
+	FullSync(ctx context.Context) (int, error)
+	IncrementalSync(ctx context.Context) (int, error)
+}
+
+// NewService initializes a new Service instance with the given API, repository, logger, and soft delete configuration
+func NewService(api ExternalAPI, repo Repository, log *logrus.Logger) *Service {
 	return &Service{
-		api:        api,
-		repo:       repo,
-		log:        log,
-		softDelete: softDelete,
+		api:  api,
+		repo: repo,
+		log:  log,
 	}
 }
 
-// FullSync performs a full synchronization by fetching all records from the external API and upserting them into the repository.
-// If soft deletion is enabled, it marks records not present in the latest fetch as soft deleted.
-// Returns the number of records synchronized and any error encountered during the process.
+// FullSync performs a full synchronization by fetching all records from the external API and upserting them into the repository
+// If soft deletion is enabled, it marks records not present in the latest fetch as soft deleted
+// Returns the number of records synchronized and any error encountered during the process
 func (s *Service) FullSync(ctx context.Context) (int, error) {
 	s.log.Info("sync: starting full import")
 
@@ -43,17 +47,6 @@ func (s *Service) FullSync(ctx context.Context) (int, error) {
 	}
 	s.log.Info("sync: all data upsert")
 
-	if s.softDelete {
-		ids := make(map[string]struct{}, len(items))
-		for _, it := range items {
-			ids[it.ExternalID] = struct{}{}
-		}
-		if err := s.repo.SoftDeleteMissing(ctx, ids); err != nil {
-			s.log.WithError(err).WithField("kept", len(ids)).Error("s.repo.SoftDeleteMissing()")
-			return len(items), err
-		}
-	}
-
 	if err := s.repo.UpdateIncrementalWatermark(ctx, time.Now().UTC()); err != nil {
 		s.log.WithError(err).Warn("s.repo.UpdateIncrementalWatermark")
 	}
@@ -62,9 +55,9 @@ func (s *Service) FullSync(ctx context.Context) (int, error) {
 	return len(items), nil
 }
 
-// IncrementalSync performs an incremental synchronization by fetching changes since the last recorded watermark.
-// Retrieves updated data from the external API, upserts it into the repository, and updates the incremental watermark.
-// Returns the count of records synchronized and any error encountered during the process.
+// IncrementalSync performs an incremental synchronization by fetching changes since the last recorded watermark
+// Retrieves updated data from the external API, upserts it into the repository, and updates the incremental watermark
+// Returns the count of records synchronized and any error encountered during the process
 func (s *Service) IncrementalSync(ctx context.Context) (int, error) {
 	since, err := s.repo.LastIncrementalWatermark(ctx)
 	if err != nil {

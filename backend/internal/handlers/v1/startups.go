@@ -33,6 +33,23 @@ func NewStartupsHandler(db *gorm.DB, log *logrus.Logger) *StartupsHandler {
 	}
 }
 
+// ListStartups godoc
+// @Summary      List startups
+// @Description  Returns a paginated list of startups with filters and sorting.
+// @Tags         Startups
+// @Param        page           query int    false "Page" default(1)
+// @Param        per_page       query int    false "Page size" default(20)
+// @Param        sort           query string false "Sort field" default(created_at)
+// @Param        order          query string false "Sort order" Enums(asc,desc) default(desc)
+// @Param        sector         query string false "Sector filter" Enums(tech,health,finance)
+// @Param        maturity       query string false "Maturity filter" Enums(early,middle,late)
+// @Param        project_status query string false "Project status" Enums(ongoing,completed)
+// @Param        founder        query string false "Founder filter"
+// @Param        created_at     query string false "CreatedAt filter"
+// @Success      200 {object} response.StartupListResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /startups [get]
 func (h *StartupsHandler) ListStartups(ctx *gin.Context) {
 	var params listStartupsParams
 	params.pagination = pagination.Parse(ctx)
@@ -96,6 +113,15 @@ func (h *StartupsHandler) ListStartups(ctx *gin.Context) {
 	})
 }
 
+// GetStartup godoc
+// @Summary      Get startup
+// @Description  Retrieves a startup by ID.
+// @Tags         Startups
+// @Param        id   path int true "Startup ID"
+// @Success      200 {object} response.StartupObjectResponse
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /startups/{id} [get]
 func (h *StartupsHandler) GetStartup(ctx *gin.Context) {
 	id := ctx.Param("id")
 
@@ -121,15 +147,45 @@ func (h *StartupsHandler) GetStartup(ctx *gin.Context) {
 	})
 }
 
+// CreateStartup godoc
+// @Summary      Create startup
+// @Description  Creates a startup (admin required).
+// @Tags         Startups
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.StartupCreateRequest true "Startup" Example({"name":"Acme","email":"contact@acme.tld","sector":"tech","maturity":"early","project_status":"ongoing"})
+// @Success      201 {object} response.StartupObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/startups [post]
 func (h *StartupsHandler) CreateStartup(ctx *gin.Context) {
-	var req models.Startup
+	var req struct {
+		Name          string  `json:"name" binding:"required"`
+		Email         *string `json:"email,omitempty" binding:"omitempty,email"`
+		Sector        *string `json:"sector,omitempty"`
+		Maturity      *string `json:"maturity,omitempty"`
+		ProjectStatus *string `json:"project_status,omitempty"`
+		Description   *string `json:"description,omitempty"`
+	}
+
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.JSONError(ctx, http.StatusBadRequest,
 			"invalid_payload", "invalid request payload", err.Error())
 		return
 	}
 
-	if err := h.db.Create(&req).Error; err != nil {
+	startup := models.Startup{
+		Name:          req.Name,
+		Email:         req.Email,
+		Sector:        req.Sector,
+		Maturity:      req.Maturity,
+		ProjectStatus: req.ProjectStatus,
+		Description:   req.Description,
+	}
+
+	if err := h.db.Create(&startup).Error; err != nil {
 		h.log.WithError(err).Error("h.db.Create().Error")
 		response.JSONError(ctx, http.StatusInternalServerError,
 			"internal_error", "failed to create startup", nil)
@@ -138,10 +194,25 @@ func (h *StartupsHandler) CreateStartup(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, gin.H{
 		"message": "startup created successfully",
-		"data":    req,
+		"data":    startup,
 	})
 }
 
+// UpdateStartup godoc
+// @Summary      Update startup
+// @Description  Updates a startup by ID (admin required).
+// @Tags         Startups
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id      path   int    true  "Startup ID"
+// @Param        payload body   requests.StartupUpdateRequest true  "Fields to update" Example({"description":"New description","maturity":"middle"})
+// @Success      200 {object} response.StartupObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/startups/{id} [patch]
 func (h *StartupsHandler) UpdateStartup(ctx *gin.Context) {
 	id := ctx.Param("id")
 
@@ -155,20 +226,49 @@ func (h *StartupsHandler) UpdateStartup(ctx *gin.Context) {
 		return
 	}
 
-	var req map[string]interface{}
+	var req struct {
+		Name          *string `json:"name,omitempty"`
+		Email         *string `json:"email,omitempty" binding:"omitempty,email"`
+		Sector        *string `json:"sector,omitempty"`
+		Maturity      *string `json:"maturity,omitempty"`
+		ProjectStatus *string `json:"project_status,omitempty"`
+		Description   *string `json:"description,omitempty"`
+	}
+
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		h.log.WithError(err).Warn("invalid request payload for startup update")
 		response.JSONError(ctx, http.StatusBadRequest,
 			"invalid_payload", "invalid request payload", err.Error())
 		return
 	}
 
-	if len(req) == 0 {
+	updates := make(map[string]interface{})
+	if req.Name != nil {
+		updates["name"] = *req.Name
+	}
+	if req.Email != nil {
+		updates["email"] = *req.Email
+	}
+	if req.Sector != nil {
+		updates["sector"] = *req.Sector
+	}
+	if req.Maturity != nil {
+		updates["maturity"] = *req.Maturity
+	}
+	if req.ProjectStatus != nil {
+		updates["project_status"] = *req.ProjectStatus
+	}
+	if req.Description != nil {
+		updates["description"] = *req.Description
+	}
+
+	if len(updates) == 0 {
 		response.JSONError(ctx, http.StatusBadRequest,
 			"no_fields", "no fields provided for update", nil)
 		return
 	}
 
-	if err := h.db.Model(&startup).Updates(req).Error; err != nil {
+	if err := h.db.Model(&startup).Updates(updates).Error; err != nil {
 		response.JSONError(ctx, http.StatusInternalServerError,
 			"internal_error", "failed to update startup", nil)
 		return
@@ -180,6 +280,17 @@ func (h *StartupsHandler) UpdateStartup(ctx *gin.Context) {
 	})
 }
 
+// DeleteStartup godoc
+// @Summary      Delete startup
+// @Description  Deletes a startup by ID (admin required).
+// @Tags         Startups
+// @Security     BearerAuth
+// @Param        id   path int true "Startup ID"
+// @Success      200 {object} response.MessageResponse
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/startups/{id} [delete]
 func (h *StartupsHandler) DeleteStartup(ctx *gin.Context) {
 	id := ctx.Param("id")
 

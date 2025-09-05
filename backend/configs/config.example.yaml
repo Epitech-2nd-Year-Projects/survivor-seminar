@@ -2,7 +2,7 @@ app:
   name: jeb-backend
   env: development  # development | staging | production
   port: 8080
-  base_url: http://localhost:8080
+  base_url: http://localhost:1111
   version: v1
 
 database:
@@ -14,7 +14,7 @@ auth:
   jwt:
     secret: ${JWT_SECRET}
     access_token_ttl: 15m
-    refresh_token_ttl: 10000m
+    refresh_token_ttl: 168h
   password_reset_ttl: 1h
   email_verification_ttl: 24h
 
@@ -28,9 +28,8 @@ api:
       backoff: 5s
 
 sync:
-  full_import: on_startup # on_startup | manual
+  full_import: manual # on_startup | manual
   incremental_cron: "0 */6 * * *"
-  soft_delete: true
 
 logging:
   level: info  # debug | info | warn | error
@@ -61,13 +60,20 @@ security:
 
 storage:
   media:
-    provider: local # local | s3 | gcs
+    provider: s3 # local | s3 | gcs
     local_path: ./uploads
+    public_base_url: https://<your-cloudfront-domain>
+    s3:
+      bucket: <your-bucket-name>
+      region: <aws-region>
+      endpoint: ""
+      force_path_style: false
 
 notifications:
   email:
     provider: smtp
-    smtp_url: ${SMTP_URL}
+    from: <your-mail>
+    smtp_url: <your-smtp-link>
   in_app: true
 
 jobs:

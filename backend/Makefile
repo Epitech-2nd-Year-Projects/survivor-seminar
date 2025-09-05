@@ -12,4 +12,11 @@ migrate-up:
 	migrate -path $(MIGRATION_DIR) -database "$(DB_URL)" up
 
 migrate-down:
-	migrate -path $(MIGRATION_DIR) -database "$(DB_URL)" down 1
+	migrate -path $(MIGRATION_DIR) -database "$(DB_URL)" down
+
+test:
+	go test ./... -coverprofile=coverage.out
+	go tool cover -func=coverage.out
+
+cover-html: test
+	go tool cover -html=coverage.out

@@ -36,7 +36,18 @@ func NewNewsHandler(db *gorm.DB, log *logrus.Logger) *NewsHandler {
 	}
 }
 
-// GetNews returns a list of news
+// GetNews godoc
+// @Summary      List news
+// @Description  Returns a paginated list of news with sorting.
+// @Tags         News
+// @Param        page      query int    false "Page" default(1)
+// @Param        per_page  query int    false "Page size" default(20)
+// @Param        sort      query string false "Sort field" Enums(id,title,news_date,category,startup_id,created_at,updated_at) default(news_date)
+// @Param        order     query string false "Sort order" Enums(asc,desc) default(desc)
+// @Success      200 {object} response.NewsListResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /news [get]
 func (h *NewsHandler) GetNews(c *gin.Context) {
 	params := pagination.Parse(c)
 	offset := (params.Page - 1) * params.PerPage
@@ -81,7 +92,15 @@ func (h *NewsHandler) GetNews(c *gin.Context) {
 	})
 }
 
-// GetNewsItem returns a specific news by ID
+// GetNewsItem godoc
+// @Summary      Get news item
+// @Description  Retrieves a news item by ID.
+// @Tags         News
+// @Param        id path int true "News ID"
+// @Success      200 {object} response.NewsObjectResponse
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /news/{id} [get]
 func (h *NewsHandler) GetNewsItem(c *gin.Context) {
 	id := c.Param("id")
 
@@ -100,7 +119,15 @@ func (h *NewsHandler) GetNewsItem(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"data": news})
 }
 
-// GetNewsImage returns the image URL of a news
+// GetNewsImage godoc
+// @Summary      News image URL
+// @Description  Returns the image URL of a news item.
+// @Tags         News
+// @Param        id path int true "News ID"
+// @Success      200 {object} response.ImageURLResponse
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /news/{id}/image [get]
 func (h *NewsHandler) GetNewsImage(c *gin.Context) {
 	id := c.Param("id")
 
@@ -127,7 +154,19 @@ func (h *NewsHandler) GetNewsImage(c *gin.Context) {
 	})
 }
 
-// CreateNews creates a new news
+// CreateNews godoc
+// @Summary      Create news
+// @Description  Creates a news item (admin required).
+// @Tags         News
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.NewsCreateRequest true "News" Example({"title":"Funding round","category":"startup","description":"Series A raised","startup_id":1})
+// @Success      201 {object} response.NewsObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/news [post]
 func (h *NewsHandler) CreateNews(c *gin.Context) {
 	var req struct {
 		Title       string  `json:"title" binding:"required"`
@@ -167,6 +206,21 @@ func (h *NewsHandler) CreateNews(c *gin.Context) {
 	})
 }
 
+// UpdateNews godoc
+// @Summary      Update news
+// @Description  Updates a news item (admin required).
+// @Tags         News
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id      path   int    true  "News ID"
+// @Param        payload body   requests.NewsUpdateRequest true  "Fields to update" Example({"title":"Updated title","image_url":"https://..."})
+// @Success      200 {object} response.NewsObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/news/{id} [patch]
 func (h *NewsHandler) UpdateNews(c *gin.Context) {
 	id := c.Param("id")
 
@@ -236,6 +290,17 @@ func (h *NewsHandler) UpdateNews(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"message": "news updated successfully", "data": news})
 }
 
+// DeleteNews godoc
+// @Summary      Delete news
+// @Description  Deletes a news item (admin required).
+// @Tags         News
+// @Security     BearerAuth
+// @Param        id path int true "News ID"
+// @Success      200 {object} response.MessageResponse
+// @Failure      401 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/news/{id} [delete]
 func (h *NewsHandler) DeleteNews(c *gin.Context) {
 	id := c.Param("id")
 
