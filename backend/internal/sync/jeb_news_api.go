@@ -7,17 +7,17 @@ import (
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/client/jeb"
 )
 
-// JEBNewsAPI implements ExternalAPI for news using the JEB client.
+// JEBNewsAPI implements ExternalAPI for news using the JEB client
 type JEBNewsAPI struct {
 	c *jeb.Client
 }
 
-// NewJEBNewsAPI creates a new instance of JEBNewsAPI with the provided JEB client.
+// NewJEBNewsAPI creates a new instance of JEBNewsAPI with the provided JEB client
 func NewJEBNewsAPI(c *jeb.Client) *JEBNewsAPI {
 	return &JEBNewsAPI{c: c}
 }
 
-// FetchFull retrieves all news and their detailed information from the JEB API, returning a list of UpstreamItems.
+// FetchFull retrieves all news and their detailed information from the JEB API, returning a list of UpstreamItems
 func (a *JEBNewsAPI) FetchFull(ctx context.Context) ([]UpstreamItem, error) {
 	skip := 0
 	items := make([]UpstreamItem, 0, 256)
@@ -54,7 +54,7 @@ func (a *JEBNewsAPI) FetchFull(ctx context.Context) ([]UpstreamItem, error) {
 	return items, nil
 }
 
-// FetchIncremental falls back to full fetch as the public API does not provide updated filters.
+// FetchIncremental falls back to full fetch as the public API does not provide updated filters
 func (a *JEBNewsAPI) FetchIncremental(ctx context.Context, since time.Time) ([]UpstreamItem, error) {
 	return a.FetchFull(ctx)
 }

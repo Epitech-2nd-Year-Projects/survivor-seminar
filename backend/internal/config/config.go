@@ -128,6 +128,7 @@ type NotificationsConfig struct {
 type EmailConfig struct {
 	Provider string `yaml:"provider"`
 	SMTPURL  string `yaml:"smtp_url"`
+	From     string `yaml:"from"`
 }
 
 type JobsConfig struct {
