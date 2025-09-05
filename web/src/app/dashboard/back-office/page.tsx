@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import UsersTable, { type User } from "@/components/tables/usersTable";
-import StartupsTable, { type Startup } from "@/components/tables/startupTable";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import ProjectsTable from "@/components/tables/projectTable";
 import {
   Select,
   SelectTrigger,
@@ -10,85 +10,113 @@ import {
   SelectContent,
   SelectValue,
 } from "@/components/ui/select";
-import { useRouter } from "next/navigation";
-
-const data: User[] = [
-  {
-    id: "101",
-    name: "Jane Doe",
-    email: "jane@x.io",
-    role: "admin",
-    founder_id: "12",
-    investor_id: "0",
-    createdAt: "2024-02-01",
-  },
-  {
-    id: "102",
-    name: "Marc Lee",
-    email: "marc@x.io",
-    role: "manager",
-    founder_id: null,
-    investor_id: "7",
-    createdAt: "2023-11-10",
-  },
-];
-
-const startups: Startup[] = [
-  {
-    id: 1,
-    name: "Acme AI",
-    email: "hello@acme.ai",
-    sector: "AI",
-    maturity: "series",
-    legal_status: "SAS",
-    address: "10 rue de la Paix, Paris",
-    phone: "+33 1 23 45 67 89",
-  },
-  {
-    id: 2,
-    name: "GreenVolt",
-    email: "contact@greenvolt.io",
-    sector: "Energy",
-    maturity: "pause A",
-    legal_status: "SASU",
-  },
-];
+import { fetchProjects, fetchUsers } from "@/lib/fetchers";
+import type { Project } from "@/types/projects";
+import type { User } from "@/types/users";
+import UsersTable from "@/components/tables/usersTable";
 
 export default function BackOfficePage() {
-  const [entity, setEntity] = useState("Users");
+  const [entity, setEntity] = useState("Startups");
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  useEffect(() => {
+    let alive = true;
+    if (entity === "Startups") {
+      setLoading(true);
+      setError(null);
+      fetchProjects()
+        .then((rows) => {
+          if (alive) setProjects(rows);
+        })
+        .catch((e) => {
+          if (alive) setError((e as Error).message);
+        })
+        .finally(() => {
+          if (alive) setLoading(false);
+        });
+    }
+    if (entity === "Users") {
+      setLoading(true);
+      setError(null);
+      fetchUsers()
+        .then((rows) => {
+          if (alive) setUsers(rows);
+        })
+        .catch((e) => {
+          if (alive) setError((e as Error).message);
+        })
+        .finally(() => {
+          if (alive) setLoading(false);
+        });
+    }
+    return () => {
+      alive = false;
+    };
+  }, [entity]);
+
   return (
-    <main className="space-y-4 p-4">
-      <div className="w-56 sm:w-64">
-        <Select value={entity} onValueChange={setEntity}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select element to edit" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Users">Users</SelectItem>
-            <SelectItem value="Startups">Startups</SelectItem>
-          </SelectContent>
-        </Select>
+    <main className="mx-auto max-w-7xl space-y-4 p-4 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:w-64">
+          <Select value={entity} onValueChange={(v) => setEntity(v)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select element to edit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Users">Users</SelectItem>
+              <SelectItem value="Startups">Startups</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {entity === "Users" && (
-        <UsersTable
-          users={data}
-          onCreate={() => router.push("/dashboard/users/new")}
-          onView={(u) => router.push(`/dashboard/users/${u.id}`)}
-          onEdit={(u) => router.push(`/dashboard/users/${u.id}/edit`)}
-          onDelete={(u) => console.log("delete", u)}
-        />
-      )}
       {entity === "Startups" && (
-        <StartupsTable
-          startups={startups}
-          onCreate={() => router.push("/dashboard/startups/new")}
-          onView={(s) => router.push(`/dashboard/startups/${s.id}`)}
-          onEdit={(s) => router.push(`/dashboard/startups/${s.id}/edit`)}
-          onDelete={(s) => console.log("delete", s)}
-        />
+        <>
+          {loading && (
+            <div className="text-muted-foreground text-sm">Loading…</div>
+          )}
+          {error && (
+            <div className="text-destructive text-sm break-all">
+              Error: {error}
+            </div>
+          )}
+          {!loading && !error && (
+            <ProjectsTable
+              projects={projects}
+              onCreate={() => router.push("/projects/new")}
+              onView={(p) => router.push(`/projects/${p.id}`)}
+              onEdit={(p) => router.push(`/projects/${p.id}/edit`)}
+              onDelete={(p) => console.log("delete", p)}
+              emptyLabel="No startups"
+            />
+          )}
+        </>
+      )}
+      {entity === "Users" && (
+        <>
+          {loading && (
+            <div className="text-muted-foreground text-sm">Loading…</div>
+          )}
+          {error && (
+            <div className="text-destructive text-sm break-all">
+              Error: {error}
+            </div>
+          )}
+          {!loading && !error && (
+            <UsersTable
+              users={users}
+              onCreate={() => router.push("/users/new")}
+              onView={(u) => router.push(`/users/${u.id}`)}
+              onEdit={(u) => router.push(`/users/${u.id}/edit`)}
+              onDelete={(u) => console.log("delete", u)}
+              emptyLabel="No users"
+            />
+          )}
+        </>
       )}
     </main>
   );
