@@ -113,7 +113,6 @@ func (s *HTTPServer) registerRoutes() {
 	v1.Group("/locations")
 	v1.Group("/tags")
 	v1.Group("/track")
-	v1.Group("/startup")
 	v1.Group("/conversations")
 }
 

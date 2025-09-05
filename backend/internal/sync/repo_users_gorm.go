@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// GormUsersRepo persists users into DB and tracks watermark.
+// GormUsersRepo persists users into DB and tracks watermark
 type GormUsersRepo struct {
 	db    *gorm.DB
 	log   *logrus.Logger
@@ -24,12 +24,12 @@ type GormUsersRepo struct {
 	jeb   *jebc.Client
 }
 
-// NewGormUsersRepo creates and returns a new instance of GormUsersRepo with the provided database, logger, media uploader, and JEB client.
+// NewGormUsersRepo creates and returns a new instance of GormUsersRepo with the provided database, logger, media uploader, and JEB client
 func NewGormUsersRepo(db *gorm.DB, log *logrus.Logger, media storeS3.Uploader, jeb *jebc.Client) *GormUsersRepo {
 	return &GormUsersRepo{db: db, log: log, scope: "users", media: media, jeb: jeb}
 }
 
-// UpsertBatch upserts a batch of users into the database by email, creating or updating non-sensitive fields as needed.
+// UpsertBatch upserts a batch of users into the database by email, creating or updating non-sensitive fields as needed
 func (r *GormUsersRepo) UpsertBatch(ctx context.Context, items []UpstreamItem) error {
 	if len(items) == 0 {
 		return nil
@@ -112,7 +112,7 @@ func (r *GormUsersRepo) UpsertBatch(ctx context.Context, items []UpstreamItem) e
 	return nil
 }
 
-// SoftDeleteMissing marks users as deleted if their emails are not present in the provided external IDs map.
+// SoftDeleteMissing marks users as deleted if their emails are not present in the provided external IDs map
 func (r *GormUsersRepo) SoftDeleteMissing(ctx context.Context, existingExternalIDs map[string]struct{}) error {
 	keep := make(map[string]struct{}, len(existingExternalIDs))
 	for email := range existingExternalIDs {
@@ -140,7 +140,7 @@ func (r *GormUsersRepo) SoftDeleteMissing(ctx context.Context, existingExternalI
 	return nil
 }
 
-// LastIncrementalWatermark retrieves the last incremental watermark from the database for the specified scope.
+// LastIncrementalWatermark retrieves the last incremental watermark from the database for the specified scope
 func (r *GormUsersRepo) LastIncrementalWatermark(ctx context.Context) (time.Time, error) {
 	var st syncState
 	if err := r.db.WithContext(ctx).First(&st, "name = ?", r.scope).Error; err != nil {
@@ -149,7 +149,7 @@ func (r *GormUsersRepo) LastIncrementalWatermark(ctx context.Context) (time.Time
 	return st.Watermark, nil
 }
 
-// UpdateIncrementalWatermark updates the incremental sync watermark in the database for the current scope.
+// UpdateIncrementalWatermark updates the incremental sync watermark in the database for the current scope
 func (r *GormUsersRepo) UpdateIncrementalWatermark(ctx context.Context, ts time.Time) error {
 	st := syncState{Name: r.scope, Watermark: ts}
 	if err := r.db.WithContext(ctx).Clauses(clause.OnConflict{UpdateAll: true}).Create(&st).Error; err != nil {

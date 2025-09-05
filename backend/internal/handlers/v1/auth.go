@@ -32,7 +32,7 @@ func NewAuthHandler(cfg *config.Config, db *gorm.DB, log *logrus.Logger, mailer 
 	return &AuthHandler{cfg: cfg, db: db, log: log, mailer: mailer}
 }
 
-// Register handles user registration with email, name, role, and password validation.
+// Register handles user registration with email, name, role, and password validation
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req struct {
 		Email      string  `json:"email" binding:"required,email"`
@@ -86,7 +86,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Auto-create a dedicated Investor record for this user when role is investor and none provided
 	if u.Role == "investor" && u.InvestorID == nil {
 		_ = h.alignInvestorSequence()
 		inv := models.Investor{Name: u.Name, Email: u.Email}
@@ -127,7 +126,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	response.JSON(c, http.StatusCreated, gin.H{"user": u, "tokens": pair})
 }
 
-// Login verifies credentials and returns a token pair.
+// Login verifies credentials and returns a token pair
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req struct {
 		Email    string `json:"email" binding:"required,email"`
@@ -161,7 +160,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"user": u, "tokens": pair})
 }
 
-// Refresh exchanges a valid refresh token for a new access token (and refresh token).
+// Refresh exchanges a valid refresh token for a new access token (and refresh token)
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req struct {
 		RefreshToken string `json:"refresh_token" binding:"required"`
@@ -192,7 +191,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"tokens": pair})
 }
 
-// VerifyEmail verifies the user's email using a token (from query or JSON).
+// VerifyEmail verifies the user's email using a token (from query or JSON)
 func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 	type reqBody struct {
 		Token string `json:"token"`
@@ -229,7 +228,7 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"message": "email verified"})
 }
 
-// ForgotPassword sends a password reset email if the user exists.
+// ForgotPassword sends a password reset email if the user exists
 func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	var req struct {
 		Email string `json:"email" binding:"required,email"`
@@ -264,7 +263,7 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"message": "if the email exists, a reset link was sent"})
 }
 
-// ResetPassword resets a user's password using a valid reset token.
+// ResetPassword resets a user's password using a valid reset token
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var req struct {
 		Token       string `json:"token" binding:"required"`
@@ -341,7 +340,7 @@ func (h *AuthHandler) createOneTimeToken(c *gin.Context, userID uint64, tokenTyp
 	return secret, nil
 }
 
-// consumeOneTimeToken validates and deletes a token. Returns the associated userID.
+// consumeOneTimeToken validates and deletes a token. Returns the associated userID
 func (h *AuthHandler) consumeOneTimeToken(c *gin.Context, secret string, tokenType string) (uint64, error) {
 	if secret == "" {
 		return 0, fmt.Errorf("missing token")

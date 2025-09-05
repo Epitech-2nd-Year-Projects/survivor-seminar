@@ -59,7 +59,7 @@ func (u *S3Uploader) Upload(ctx context.Context, key string, contentType string,
 	return u.publicBase + "/" + path.Clean(key), nil
 }
 
-// bytesReader returns an io.ReadSeeker for []byte without extra alloc.
+// bytesReader returns an io.ReadSeeker for []byte without extra alloc
 func bytesReader(b []byte) *byteReader { return &byteReader{b: b} }
 
 type byteReader struct {

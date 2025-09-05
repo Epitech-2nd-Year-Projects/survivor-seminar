@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// GormNewsRepo persists news into DB and tracks watermark.
+// GormNewsRepo persists news into DB and tracks watermark
 type GormNewsRepo struct {
 	db    *gorm.DB
 	log   *logrus.Logger
@@ -23,12 +23,12 @@ type GormNewsRepo struct {
 	jeb   *jebc.Client
 }
 
-// NewGormNewsRepo initializes and returns a new instance of GormNewsRepo with the given database and logger.
+// NewGormNewsRepo initializes and returns a new instance of GormNewsRepo with the given database and logger
 func NewGormNewsRepo(db *gorm.DB, log *logrus.Logger, media storeS3.Uploader, jeb *jebc.Client) *GormNewsRepo {
 	return &GormNewsRepo{db: db, log: log, scope: "news", media: media, jeb: jeb}
 }
 
-// UpsertBatch inserts or updates a batch of upstream items in the database using their primary keys.
+// UpsertBatch inserts or updates a batch of upstream items in the database using their primary keys
 func (r *GormNewsRepo) UpsertBatch(ctx context.Context, items []UpstreamItem) error {
 	if len(items) == 0 {
 		return nil
