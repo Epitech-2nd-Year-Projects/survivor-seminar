@@ -1,8 +1,13 @@
+// app/dashboard/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+
 import ProjectsTable from "@/components/tables/projectTable";
+import UsersTable from "@/components/tables/usersTable";
+
 import {
   Select,
   SelectTrigger,
@@ -10,58 +15,48 @@ import {
   SelectContent,
   SelectValue,
 } from "@/components/ui/select";
+
 import { fetchProjects, fetchUsers } from "@/lib/fetchers";
 import type { Project, User } from "@/types";
-import UsersTable from "@/components/tables/usersTable";
+import TableSkeletonWide from "@/components/tablesSkeletonWide";
+
+const ENTITIES = ["Users", "Startups"] as const;
+type Entity = (typeof ENTITIES)[number];
+const isEntity = (v: string): v is Entity =>
+  (ENTITIES as readonly string[]).includes(v);
 
 export default function BackOfficePage() {
-  const [entity, setEntity] = useState("Startups");
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [entity, setEntity] = useState<Entity>("Startups");
   const router = useRouter();
 
-  useEffect(() => {
-    let alive = true;
-    if (entity === "Startups") {
-      setLoading(true);
-      setError(null);
-      fetchProjects()
-        .then((rows) => {
-          if (alive) setProjects(rows);
-        })
-        .catch((e) => {
-          if (alive) setError((e as Error).message);
-        })
-        .finally(() => {
-          if (alive) setLoading(false);
-        });
-    }
-    if (entity === "Users") {
-      setLoading(true);
-      setError(null);
-      fetchUsers()
-        .then((rows) => {
-          if (alive) setUsers(rows);
-        })
-        .catch((e) => {
-          if (alive) setError((e as Error).message);
-        })
-        .finally(() => {
-          if (alive) setLoading(false);
-        });
-    }
-    return () => {
-      alive = false;
-    };
-  }, [entity]);
+  const projectsQ = useQuery<Project[], Error>({
+    queryKey: ["projects"],
+    queryFn: fetchProjects,
+    enabled: entity === "Startups",
+    staleTime: 5 * 60_000,
+    retry: 2,
+    placeholderData: (prev) => prev,
+  });
+
+  const usersQ = useQuery<User[], Error>({
+    queryKey: ["users"],
+    queryFn: fetchUsers,
+    enabled: entity === "Users",
+    staleTime: 5 * 60_000,
+    retry: 2,
+    placeholderData: (prev) => prev,
+  });
 
   return (
     <main className="mx-auto max-w-7xl space-y-4 p-4 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="w-full sm:w-64">
-          <Select value={entity} onValueChange={(v) => setEntity(v)}>
+          <Select
+            value={entity}
+            onValueChange={(v) => {
+              if (isEntity(v)) setEntity(v);
+            }}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select element to edit" />
             </SelectTrigger>
@@ -75,17 +70,23 @@ export default function BackOfficePage() {
 
       {entity === "Startups" && (
         <>
-          {loading && (
-            <div className="text-muted-foreground text-sm">Loading…</div>
+          {projectsQ.isLoading && (
+            <TableSkeletonWide
+              title="Startups"
+              subtitle="Loading startups…"
+              rows={12}
+            />
           )}
-          {error && (
+
+          {projectsQ.isError && (
             <div className="text-destructive text-sm break-all">
-              Error: {error}
+              Error: {projectsQ.error?.message}
             </div>
           )}
-          {!loading && !error && (
+
+          {projectsQ.data && (
             <ProjectsTable
-              projects={projects}
+              projects={projectsQ.data}
               onCreate={() => router.push("/projects/new")}
               onView={(p) => router.push(`/projects/${p.id}`)}
               onEdit={(p) => router.push(`/projects/${p.id}/edit`)}
@@ -95,19 +96,26 @@ export default function BackOfficePage() {
           )}
         </>
       )}
+
       {entity === "Users" && (
         <>
-          {loading && (
-            <div className="text-muted-foreground text-sm">Loading…</div>
+          {usersQ.isLoading && (
+            <TableSkeletonWide
+              title="Users"
+              subtitle="Loading users…"
+              rows={12}
+            />
           )}
-          {error && (
+
+          {usersQ.isError && (
             <div className="text-destructive text-sm break-all">
-              Error: {error}
+              Error: {usersQ.error?.message}
             </div>
           )}
-          {!loading && !error && (
+
+          {usersQ.data && (
             <UsersTable
-              users={users}
+              users={usersQ.data}
               onCreate={() => router.push("/users/new")}
               onView={(u) => router.push(`/users/${u.id}`)}
               onEdit={(u) => router.push(`/users/${u.id}/edit`)}
