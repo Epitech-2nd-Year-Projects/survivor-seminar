@@ -47,7 +47,7 @@ export async function loginUser(creds: LoginFormData): Promise<LoginResponse> {
 }
 
 export async function fetchCurrentUser(): Promise<User> {
-  const res = await fetch("/api/v1/auth/me", {
+  const res = await fetch("/api/v1/me", {
     method: "GET",
     credentials: "include",
   });
