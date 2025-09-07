@@ -19,6 +19,13 @@ type InvestorsHandler struct {
 	log *logrus.Logger
 }
 
+type listInvestorsParams struct {
+	pagination      pagination.Params
+	InvestorType    string `form:"investor_type" binding:"omitempty"`
+	InvestmentFocus string `form:"investment_focus" binding:"omitempty"`
+	Email           string `form:"email" binding:"omitempty,email"`
+}
+
 func NewInvestorsHandler(db *gorm.DB, log *logrus.Logger) *InvestorsHandler {
 	return &InvestorsHandler{
 		db:  db,
@@ -37,56 +44,72 @@ var validInvestorSortFields = []string{
 
 // GetInvestors godoc
 // @Summary      List investors
-// @Description  Returns a paginated list of investors with sorting.
+// @Description  Returns a paginated list of investors with filters and sorting.
 // @Tags         Investors
-// @Param        page      query int    false "Page" default(1)
-// @Param        per_page  query int    false "Page size" default(20)
-// @Param        sort      query string false "Sort field" Enums(id,name,email,created_at,investor_type,investment_focus) default(created_at)
-// @Param        order     query string false "Sort order" Enums(asc,desc) default(desc)
+// @Param        page             query int    false "Page" default(1)
+// @Param        per_page         query int    false "Page size" default(20)
+// @Param        sort             query string false "Sort field" Enums(id,name,email,created_at,investor_type,investment_focus) default(created_at)
+// @Param        order            query string false "Sort order" Enums(asc,desc) default(desc)
+// @Param        investor_type    query string false "Filter by investor type"
+// @Param        investment_focus query string false "Filter by investment focus (contains)"
+// @Param        email            query string false "Filter by email"
 // @Success      200 {object} response.InvestorListResponse
 // @Failure      400 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
 // @Router       /investors [get]
 func (h *InvestorsHandler) GetInvestors(c *gin.Context) {
-	params := pagination.Parse(c)
-	offset := (params.Page - 1) * params.PerPage
+	var params listInvestorsParams
+	params.pagination = pagination.Parse(c)
 
-	if !slices.Contains(validInvestorSortFields, params.Sort) {
-		response.JSONError(c, http.StatusBadRequest,
-			"invalid_sort",
-			fmt.Sprintf("invalid sort field '%s'. Allowed: %v", params.Sort, validInvestorSortFields), nil)
+	if err := c.ShouldBindQuery(&params); err != nil {
+		response.JSON(c, http.StatusBadRequest, gin.H{"code": "invalid_params", "message": err.Error()})
 		return
+	}
+
+	if !slices.Contains(validInvestorSortFields, params.pagination.Sort) {
+		response.JSON(c, http.StatusBadRequest, gin.H{
+			"code":    2117,
+			"message": fmt.Sprintf("invalid sort field '%s'. Allowed fields: %v", params.pagination.Sort, validInvestorSortFields),
+		})
+		return
+	}
+
+	query := h.db.Model(&models.Investor{})
+	if params.InvestorType != "" {
+		query = query.Where("investor_type = ?", params.InvestorType)
+	}
+	if params.InvestmentFocus != "" {
+		query = query.Where("investment_focus ILIKE ?", "%"+params.InvestmentFocus+"%")
+	}
+	if params.Email != "" {
+		query = query.Where("email = ?", params.Email)
 	}
 
 	var total int64
-	if err := h.db.Model(&models.Investor{}).Count(&total).Error; err != nil {
-		h.log.WithError(err).Error("failed to count investors")
-		response.JSONError(c, http.StatusInternalServerError,
-			"internal_error", "failed to retrieve investors count", nil)
+	if err := query.Count(&total).Error; err != nil {
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to count investors"})
 		return
 	}
 
-	orderBy := fmt.Sprintf("%s %s", params.Sort, params.Order)
+	orderBy := fmt.Sprintf("%s %s", params.pagination.Sort, params.pagination.Order)
 	var investors []models.Investor
-	if err := h.db.Order(orderBy).Offset(offset).Limit(params.PerPage).Find(&investors).Error; err != nil {
-		h.log.WithError(err).Error("failed to fetch investors")
-		response.JSONError(c, http.StatusInternalServerError,
-			"internal_error", "failed to retrieve investors", nil)
+	if err := query.Order(orderBy).
+		Offset((params.pagination.Page - 1) * params.pagination.PerPage).
+		Limit(params.pagination.PerPage).
+		Find(&investors).Error; err != nil {
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to retrieve investors"})
 		return
 	}
 
-	totalPages := (int(total) + params.PerPage - 1) / params.PerPage
-	hasNext := params.Page < totalPages
-	hasPrev := params.Page > 1
-
+	totalPages := (int(total) + params.pagination.PerPage - 1) / params.pagination.PerPage
 	response.JSON(c, http.StatusOK, gin.H{
 		"data": investors,
 		"pagination": gin.H{
-			"page":     params.Page,
-			"per_page": params.PerPage,
+			"page":     params.pagination.Page,
+			"per_page": params.pagination.PerPage,
 			"total":    total,
-			"has_next": hasNext,
-			"has_prev": hasPrev,
+			"has_next": params.pagination.Page < totalPages,
+			"has_prev": params.pagination.Page > 1,
 		},
 	})
 }
