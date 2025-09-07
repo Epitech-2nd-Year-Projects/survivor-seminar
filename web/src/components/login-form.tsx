@@ -6,8 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
-import { useLogin } from "@/hooks/useLogin";
 import React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useLogin } from "@/lib/api/services/auth/hooks";
+import { userMessageFromError } from "@/lib/api/http/messages";
 
 function getString(form: FormData, key: string, fallback = ""): string {
   const v = form.get(key);
@@ -18,10 +20,14 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const { mutate, isPending } = useLogin();
+  const router = useRouter();
+  const sp = useSearchParams();
+  const next = sp.get("next") ?? "/";
+
+  const { mutateAsync, isPending } = useLogin();
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorMsg(null);
 
@@ -29,17 +35,13 @@ export function LoginForm({
     const email = getString(form, "email");
     const password = getString(form, "password");
 
-    mutate(
-      {
-        email,
-        password,
-      },
-      {
-        onError(err) {
-          setErrorMsg(err.message);
-        },
-      },
-    );
+    try {
+      await mutateAsync({ email, password });
+      router.replace(next);
+      router.refresh();
+    } catch (err) {
+      setErrorMsg(userMessageFromError(err));
+    }
   }
 
   return (

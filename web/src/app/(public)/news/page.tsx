@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,141 +8,56 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchNews } from "@/lib/fetchers";
-import { capitalize } from "@/lib/utils";
-import type { News } from "@/types";
-import { useQuery } from "@tanstack/react-query";
-import { ListRestartIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { userMessageFromError } from "@/lib/api/http/messages";
+import { useNewsList } from "@/lib/api/services/news/hooks";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-export default function Projects() {
+function useUrlState() {
+  const sp = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
 
-  const {
-    data: news = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery<News[], Error>({
-    queryKey: ["news"],
-    queryFn: fetchNews,
-    staleTime: 1000 * 60 * 5,
-    retry: 2,
-  });
-
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
-    undefined,
-  );
-  const [selectedLocation, setSelectedLocation] = useState<string | undefined>(
-    undefined,
-  );
-
-  const categoryOptions = useMemo(() => {
-    return Array.from(
-      new Set(
-        news.map((n) => n.category).filter((m): m is string => m != null),
-      ),
-    ).sort();
-  }, [news]);
-
-  const locationOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          news
-            .map((n) => n.location?.split(",").pop()?.trim())
-            .filter((c): c is string => !!c),
-        ),
-      ).sort(),
-    [news],
-  );
-
-  const visibleNews = useMemo(
-    () =>
-      news.filter((e) => {
-        const city = e.location?.split(",").pop()?.trim();
-        return (
-          (!selectedCategory || e.category === selectedCategory) &&
-          (!selectedLocation || city === selectedLocation)
-        );
-      }),
-    [news, selectedCategory, selectedLocation],
-  );
-
-  const resetFilters = () => {
-    setSelectedCategory(undefined);
-    setSelectedLocation(undefined);
+  const get = (k: string) => sp.get(k) ?? undefined;
+  const set = (next: Record<string, string | undefined>) => {
+    const n = new URLSearchParams(Array.from(sp.entries()));
+    for (const [k, v] of Object.entries(next)) {
+      if (!v) n.delete(k);
+      else n.set(k, v);
+    }
+    router.replace(`${pathname}?${n.toString()}`);
   };
 
+  return {
+    page: Number(get("page") ?? "1"),
+    perPage: Number(get("per_page") ?? "20"),
+    set,
+  };
+}
+
+export default function NewsPage() {
+  const router = useRouter();
+  const { page, perPage } = useUrlState();
+
+  const { data, isLoading, isError, error } = useNewsList({
+    page,
+    perPage,
+  });
+
+  const listNews = data?.data ?? [];
+
   if (isError) {
-    return <div>Error: {error.message}</div>;
+    console.log(error);
+    return <div>Error: {userMessageFromError(error)}</div>;
   }
+
+  const showSkeletons = isLoading && !data;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <Select
-          disabled={isLoading}
-          value={selectedCategory ?? ""}
-          onValueChange={setSelectedCategory}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Category</SelectLabel>
-              {categoryOptions.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {capitalize(m)}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <Select
-          disabled={isLoading}
-          value={selectedLocation ?? ""}
-          onValueChange={setSelectedLocation}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select a city" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>City</SelectLabel>
-              {locationOptions.map((location) => (
-                <SelectItem key={location} value={location}>
-                  {location}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <Button
-          disabled={isLoading}
-          variant="secondary"
-          size="icon"
-          className="size-8"
-          onClick={resetFilters}
-        >
-          <ListRestartIcon />
-        </Button>
-      </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading
-          ? Array.from({ length: 12 }).map((_, i) => (
+        {showSkeletons
+          ? Array.from({ length: perPage }).map((_, i) => (
               <Card key={i}>
                 <CardHeader>
                   <CardTitle>
@@ -158,7 +72,7 @@ export default function Projects() {
                 </CardContent>
               </Card>
             ))
-          : visibleNews.map((news) => (
+          : listNews.map((news) => (
               <Card
                 key={news.id}
                 className="focus:ring-primary transform cursor-pointer transition duration-200 ease-out hover:scale-105 hover:shadow-lg focus:scale-105 focus:ring-2 focus:outline-none"

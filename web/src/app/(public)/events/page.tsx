@@ -9,176 +9,74 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchEvents } from "@/lib/fetchers";
-import { capitalize } from "@/lib/utils";
-import type { Event } from "@/types";
-import { useQuery } from "@tanstack/react-query";
-import { ListRestartIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { userMessageFromError } from "@/lib/api/http/messages";
+import { useEventsList } from "@/lib/api/services/events/hooks";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-export default function Projects() {
+function useUrlState() {
+  const sp = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
 
-  const {
-    data: events = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery<Event[], Error>({
-    queryKey: ["events"],
-    queryFn: fetchEvents,
-    staleTime: 1000 * 60 * 5,
-    retry: 2,
+  const get = (k: string) => sp.get(k) ?? undefined;
+  const set = (next: Record<string, string | undefined>) => {
+    const n = new URLSearchParams(Array.from(sp.entries()));
+    for (const [k, v] of Object.entries(next)) {
+      if (!v) n.delete(k);
+      else n.set(k, v);
+    }
+    router.replace(`${pathname}?${n.toString()}`);
+  };
+
+  return {
+    page: Number(get("page") ?? "1"),
+    perPage: Number(get("per_page") ?? "20"),
+    // eventType: get('event_type'),
+    set,
+  };
+}
+
+export default function EventsPage() {
+  const router = useRouter();
+  const { page, perPage, /* eventType,*/ set } = useUrlState();
+
+  const { data, isLoading, isError, error } = useEventsList({
+    page,
+    perPage,
+    // eventType,
   });
 
-  const [selectedEventType, setSelectedEventType] = useState<
-    string | undefined
-  >(undefined);
-  const [selectedTargetAudience, setSelectedTargetAudience] = useState<
-    string | undefined
-  >(undefined);
-  const [selectedLocation, setSelectedLocation] = useState<string | undefined>(
-    undefined,
-  );
+  const listEvents = data?.data ?? [];
 
-  const eventTypeOptions = useMemo(() => {
-    return Array.from(
-      new Set(
-        events.map((e) => e.event_type).filter((m): m is string => m != null),
-      ),
-    ).sort();
-  }, [events]);
+  // TODO: Add filters once API is ready for it
 
-  const targetAudienceOptions = useMemo(() => {
-    return Array.from(
-      new Set(
-        events
-          .map((e) => e.target_audience)
-          .filter((m): m is string => m != null),
-      ),
-    ).sort();
-  }, [events]);
-
-  const locationOptions = useMemo(
+  /*const eventTypeOptions = useMemo(
     () =>
       Array.from(
         new Set(
           events
-            .map((e) => e.location?.split(",").pop()?.trim())
-            .filter((c): c is string => !!c),
+            .map((e) => e.eventType)
+            .filter((m): m is string => !!m && m.length > 0),
         ),
       ).sort(),
     [events],
   );
 
-  const visibleEvents = useMemo(
-    () =>
-      events.filter((e) => {
-        const city = e.location?.split(",").pop()?.trim();
-        return (
-          (!selectedEventType || e.event_type === selectedEventType) &&
-          (!selectedTargetAudience ||
-            e.target_audience === selectedTargetAudience) &&
-          (!selectedLocation || city === selectedLocation)
-        );
-      }),
-    [events, selectedEventType, selectedTargetAudience, selectedLocation],
-  );
-
-  const resetFilters = () => {
-    setSelectedEventType(undefined);
-    setSelectedTargetAudience(undefined);
-    setSelectedLocation(undefined);
-  };
+  const reset = () => set({ event_type: undefined, page: '1' });*/
 
   if (isError) {
-    return <div>Error: {error.message}</div>;
+    console.log(error);
+    return <div>Error: {userMessageFromError(error)}</div>;
   }
+
+  const showSkeletons = isLoading && !data;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <Select
-          disabled={isLoading}
-          value={selectedEventType ?? ""}
-          onValueChange={setSelectedEventType}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select a event type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Event type</SelectLabel>
-              {eventTypeOptions.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {capitalize(m)}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <Select
-          disabled={isLoading}
-          value={selectedTargetAudience ?? ""}
-          onValueChange={setSelectedTargetAudience}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select a target audience" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Target audience</SelectLabel>
-              {targetAudienceOptions.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {capitalize(m)}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <Select
-          disabled={isLoading}
-          value={selectedLocation ?? ""}
-          onValueChange={setSelectedLocation}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select a city" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>City</SelectLabel>
-              {locationOptions.map((location) => (
-                <SelectItem key={location} value={location}>
-                  {location}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <Button
-          disabled={isLoading}
-          variant="secondary"
-          size="icon"
-          className="size-8"
-          onClick={resetFilters}
-        >
-          <ListRestartIcon />
-        </Button>
-      </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading
-          ? Array.from({ length: 12 }).map((_, i) => (
+        {showSkeletons
+          ? Array.from({ length: perPage }).map((_, i) => (
               <Card key={i}>
                 <CardHeader>
                   <CardTitle>
@@ -193,7 +91,7 @@ export default function Projects() {
                 </CardContent>
               </Card>
             ))
-          : visibleEvents.map((event) => (
+          : listEvents.map((event) => (
               <Card
                 key={event.id}
                 className="focus:ring-primary transform cursor-pointer transition duration-200 ease-out hover:scale-105 hover:shadow-lg focus:scale-105 focus:ring-2 focus:outline-none"
@@ -214,6 +112,29 @@ export default function Projects() {
                 </CardContent>
               </Card>
             ))}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          disabled={isLoading || !data?.hasPrev}
+          onClick={() =>
+            set({ page: String(Math.max(1, (data?.page ?? 1) - 1)) })
+          }
+        >
+          Prev
+        </Button>
+        <span>
+          Page {data?.page ?? page} of{" "}
+          {data ? Math.max(1, Math.ceil(data.total / data.perPage)) : "—"}
+        </span>
+        <Button
+          variant="outline"
+          disabled={isLoading || !data?.hasNext}
+          onClick={() => set({ page: String((data?.page ?? 1) + 1) })}
+        >
+          Next
+        </Button>
       </div>
     </div>
   );
