@@ -221,48 +221,6 @@ func (h *UsersHandler) GetMe(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"data": user})
 }
 
-// GetUserImage godoc
-// @Summary      User image URL
-// @Description  Returns a user's image URL.
-// @Tags         Users
-// @Param        id   path int true "User ID"
-// @Success      200 {object} response.ImageURLResponse
-// @Failure      404 {object} response.ErrorBody
-// @Failure      500 {object} response.ErrorBody
-// @Router       /users/{id}/image [get]
-func (h *UsersHandler) GetUserImage(c *gin.Context) {
-	id := c.Param("id")
-
-	var user models.User
-	if err := h.db.Select("image_url").Where("id = ?", id).First(&user).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			response.JSON(c, http.StatusNotFound, gin.H{
-				"code":    "not_found",
-				"message": "user not found",
-			})
-			return
-		}
-		h.log.WithError(err).WithField("id", id).Error("failed to fetch user for image")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to retrieve user",
-		})
-		return
-	}
-
-	if user.ImageURL == nil || *user.ImageURL == "" {
-		response.JSON(c, http.StatusNotFound, gin.H{
-			"code":    "not_found",
-			"message": "image not found",
-		})
-		return
-	}
-
-	response.JSON(c, http.StatusOK, gin.H{
-		"image_url": *user.ImageURL,
-	})
-}
-
 // CreateUser godoc
 // @Summary      Create user
 // @Description  Creates a user (admin required).
