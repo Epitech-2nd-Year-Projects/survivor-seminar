@@ -25,6 +25,15 @@ export const AnimatedThemeToggler = ({ className }: props) => {
     setIsDarkMode(resolvedTheme === "dark");
   }, [mounted, resolvedTheme]);
 
+  interface ViewTransition {
+    ready: Promise<void>;
+    finished: Promise<void>;
+    updateCallbackDone: Promise<void>;
+  }
+  interface DocumentWithStartViewTransition extends Document {
+    startViewTransition: (cb: () => void) => ViewTransition;
+  }
+
   const changeTheme = async () => {
     if (!buttonRef.current) return;
     const next = isDarkMode ? "light" : "dark";
@@ -36,7 +45,8 @@ export const AnimatedThemeToggler = ({ className }: props) => {
       });
     };
 
-    const vt = (document as any).startViewTransition?.(run);
+    const doc = document as unknown as Partial<DocumentWithStartViewTransition>;
+    const vt = doc.startViewTransition?.(run);
     if (!vt) {
       run();
       return;
