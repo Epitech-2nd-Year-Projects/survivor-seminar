@@ -110,6 +110,7 @@ func (s *HTTPServer) registerRoutes() {
 	v1routes.RegisterPartners(v1, s.cfg, s.db, s.log)
 	v1routes.RegisterStatistics(v1, s.cfg, s.db, s.log)
 	v1routes.RegisterAuth(v1, s.cfg, s.db, s.log, s.mailer)
+	v1routes.RegisterConversations(v1, s.cfg, s.db, s.log)
 	v1.Group("/sectors")
 	v1.Group("/locations")
 	v1.Group("/tags")
