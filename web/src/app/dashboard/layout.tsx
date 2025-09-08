@@ -8,12 +8,29 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { redirect } from "next/navigation";
+import { apiFetchServer } from "@/lib/api/http/server";
+import type { ItemResponseDTO } from "@/lib/api/contracts/common";
+import { mapUser, type UserDTO } from "@/lib/api/contracts/users";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  try {
+    const res = await apiFetchServer<ItemResponseDTO<UserDTO>>(`/users/me`, {
+      cache: "no-store",
+    });
+    /*
+    const me = mapUser(res.data ?? (res as any).user);
+    if (!me) { // TODO: Maybe check for role?
+      redirect('/');
+    }*/
+  } catch (e) {
+    redirect(`/login?next=/admin`);
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />

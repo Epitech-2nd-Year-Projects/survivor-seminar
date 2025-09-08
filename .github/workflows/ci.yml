@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+env:
+  NEXT_PUBLIC_API_URL: /api/v1
+
 jobs:
   lint-test-build:
     runs-on: ubuntu-latest

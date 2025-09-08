@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import React from "react";
-import { useRegister } from "@/hooks/useRegister";
+import { userMessageFromError } from "@/lib/api/http/messages";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useRegister } from "@/lib/api/services/auth/hooks";
 
 function getString(form: FormData, key: string, fallback = ""): string {
   const v = form.get(key);
@@ -18,32 +20,30 @@ export function RegisterForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const { mutate, isPending } = useRegister();
+  const router = useRouter();
+  const sp = useSearchParams();
+  const next = sp.get("next") ?? "/login";
+
+  const { mutateAsync, isPending } = useRegister();
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorMsg(null);
 
     const form = new FormData(e.currentTarget);
-    const name = getString(form, "name");
     const email = getString(form, "email");
+    const name = getString(form, "name");
     const password = getString(form, "password");
     const role = "investor";
 
-    mutate(
-      {
-        name,
-        email,
-        password,
-        role,
-      },
-      {
-        onError(err: Error) {
-          setErrorMsg(err.message);
-        },
-      },
-    );
+    try {
+      await mutateAsync({ email, password, name, role });
+      router.replace(next);
+      router.refresh();
+    } catch (err) {
+      setErrorMsg(userMessageFromError(err));
+    }
   }
 
   return (
