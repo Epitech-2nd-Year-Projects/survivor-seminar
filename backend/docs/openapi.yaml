@@ -2133,7 +2133,7 @@ paths:
       - Auth
   /events:
     get:
-      description: Returns a paginated list of events with sorting.
+      description: Returns a paginated list of events with filters and sorting.
       parameters:
       - default: 1
         description: Page
@@ -2165,6 +2165,18 @@ paths:
         - desc
         in: query
         name: order
+        type: string
+      - description: Filter by event type
+        in: query
+        name: event_type
+        type: string
+      - description: Filter by location
+        in: query
+        name: location
+        type: string
+      - description: Filter by start date (YYYY-MM-DD)
+        in: query
+        name: start_date
         type: string
       responses:
         "200":
@@ -2224,7 +2236,7 @@ paths:
       - Health
   /investors:
     get:
-      description: Returns a paginated list of investors with sorting.
+      description: Returns a paginated list of investors with filters and sorting.
       parameters:
       - default: 1
         description: Page
@@ -2255,6 +2267,18 @@ paths:
         - desc
         in: query
         name: order
+        type: string
+      - description: Filter by investor type
+        in: query
+        name: investor_type
+        type: string
+      - description: Filter by investment focus (contains)
+        in: query
+        name: investment_focus
+        type: string
+      - description: Filter by email
+        in: query
+        name: email
         type: string
       responses:
         "200":
@@ -2425,7 +2449,7 @@ paths:
       - News
   /opportunities:
     get:
-      description: Returns a paginated list of opportunities with sorting.
+      description: Returns a paginated list of opportunities with filters and sorting.
       parameters:
       - default: 1
         description: Page
@@ -2457,6 +2481,18 @@ paths:
         - desc
         in: query
         name: order
+        type: string
+      - description: Filter by type (grant, loan, etc.)
+        in: query
+        name: type
+        type: string
+      - description: Filter by organism
+        in: query
+        name: organism
+        type: string
+      - description: Filter by deadline (YYYY-MM-DD)
+        in: query
+        name: deadline
         type: string
       responses:
         "200":
