@@ -10,15 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { DropdownMenu } from "@/components/ui/dropdown-menu-style";
 import { Skeleton } from "@/components/ui/skeleton";
 import { userMessageFromError } from "@/lib/api/http/messages";
 import { useStartupsList } from "@/lib/api/services/startups/hooks";
@@ -67,6 +59,10 @@ export default function StartupsClient() {
   const [selectedLocation, setSelectedLocation] = useState<
     string | undefined
   >();
+
+  const [openFilter, setOpenFilter] = useState<
+    "maturity" | "sector" | "city" | null
+  >(null);
 
   const maturityOptions = useMemo(
     () =>
@@ -132,63 +128,45 @@ export default function StartupsClient() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <Select
-          disabled={isLoading}
-          value={selectedMaturity ?? ""}
-          onValueChange={setSelectedMaturity}
+        <DropdownMenu
+          open={openFilter === "maturity"}
+          onOpenChange={(o) => setOpenFilter(o ? "maturity" : null)}
+          options={[
+            { label: "All maturities", onClick: () => setSelectedMaturity(undefined) },
+            ...maturityOptions.map((m) => ({
+              label: capitalize(m),
+              onClick: () => setSelectedMaturity(m),
+            })),
+          ]}
         >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select a maturity" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Maturity</SelectLabel>
-              {maturityOptions.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {capitalize(m)}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <Select
-          disabled={isLoading}
-          value={selectedSector ?? ""}
-          onValueChange={setSelectedSector}
+          {selectedMaturity ? `Maturity: ${capitalize(selectedMaturity)}` : "Select a maturity"}
+        </DropdownMenu>
+        <DropdownMenu
+          open={openFilter === "sector"}
+          onOpenChange={(o) => setOpenFilter(o ? "sector" : null)}
+          options={[
+            { label: "All sectors", onClick: () => setSelectedSector(undefined) },
+            ...sectorOptions.map((m) => ({
+              label: capitalize(m),
+              onClick: () => setSelectedSector(m),
+            })),
+          ]}
         >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select a sector" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Sector</SelectLabel>
-              {sectorOptions.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {capitalize(m)}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <Select
-          disabled={isLoading}
-          value={selectedLocation ?? ""}
-          onValueChange={setSelectedLocation}
+          {selectedSector ? `Sector: ${capitalize(selectedSector)}` : "Select a sector"}
+        </DropdownMenu>
+        <DropdownMenu
+          open={openFilter === "city"}
+          onOpenChange={(o) => setOpenFilter(o ? "city" : null)}
+          options={[
+            { label: "All cities", onClick: () => setSelectedLocation(undefined) },
+            ...locationOptions.map((location) => ({
+              label: location,
+              onClick: () => setSelectedLocation(location),
+            })),
+          ]}
         >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select a city" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>City</SelectLabel>
-              {locationOptions.map((location) => (
-                <SelectItem key={location} value={location}>
-                  {location}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+          {selectedLocation ? `City: ${selectedLocation}` : "Select a city"}
+        </DropdownMenu>
         <Button
           disabled={isLoading}
           variant="secondary"
