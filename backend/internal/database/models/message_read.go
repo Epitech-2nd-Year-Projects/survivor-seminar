@@ -12,8 +12,7 @@ type MessageRead struct {
 	// When the message was read
 	ReadAt time.Time `json:"read_at" gorm:"autoCreateTime" format:"date-time"`
 
-	Message *Message `json:"message,omitempty" gorm:"foreignKey:MessageID"`
-	User    *User    `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	User *User `json:"user,omitempty" gorm:"foreignKey:UserID"`
 }
 
 func (MessageRead) TableName() string {
