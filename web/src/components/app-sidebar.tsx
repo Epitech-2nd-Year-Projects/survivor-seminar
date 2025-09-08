@@ -63,7 +63,7 @@ const data: {
         { title: "Dashboard", href: "/dashboard/", icon: <LayoutDashboard /> },
         {
           title: "Back Office",
-          href: "/dashboard/admin-back-office",
+          href: "/dashboard/back-office",
           icon: <ShieldUser />,
         },
         {
