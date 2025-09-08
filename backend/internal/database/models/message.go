@@ -16,6 +16,5 @@ type Message struct {
 	// Soft delete timestamp (for moderation)
 	DeletedAt *time.Time `json:"deleted_at,omitempty" gorm:"index"`
 
-	Sender *User         `json:"sender,omitempty" gorm:"foreignKey:SenderID"`
-	Reads  []MessageRead `json:"reads,omitempty" gorm:"foreignKey:MessageID"`
+	Sender *User `json:"sender,omitempty" gorm:"foreignKey:SenderID"`
 }
