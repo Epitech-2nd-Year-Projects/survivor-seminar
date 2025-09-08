@@ -30,6 +30,13 @@ var validUserSortFields = []string{
 	"updated_at",
 }
 
+type listUsersParams struct {
+	pagination pagination.Params
+	Role       string `form:"role" binding:"omitempty,oneof=admin user investor founder"`
+	Email      string `form:"email" binding:"omitempty,email"`
+	Name       string `form:"name" binding:"omitempty"`
+}
+
 // NewUsersHandler returns a new UsersHandler
 func NewUsersHandler(db *gorm.DB, log *logrus.Logger) *UsersHandler {
 	return &UsersHandler{
@@ -40,61 +47,73 @@ func NewUsersHandler(db *gorm.DB, log *logrus.Logger) *UsersHandler {
 
 // GetUsers godoc
 // @Summary      List users
-// @Description  Returns a paginated list of users.
+// @Description  Returns a paginated list of users with optional filters.
 // @Tags         Users
 // @Param        page      query int    false "Page" default(1)
 // @Param        per_page  query int    false "Page size" default(20)
 // @Param        sort      query string false "Sort field" Enums(id,email,name,role,created_at,updated_at) default(created_at)
 // @Param        order     query string false "Sort order" Enums(asc,desc) default(desc)
+// @Param        role      query string false "Filter by role" Enums(admin,user,investor,founder)
+// @Param        email     query string false "Filter by email (contains)"
+// @Param        name      query string false "Filter by name (contains)"
 // @Success      200 {object} response.UserListResponse
 // @Failure      400 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
 // @Router       /users [get]
 func (h *UsersHandler) GetUsers(c *gin.Context) {
-	params := pagination.Parse(c)
-	offset := (params.Page - 1) * params.PerPage
+	var params listUsersParams
+	params.pagination = pagination.Parse(c)
 
-	if !slices.Contains(validUserSortFields, params.Sort) {
-		h.log.WithField("sort", params.Sort).Warn("!slices.Contains(validUserSortFields, params.Sort)")
+	if err := c.ShouldBindQuery(&params); err != nil {
+		response.JSON(c, http.StatusBadRequest,
+			gin.H{"code": "invalid_params", "message": err.Error()})
+		return
+	}
+
+	if !slices.Contains(validUserSortFields, params.pagination.Sort) {
 		response.JSON(c, http.StatusBadRequest, gin.H{
 			"code":    2117,
-			"message": fmt.Sprintf("invalid sort field '%s'. Allowed fields: %v", params.Sort, validUserSortFields),
+			"message": fmt.Sprintf("invalid sort field '%s'. Allowed fields: %v", params.pagination.Sort, validUserSortFields),
 		})
 		return
+	}
+
+	query := h.db.Model(&models.User{})
+	if params.Role != "" {
+		query = query.Where("role = ?", params.Role)
+	}
+	if params.Email != "" {
+		query = query.Where("email ILIKE ?", "%"+params.Email+"%")
+	}
+	if params.Name != "" {
+		query = query.Where("name ILIKE ?", "%"+params.Name+"%")
 	}
 
 	var total int64
-	if err := h.db.Model(&models.User{}).Count(&total).Error; err != nil {
-		h.log.WithError(err).Error("failed to count users")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to retrieve users count",
-		})
+	if err := query.Count(&total).Error; err != nil {
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to count users"})
 		return
 	}
 
-	orderBy := fmt.Sprintf("%s %s", params.Sort, params.Order)
+	orderBy := fmt.Sprintf("%s %s", params.pagination.Sort, params.pagination.Order)
 	var users []models.User
-	if err := h.db.Order(orderBy).Offset(offset).Limit(params.PerPage).Find(&users).Error; err != nil {
-		h.log.WithError(err).Error("failed to fetch users")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to retrieve users",
-		})
+	if err := query.Order(orderBy).
+		Offset((params.pagination.Page - 1) * params.pagination.PerPage).
+		Limit(params.pagination.PerPage).
+		Find(&users).Error; err != nil {
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to retrieve users"})
 		return
 	}
-	totalPages := (int(total) + params.PerPage - 1) / params.PerPage
-	hasNext := params.Page < totalPages
-	hasPrev := params.Page > 1
 
+	totalPages := (int(total) + params.pagination.PerPage - 1) / params.pagination.PerPage
 	response.JSON(c, http.StatusOK, gin.H{
 		"data": users,
 		"pagination": gin.H{
-			"page":     params.Page,
-			"per_page": params.PerPage,
+			"page":     params.pagination.Page,
+			"per_page": params.pagination.PerPage,
 			"total":    total,
-			"has_next": hasNext,
-			"has_prev": hasPrev,
+			"has_next": params.pagination.Page < totalPages,
+			"has_prev": params.pagination.Page > 1,
 		},
 	})
 }
@@ -200,48 +219,6 @@ func (h *UsersHandler) GetMe(c *gin.Context) {
 		return
 	}
 	response.JSON(c, http.StatusOK, gin.H{"data": user})
-}
-
-// GetUserImage godoc
-// @Summary      User image URL
-// @Description  Returns a user's image URL.
-// @Tags         Users
-// @Param        id   path int true "User ID"
-// @Success      200 {object} response.ImageURLResponse
-// @Failure      404 {object} response.ErrorBody
-// @Failure      500 {object} response.ErrorBody
-// @Router       /users/{id}/image [get]
-func (h *UsersHandler) GetUserImage(c *gin.Context) {
-	id := c.Param("id")
-
-	var user models.User
-	if err := h.db.Select("image_url").Where("id = ?", id).First(&user).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			response.JSON(c, http.StatusNotFound, gin.H{
-				"code":    "not_found",
-				"message": "user not found",
-			})
-			return
-		}
-		h.log.WithError(err).WithField("id", id).Error("failed to fetch user for image")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to retrieve user",
-		})
-		return
-	}
-
-	if user.ImageURL == nil || *user.ImageURL == "" {
-		response.JSON(c, http.StatusNotFound, gin.H{
-			"code":    "not_found",
-			"message": "image not found",
-		})
-		return
-	}
-
-	response.JSON(c, http.StatusOK, gin.H{
-		"image_url": *user.ImageURL,
-	})
 }
 
 // CreateUser godoc

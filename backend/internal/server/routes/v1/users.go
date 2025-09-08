@@ -16,7 +16,6 @@ func RegisterUsers(r *gin.RouterGroup, cfg *config.Config, db *gorm.DB, logger *
 	users.GET("", h.GetUsers)
 	users.GET("/:id", middleware.AuthRequired(cfg), middleware.RequireSelfOrAdminByParam("id"), h.GetUser)
 	users.GET("/email/:email", middleware.AuthRequired(cfg), middleware.RequireSelfOrAdminByEmailParam("email"), h.GetUserByEmail)
-	users.GET("/:id/image", middleware.AuthRequired(cfg), middleware.RequireSelfOrAdminByParam("id"), h.GetUserImage)
 
 	me := r.Group("")
 	me.Use(middleware.AuthRequired(cfg))
