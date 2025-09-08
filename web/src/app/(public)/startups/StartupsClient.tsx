@@ -49,7 +49,7 @@ function useUrlState() {
   };
 }
 
-export default function StartupsPage() {
+export default function StartupsClient() {
   const router = useRouter();
   const { page, perPage } = useUrlState();
 
@@ -60,33 +60,37 @@ export default function StartupsPage() {
 
   const listStartups = data?.data ?? [];
 
-  const [selectedMaturity, setSelectedMaturity] = useState<string | undefined>(
-    undefined,
-  );
-  const [selectedSector, setSelectedSector] = useState<string | undefined>(
-    undefined,
-  );
-  const [selectedLocation, setSelectedLocation] = useState<string | undefined>(
-    undefined,
+  const [selectedMaturity, setSelectedMaturity] = useState<
+    string | undefined
+  >();
+  const [selectedSector, setSelectedSector] = useState<string | undefined>();
+  const [selectedLocation, setSelectedLocation] = useState<
+    string | undefined
+  >();
+
+  const maturityOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          listStartups
+            .map((p) => p.maturity)
+            .filter((m): m is string => m != null),
+        ),
+      ).sort(),
+    [listStartups],
   );
 
-  const maturityOptions = useMemo(() => {
-    return Array.from(
-      new Set(
-        listStartups
-          .map((p) => p.maturity)
-          .filter((m): m is string => m != null),
-      ),
-    ).sort();
-  }, [listStartups]);
-
-  const sectorOptions = useMemo(() => {
-    return Array.from(
-      new Set(
-        listStartups.map((p) => p.sector).filter((m): m is string => m != null),
-      ),
-    ).sort();
-  }, [listStartups]);
+  const sectorOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          listStartups
+            .map((p) => p.sector)
+            .filter((m): m is string => m != null),
+        ),
+      ).sort(),
+    [listStartups],
+  );
 
   const locationOptions = useMemo(
     () =>
@@ -120,7 +124,6 @@ export default function StartupsPage() {
   };
 
   if (isError) {
-    console.log(error);
     return <div>Error: {userMessageFromError(error)}</div>;
   }
 
@@ -196,6 +199,7 @@ export default function StartupsPage() {
           <ListRestartIcon />
         </Button>
       </div>
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {showSkeletons
           ? Array.from({ length: 12 }).map((_, i) => (
@@ -222,25 +226,33 @@ export default function StartupsPage() {
                 <CardHeader>
                   <CardTitle>{startup.name}</CardTitle>
                   <CardDescription className="flex gap-1">
-                    {
-                      <Badge variant="secondary">
-                        {startup.address ?? "No address provided"}
-                      </Badge>
-                    }
+                    <Badge variant="secondary">
+                      {startup.address ?? "No address provided"}
+                    </Badge>
                   </CardDescription>
                   <CardAction className="flex gap-2">
-                    <Button variant="secondary" size="icon" className="size-8">
-                      <a href={`mailto:${startup.email}`}>
-                        <MailIcon />
-                      </a>
-                    </Button>
+                    {startup.email && (
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        className="size-8"
+                      >
+                        <a href={`mailto:${startup.email}`}>
+                          <MailIcon />
+                        </a>
+                      </Button>
+                    )}
                     {startup.websiteUrl ? (
                       <Button
                         variant="secondary"
                         size="icon"
                         className="size-8"
                       >
-                        <a href={startup.websiteUrl}>
+                        <a
+                          href={startup.websiteUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                           <GlobeIcon />
                         </a>
                       </Button>

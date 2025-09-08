@@ -4,7 +4,7 @@ import * as React from "react";
 import { formatDateRange } from "little-date";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import type { Event } from "@/types";
+import type { Event } from "@/lib/api/contracts/events";
 
 type CalendarProps = {
   events: Event[];
@@ -45,13 +45,8 @@ export default function Calendar31({ events }: CalendarProps) {
             >
               <div className="font-medium">{event.name}</div>
               <div className="text-muted-foreground text-xs">
-                {event.start_date && event.end_date ? (
-                  <span>
-                    {formatDateRange(
-                      new Date(event.start_date),
-                      new Date(event.end_date),
-                    )}
-                  </span>
+                {event.startDate && event.endDate ? (
+                  <span>{formatDateRange(event.startDate, event.endDate)}</span>
                 ) : null}
               </div>
             </div>

@@ -37,7 +37,7 @@ function useUrlState() {
   };
 }
 
-export default function EventsPage() {
+export default function EventsClient() {
   const router = useRouter();
   const { page, perPage, /* eventType,*/ set } = useUrlState();
 

@@ -35,7 +35,7 @@ function useUrlState() {
   };
 }
 
-export default function NewsPage() {
+export default function NewsClient() {
   const router = useRouter();
   const { page, perPage } = useUrlState();
 

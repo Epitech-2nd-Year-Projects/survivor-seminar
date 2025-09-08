@@ -35,7 +35,7 @@ function useUrlState() {
   };
 }
 
-export default function Projects() {
+export default function OpportunitiesClient() {
   const router = useRouter();
   const { page, perPage } = useUrlState();
 
