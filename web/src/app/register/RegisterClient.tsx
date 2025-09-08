@@ -1,4 +1,4 @@
-import { Component as SignUpCard } from "@/components/ui/sign-up-card-2";
+import { Component as SignUpCard } from "@/components/ui/sign-up-card";
 import { GridBeams } from "@/components/magicui/grid-beams";
 import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
 
