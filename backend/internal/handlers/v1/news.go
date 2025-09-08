@@ -143,41 +143,6 @@ func (h *NewsHandler) GetNewsItem(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"data": news})
 }
 
-// GetNewsImage godoc
-// @Summary      News image URL
-// @Description  Returns the image URL of a news item.
-// @Tags         News
-// @Param        id path int true "News ID"
-// @Success      200 {object} response.ImageURLResponse
-// @Failure      404 {object} response.ErrorBody
-// @Failure      500 {object} response.ErrorBody
-// @Router       /news/{id}/image [get]
-func (h *NewsHandler) GetNewsImage(c *gin.Context) {
-	id := c.Param("id")
-
-	var news models.News
-	if err := h.db.Select("image_url").Where("id = ?", id).First(&news).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			response.JSONError(c, http.StatusNotFound,
-				"not_found", "news not found", nil)
-			return
-		}
-		response.JSONError(c, http.StatusInternalServerError,
-			"internal_error", "failed to retrieve news", nil)
-		return
-	}
-
-	if news.ImageURL == nil || *news.ImageURL == "" {
-		response.JSONError(c, http.StatusNotFound,
-			"not_found", "image not found", nil)
-		return
-	}
-
-	response.JSON(c, http.StatusOK, gin.H{
-		"image_url": *news.ImageURL,
-	})
-}
-
 // CreateNews godoc
 // @Summary      Create news
 // @Description  Creates a news item (admin required).
