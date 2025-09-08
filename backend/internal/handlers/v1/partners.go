@@ -149,14 +149,13 @@ func (h *PartnersHandler) GetPartner(c *gin.Context) {
 // @Router       /admin/partners [post]
 func (h *PartnersHandler) CreatePartner(c *gin.Context) {
 	var req struct {
-		Name            string     `json:"name" binding:"required,max=255"`
-		LegalStatus     *string    `json:"legal_status,omitempty"`
-		Address         *string    `json:"address,omitempty"`
-		Email           string     `json:"email" binding:"required,email"`
-		Phone           *string    `json:"phone,omitempty"`
-		CreatedAt       *time.Time `json:"created_at,omitempty"`
-		Description     *string    `json:"description,omitempty"`
-		PartnershipType *string    `json:"partnership_type,omitempty"`
+		Name            string  `json:"name" binding:"required,max=255"`
+		LegalStatus     *string `json:"legal_status,omitempty"`
+		Address         *string `json:"address,omitempty"`
+		Email           string  `json:"email" binding:"required,email"`
+		Phone           *string `json:"phone,omitempty"`
+		Description     *string `json:"description,omitempty"`
+		PartnershipType *string `json:"partnership_type,omitempty"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -169,13 +168,15 @@ func (h *PartnersHandler) CreatePartner(c *gin.Context) {
 		return
 	}
 
+	now := time.Now().UTC()
+
 	partner := models.Partner{
 		Name:            req.Name,
 		LegalStatus:     req.LegalStatus,
 		Address:         req.Address,
 		Email:           req.Email,
 		Phone:           req.Phone,
-		CreatedAt:       req.CreatedAt,
+		CreatedAt:       &now,
 		Description:     req.Description,
 		PartnershipType: req.PartnershipType,
 	}
