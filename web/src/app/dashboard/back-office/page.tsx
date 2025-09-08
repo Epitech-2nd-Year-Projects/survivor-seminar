@@ -60,10 +60,12 @@ export default function BackOfficePage() {
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select element to edit" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Users">Users</SelectItem>
-              <SelectItem value="Startups">Startups</SelectItem>
-            </SelectContent>
+<SelectContent>
+  {ENTITIES.map((e) => (
+    <SelectItem key={e} value={e}>{e}</SelectItem>
+  ))}
+</SelectContent>
+
           </Select>
         </div>
       </div>
