@@ -3,7 +3,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 
 import ProjectsTable from "@/components/tables/projectTable";
 import UsersTable from "@/components/tables/usersTable";
@@ -16,8 +15,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { fetchProjects, fetchUsers } from "@/lib/fetchers";
-import type { Project, User } from "@/types";
+import type { Startup } from "@/lib/api/contracts/startups";
+import type { User } from "@/lib/api/contracts/users";
+import { useUsersList } from "@/lib/api/services/users/hooks";
+import { useStartupsList } from "@/lib/api/services/startups/hooks";
 import TableSkeletonWide from "@/components/tablesSkeletonWide";
 
 const ENTITIES = ["Users", "Startups"] as const;
@@ -29,14 +30,11 @@ export default function BackOfficePage() {
   const [entity, setEntity] = useState<Entity>("Startups");
   const router = useRouter();
 
-  const query = useQuery({
-    queryKey: [entity.toLowerCase()],
-    queryFn: entity === "Startups" ? fetchProjects : fetchUsers,
-    enabled: !!entity,
-    staleTime: 5 * 60_000,
-    retry: 2,
-    placeholderData: [],
-  });
+  const startupsQ = useStartupsList();
+  const usersQ = useUsersList();
+
+  const listStartups = startupsQ.data?.data ?? [];
+  const listUsers = usersQ.data?.data ?? [];
 
   return (
     <main className="mx-auto max-w-7xl space-y-4 p-4 sm:p-6">
@@ -51,19 +49,20 @@ export default function BackOfficePage() {
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select element to edit" />
             </SelectTrigger>
-<SelectContent>
-  {ENTITIES.map((e) => (
-    <SelectItem key={e} value={e}>{e}</SelectItem>
-  ))}
-</SelectContent>
-
+            <SelectContent>
+              {ENTITIES.map((e) => (
+                <SelectItem key={e} value={e}>
+                  {e}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
       </div>
 
       {entity === "Startups" && (
         <>
-          {projectsQ.isLoading && (
+          {startupsQ.isLoading && (
             <TableSkeletonWide
               title="Startups"
               subtitle="Loading startups…"
@@ -71,19 +70,19 @@ export default function BackOfficePage() {
             />
           )}
 
-          {projectsQ.isError && (
+          {startupsQ.isError && (
             <div className="text-destructive text-sm break-all">
-              Error: {projectsQ.error?.message}
+              Error: {startupsQ.error?.message}
             </div>
           )}
 
-          {projectsQ.data && (
+          {listStartups && (
             <ProjectsTable
-              projects={projectsQ.data}
+              projects={listStartups}
               onCreate={() => router.push("/projects/new")}
-              onView={(p) => router.push(`/projects/${p.id}`)}
-              onEdit={(p) => router.push(`/projects/${p.id}/edit`)}
-              onDelete={(p) => console.log("delete", p)}
+              onView={(s) => router.push(`/projects/${s.id}`)}
+              onEdit={(s) => router.push(`/projects/${s.id}/edit`)}
+              onDelete={(s) => console.log("delete", s)}
               emptyLabel="No startups"
             />
           )}
@@ -106,9 +105,9 @@ export default function BackOfficePage() {
             </div>
           )}
 
-          {usersQ.data && (
+          {listUsers && (
             <UsersTable
-              users={usersQ.data}
+              users={listUsers}
               onCreate={() => router.push("/users/new")}
               onView={(u) => router.push(`/users/${u.id}`)}
               onEdit={(u) => router.push(`/users/${u.id}/edit`)}

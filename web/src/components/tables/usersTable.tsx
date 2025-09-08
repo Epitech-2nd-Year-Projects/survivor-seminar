@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
-import type { User } from "@/types";
+import type { User } from "@/lib/api/contracts/users";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type Props = {
@@ -40,12 +40,12 @@ type Props = {
   emptyLabel?: string;
 };
 
-const formatDateFR = (date?: string | null) =>
+const formatDateFR = (date?: string | Date | null) =>
   date
     ? new Intl.DateTimeFormat("fr-FR", {
         dateStyle: "medium",
         timeZone: "Europe/Paris",
-      }).format(new Date(date))
+      }).format(typeof date === "string" ? new Date(date) : date)
     : "";
 
 const initials = (name: string) =>
@@ -143,7 +143,7 @@ export default function UsersTable({
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8 shrink-0">
                             <AvatarImage
-                              src={user.image_url ?? ""}
+                              src={user.imageUrl ?? ""}
                               alt={user.name}
                             />
                             <AvatarFallback>
@@ -155,8 +155,8 @@ export default function UsersTable({
                               {user.name}
                             </span>
                             <span className="text-muted-foreground text-xs">
-                              {formatDateFR(user.created_at)
-                                ? `Member since ${formatDateFR(user.created_at)}`
+                              {formatDateFR(user.createdAt)
+                                ? `Member since ${formatDateFR(user.createdAt)}`
                                 : "—"}
                             </span>
                           </div>
@@ -182,10 +182,10 @@ export default function UsersTable({
                       </TableCell>
 
                       <TableCell className="hidden text-center lg:table-cell">
-                        {user.founder_id}
+                        {user.founderId}
                       </TableCell>
                       <TableCell className="hidden text-center lg:table-cell">
-                        {user.investor_id}
+                        {user.investorId}
                       </TableCell>
                       <TableCell className="hidden text-center md:table-cell">
                         {user.id}

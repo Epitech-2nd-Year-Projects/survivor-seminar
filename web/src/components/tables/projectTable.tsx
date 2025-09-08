@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import type { Project } from "@/types";
+import type { Startup } from "@/lib/api/contracts/startups";
 import {
   Card,
   CardHeader,
@@ -31,12 +31,12 @@ import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type Props = {
-  projects: Project[];
+  projects: Startup[];
   title?: string;
   onCreate?: () => void;
-  onView?: (p: Project) => void;
-  onEdit?: (p: Project) => void;
-  onDelete?: (p: Project) => void;
+  onView?: (p: Startup) => void;
+  onEdit?: (p: Startup) => void;
+  onDelete?: (p: Startup) => void;
   emptyLabel?: string;
 };
 
@@ -71,12 +71,12 @@ const maturityVariant = (m?: string | null): BadgeVariant => {
   return "outline";
 };
 
-const formatDateFR = (d?: string | null) =>
+const formatDateFR = (d?: Date | null) =>
   d
     ? new Intl.DateTimeFormat("fr-FR", {
         dateStyle: "medium",
         timeZone: "Europe/Paris",
-      }).format(new Date(d))
+      }).format(d)
     : "";
 
 export default function ProjectsTable({
@@ -145,9 +145,9 @@ export default function ProjectsTable({
                   <TableHead className="hidden xl:table-cell">
                     Address
                   </TableHead>
-                  <TableHead className="hidden text-center md:table-cell">
+                  {/* <TableHead className="hidden text-center md:table-cell">
                     Founders
-                  </TableHead>
+                  </TableHead> */}
                   <TableHead className="text-center">ID</TableHead>
                   {showActions && (
                     <TableHead className="text-right">Actions</TableHead>
@@ -179,8 +179,8 @@ export default function ProjectsTable({
                             </span>
                             <span className="text-muted-foreground text-xs">
                               {p.sector ?? "—"}
-                              {p.created_at
-                                ? ` • since ${formatDateFR(p.created_at)}`
+                              {p.createdAt
+                                ? ` • since ${formatDateFR(p.createdAt)}`
                                 : ""}
                             </span>
                           </div>
@@ -194,7 +194,7 @@ export default function ProjectsTable({
                         {p.phone ?? "—"}
                       </TableCell>
                       <TableCell className="hidden lg:table-cell">
-                        {p.legal_status ?? "—"}
+                        {p.legalStatus ?? "—"}
                       </TableCell>
 
                       <TableCell>
@@ -216,21 +216,21 @@ export default function ProjectsTable({
                       </TableCell>
 
                       <TableCell className="hidden lg:table-cell">
-                        {p.project_status ?? "—"}
+                        {p.projectStatus ?? "—"}
                       </TableCell>
                       <TableCell className="hidden xl:table-cell">
                         {truncate(p.needs, 28)}
                       </TableCell>
 
                       <TableCell className="hidden lg:table-cell">
-                        {p.website_url ? (
+                        {p.websiteUrl ? (
                           <a
-                            href={p.website_url}
+                            href={p.websiteUrl}
                             target="_blank"
                             rel="noreferrer"
                             className="underline underline-offset-2"
                           >
-                            {truncate(p.website_url, 22)}
+                            {truncate(p.websiteUrl, 22)}
                           </a>
                         ) : (
                           "—"
@@ -241,9 +241,9 @@ export default function ProjectsTable({
                         {truncate(p.address, 28)}
                       </TableCell>
 
-                      <TableCell className="hidden text-center md:table-cell">
-                        {Array.isArray(p.founders) ? p.founders.length : 0}
-                      </TableCell>
+                      {/* <TableCell className="hidden text-center md:table-cell">
+                        {Array.isArray(p.fou) ? p.founders.length : 0}
+                      </TableCell> */}
 
                       <TableCell className="text-center">{p.id}</TableCell>
 
