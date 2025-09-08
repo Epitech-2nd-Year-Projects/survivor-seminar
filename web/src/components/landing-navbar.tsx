@@ -110,16 +110,10 @@ export function LandingNavbar({
                                         url: "#",
                                       },
                                       {
-                                        title: "TekWeather",
-                                        description: "TekWeather helps you plan your day",
-                                        icon: <Sunset className="size-5 shrink-0" />,
-                                        url: "#",
-                                      },
-                                      {
                                         title: "See more",
                                         description: "Explore more projects",
                                         icon: <ChevronRight className="size-5 shrink-0" />,
-                                        url: "/projects",
+                                        url: "/startups",
                                       },
                                     ],
                                   },

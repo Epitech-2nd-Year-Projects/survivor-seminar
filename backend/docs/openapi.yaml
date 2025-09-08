@@ -8,6 +8,79 @@ definitions:
       refresh_token:
         type: string
     type: object
+  models.Conversation:
+    properties:
+      created_at:
+        description: Creation timestamp (UTC)
+        format: date-time
+        type: string
+      id:
+        description: Unique conversation identifier
+        example: 1
+        type: integer
+      is_group:
+        description: Whether this is a group conversation
+        example: false
+        type: boolean
+      last_message:
+        $ref: '#/definitions/models.Message'
+      last_message_id:
+        description: ID of the last message (optimization)
+        type: integer
+      messages:
+        items:
+          $ref: '#/definitions/models.Message'
+        type: array
+      participants:
+        items:
+          $ref: '#/definitions/models.ConversationParticipant'
+        type: array
+      title:
+        description: Conversation title (optional, useful for group chats)
+        example: Project Discussion
+        type: string
+      updated_at:
+        description: Update timestamp (UTC)
+        format: date-time
+        type: string
+    type: object
+  models.ConversationParticipant:
+    properties:
+      conversation:
+        allOf:
+        - $ref: '#/definitions/models.Conversation'
+        description: Relationships
+      conversation_id:
+        description: Conversation ID
+        example: 1
+        type: integer
+      id:
+        description: Unique participant identifier
+        example: 1
+        type: integer
+      joined_at:
+        description: When the user joined the conversation
+        format: date-time
+        type: string
+      last_read_message:
+        $ref: '#/definitions/models.Message'
+      last_read_message_id:
+        description: ID of the last message read by this user
+        type: integer
+      role:
+        description: Participant role (member, owner, etc.)
+        enum:
+        - member
+        - owner
+        example: member
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        description: User ID
+        example: 1
+        type: integer
+    type: object
   models.Event:
     properties:
       capacity:
@@ -103,6 +176,63 @@ definitions:
         description: Contact phone
         example: +33 1 23 45 67 89
         type: string
+    type: object
+  models.Message:
+    properties:
+      content:
+        description: Message content
+        example: Hello, how are you?
+        type: string
+      conversation:
+        $ref: '#/definitions/models.Conversation'
+      conversation_id:
+        description: Conversation ID
+        example: 1
+        type: integer
+      created_at:
+        description: Creation timestamp (UTC)
+        format: date-time
+        type: string
+      deleted_at:
+        description: Soft delete timestamp (for moderation)
+        type: string
+      id:
+        description: Unique message identifier
+        example: 1
+        type: integer
+      reads:
+        items:
+          $ref: '#/definitions/models.MessageRead'
+        type: array
+      sender:
+        $ref: '#/definitions/models.User'
+      sender_id:
+        description: Sender user ID
+        example: 1
+        type: integer
+    type: object
+  models.MessageRead:
+    properties:
+      id:
+        description: Unique read identifier
+        example: 1
+        type: integer
+      message:
+        $ref: '#/definitions/models.Message'
+      message_id:
+        description: Message ID
+        example: 1
+        type: integer
+      read_at:
+        description: When the message was read
+        format: date-time
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        description: User ID who read the message
+        example: 1
+        type: integer
     type: object
   models.News:
     properties:
@@ -439,6 +569,8 @@ definitions:
         example: <verify-token>
         type: string
     type: object
+  requests.ConversationCreateRequest:
+    type: object
   requests.EventCreateRequest:
     properties:
       capacity:
@@ -590,6 +722,25 @@ definitions:
         description: New phone
         example: +33 1 23 45 67 89
         type: string
+    type: object
+  requests.MessageMarkReadRequest:
+    properties:
+      message_id:
+        description: Message ID to mark as read
+        example: 1
+        type: integer
+    required:
+    - message_id
+    type: object
+  requests.MessageSendRequest:
+    properties:
+      content:
+        description: Message content
+        example: Hello, how are you?
+        maxLength: 2000
+        type: string
+    required:
+    - content
     type: object
   requests.NewsCreateRequest:
     properties:
@@ -906,6 +1057,27 @@ definitions:
       user:
         $ref: '#/definitions/models.User'
     type: object
+  response.ConversationObjectResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Conversation'
+    type: object
+  response.ConversationWithUnreadCountResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Conversation'
+      unread_count:
+        type: integer
+    type: object
+  response.ConversationsWithUnreadResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.ConversationWithUnreadCountResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/response.PageMeta'
+    type: object
   response.ErrorBody:
     properties:
       code:
@@ -945,11 +1117,6 @@ definitions:
       data:
         $ref: '#/definitions/models.Event'
     type: object
-  response.ImageURLResponse:
-    properties:
-      image_url:
-        type: string
-    type: object
   response.InvestorListResponse:
     properties:
       data:
@@ -963,6 +1130,20 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/models.Investor'
+    type: object
+  response.MessageListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Message'
+        type: array
+      pagination:
+        $ref: '#/definitions/response.PageMeta'
+    type: object
+  response.MessageObjectResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Message'
     type: object
   response.MessageResponse:
     properties:
@@ -2131,9 +2312,270 @@ paths:
       summary: Verify email
       tags:
       - Auth
+  /conversations:
+    get:
+      description: Returns a paginated list of conversations for the authenticated
+        user with unread counts.
+      parameters:
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Page size
+        in: query
+        name: per_page
+        type: integer
+      - default: updated_at
+        description: Sort field
+        enum:
+        - id
+        - created_at
+        - updated_at
+        in: query
+        name: sort
+        type: string
+      - default: desc
+        description: Sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ConversationsWithUnreadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: List user conversations
+      tags:
+      - Conversations
+    post:
+      consumes:
+      - application/json
+      description: Creates a new conversation with specified participants.
+      parameters:
+      - description: Conversation
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/requests.ConversationCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.ConversationObjectResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Create conversation
+      tags:
+      - Conversations
+  /conversations/{id}:
+    get:
+      description: Retrieves a conversation by ID with messages.
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ConversationObjectResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Get conversation
+      tags:
+      - Conversations
+  /conversations/{id}/mark-read:
+    post:
+      consumes:
+      - application/json
+      description: Marks messages as read up to a specific message ID.
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Message ID
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/requests.MessageMarkReadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Mark message as read
+      tags:
+      - Conversations
+  /conversations/{id}/messages:
+    get:
+      description: Returns paginated messages for a conversation.
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        type: integer
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Page size
+        in: query
+        name: per_page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Get conversation messages
+      tags:
+      - Conversations
+    post:
+      consumes:
+      - application/json
+      description: Sends a message to a conversation.
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Message
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/requests.MessageSendRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.MessageObjectResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Send message
+      tags:
+      - Conversations
   /events:
     get:
-      description: Returns a paginated list of events with sorting.
+      description: Returns a paginated list of events with filters and sorting.
       parameters:
       - default: 1
         description: Page
@@ -2165,6 +2607,18 @@ paths:
         - desc
         in: query
         name: order
+        type: string
+      - description: Filter by event type
+        in: query
+        name: event_type
+        type: string
+      - description: Filter by location
+        in: query
+        name: location
+        type: string
+      - description: Filter by start date (YYYY-MM-DD)
+        in: query
+        name: start_date
         type: string
       responses:
         "200":
@@ -2224,7 +2678,7 @@ paths:
       - Health
   /investors:
     get:
-      description: Returns a paginated list of investors with sorting.
+      description: Returns a paginated list of investors with filters and sorting.
       parameters:
       - default: 1
         description: Page
@@ -2255,6 +2709,18 @@ paths:
         - desc
         in: query
         name: order
+        type: string
+      - description: Filter by investor type
+        in: query
+        name: investor_type
+        type: string
+      - description: Filter by investment focus (contains)
+        in: query
+        name: investment_focus
+        type: string
+      - description: Filter by email
+        in: query
+        name: email
         type: string
       responses:
         "200":
@@ -2324,7 +2790,7 @@ paths:
       - Users
   /news:
     get:
-      description: Returns a paginated list of news with sorting.
+      description: Returns a paginated list of news with filters and sorting.
       parameters:
       - default: 1
         description: Page
@@ -2356,6 +2822,18 @@ paths:
         - desc
         in: query
         name: order
+        type: string
+      - description: Filter by category
+        in: query
+        name: category
+        type: string
+      - description: Filter by startup ID
+        in: query
+        name: startup_id
+        type: integer
+      - description: Filter by news date (YYYY-MM-DD)
+        in: query
+        name: news_date
         type: string
       responses:
         "200":
@@ -2398,34 +2876,9 @@ paths:
       summary: Get news item
       tags:
       - News
-  /news/{id}/image:
-    get:
-      description: Returns the image URL of a news item.
-      parameters:
-      - description: News ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ImageURLResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.ErrorBody'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrorBody'
-      summary: News image URL
-      tags:
-      - News
   /opportunities:
     get:
-      description: Returns a paginated list of opportunities with sorting.
+      description: Returns a paginated list of opportunities with filters and sorting.
       parameters:
       - default: 1
         description: Page
@@ -2457,6 +2910,18 @@ paths:
         - desc
         in: query
         name: order
+        type: string
+      - description: Filter by type (grant, loan, etc.)
+        in: query
+        name: type
+        type: string
+      - description: Filter by organism
+        in: query
+        name: organism
+        type: string
+      - description: Filter by deadline (YYYY-MM-DD)
+        in: query
+        name: deadline
         type: string
       responses:
         "200":
@@ -2675,7 +3140,7 @@ paths:
       - Startups
   /users:
     get:
-      description: Returns a paginated list of users.
+      description: Returns a paginated list of users with optional filters.
       parameters:
       - default: 1
         description: Page
@@ -2706,6 +3171,23 @@ paths:
         - desc
         in: query
         name: order
+        type: string
+      - description: Filter by role
+        enum:
+        - admin
+        - user
+        - investor
+        - founder
+        in: query
+        name: role
+        type: string
+      - description: Filter by email (contains)
+        in: query
+        name: email
+        type: string
+      - description: Filter by name (contains)
+        in: query
+        name: name
         type: string
       responses:
         "200":
@@ -2752,31 +3234,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Get user
-      tags:
-      - Users
-  /users/{id}/image:
-    get:
-      description: Returns a user's image URL.
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ImageURLResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.ErrorBody'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrorBody'
-      summary: User image URL
       tags:
       - Users
   /users/email/{email}:
