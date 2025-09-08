@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strconv"
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
@@ -281,5 +280,76 @@ func (h *ConversationsHandler) CreateConversation(c *gin.Context) {
 	response.JSON(c, http.StatusCreated, gin.H{
 		"message": "conversation created successfully",
 		"data":    conversation,
+	})
+}
+
+// GetMessages godoc
+// @Summary      Get conversation messages
+// @Description  Returns paginated messages for a conversation.
+// @Tags         Conversations
+// @Security     BearerAuth
+// @Param        id        path  int false "Conversation ID"
+// @Param        page      query int false "Page" default(1)
+// @Param        per_page  query int false "Page size" default(20)
+// @Success      200 {object} response.MessageListResponse
+// @Failure      401 {object} response.ErrorBody
+// @Failure      403 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /conversations/{id}/messages [get]
+func (h *ConversationsHandler) GetMessages(c *gin.Context) {
+	claims := middleware.GetClaims(c)
+	if claims == nil {
+		response.JSONError(c, http.StatusUnauthorized,
+			"unauthorized", "missing auth", nil)
+		return
+	}
+
+	id := c.Param("id")
+
+	if !h.isUserParticipant(claims.UserID, id) {
+		response.JSONError(c, http.StatusForbidden,
+			"forbidden", "not a participant", nil)
+		return
+	}
+
+	params := pagination.Parse(c)
+	offset := (params.Page - 1) * params.PerPage
+
+	var total int64
+	if err := h.db.Model(&models.Message{}).Where("conversation_id = ? AND deleted_at IS NULL", id).Count(&total).Error; err != nil {
+		h.log.WithError(err).Error("failed to count messages")
+		response.JSONError(c, http.StatusInternalServerError,
+			"internal_error", "failed to retrieve messages count", nil)
+		return
+	}
+
+	var messages []models.Message
+	if err := h.db.
+		Preload("Sender").
+		Where("conversation_id = ? AND deleted_at IS NULL", id).
+		Order("created_at DESC").
+		Offset(offset).
+		Limit(params.PerPage).
+		Find(&messages).Error; err != nil {
+		h.log.WithError(err).Error("failed to fetch messages")
+		response.JSONError(c, http.StatusInternalServerError,
+			"internal_error", "failed to retrieve messages", nil)
+		return
+	}
+
+	totalPages := (int(total) + params.PerPage - 1) / params.PerPage
+	hasNext := params.Page < totalPages
+	hasPrev := params.Page > 1
+
+	response.JSON(c, http.StatusOK, gin.H{
+		"data": messages,
+		"pagination": gin.H{
+			"page":     params.Page,
+			"per_page": params.PerPage,
+			"total":    total,
+			"has_next": hasNext,
+			"has_prev": hasPrev,
+		},
 	})
 }
