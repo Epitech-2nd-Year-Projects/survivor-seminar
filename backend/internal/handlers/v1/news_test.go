@@ -17,7 +17,6 @@ func setupNewsRouter(h *v1.NewsHandler) *gin.Engine {
 	r := gin.Default()
 	r.GET("/news", h.GetNews)
 	r.GET("/news/:id", h.GetNewsItem)
-	r.GET("/news/:id/image", h.GetNewsImage)
 	r.POST("/admin/news", h.CreateNews)
 	r.PATCH("/admin/news/:id", h.UpdateNews)
 	r.DELETE("/admin/news/:id", h.DeleteNews)
@@ -54,11 +53,6 @@ func TestNewsHandler_FullCoverage(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	req = httptest.NewRequest(http.MethodGet, "/news/999", nil)
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusNotFound, w.Code)
-
-	req = httptest.NewRequest(http.MethodGet, "/news/1/image", nil)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)

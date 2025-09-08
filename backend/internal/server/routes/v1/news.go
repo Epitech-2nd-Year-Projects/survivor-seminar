@@ -15,7 +15,6 @@ func RegisterNews(r *gin.RouterGroup, cfg *config.Config, db *gorm.DB, logger *l
 	news := r.Group("/news")
 	news.GET("", h.GetNews)
 	news.GET("/:id", h.GetNewsItem)
-	news.GET("/:id/image", h.GetNewsImage)
 
 	// Admin
 	admin := r.Group("/admin/news")
