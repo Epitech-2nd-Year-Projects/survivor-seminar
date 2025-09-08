@@ -7,20 +7,12 @@ import "./src/env.js";
 /** @type {import("next").NextConfig} */
 const config = {
   async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: "/api/:path*",
-          destination: `http://localhost:1111/api/:path*`,
-        },
-      ],
-      fallback: [
-        {
-          source: "/api/:path*/",
-          destination: `http://localhost:1111/api/:path*`,
-        },
-      ],
-    };
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: `http://localhost:1111/api/v1/:path*`,
+      },
+    ];
   },
 };
 

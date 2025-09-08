@@ -19,7 +19,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { LayoutDashboard, Mail, Pencil, ShieldUser, Users } from "lucide-react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useMe } from "@/lib/api/services/auth/hooks";
 
 type User = {
   name: string;
@@ -91,7 +91,7 @@ const data: {
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
-  const { data: user, isLoading, error } = useCurrentUser();
+  const { data: user, isLoading, error } = useMe();
 
   if (isLoading) {
     return (

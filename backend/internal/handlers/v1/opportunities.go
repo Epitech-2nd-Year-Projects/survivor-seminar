@@ -30,6 +30,13 @@ var validSortFields = []string{
 	"updated_at",
 }
 
+type listOpportunitiesParams struct {
+	pagination pagination.Params
+	Type       string `form:"type" binding:"omitempty"`
+	Organism   string `form:"organism" binding:"omitempty"`
+	Deadline   string `form:"deadline" binding:"omitempty"`
+}
+
 func NewOpportunityHandler(log *logrus.Logger, db *gorm.DB) *OpportunityHandler {
 	return &OpportunityHandler{
 		log: log,
@@ -39,63 +46,73 @@ func NewOpportunityHandler(log *logrus.Logger, db *gorm.DB) *OpportunityHandler 
 
 // GetOpportunities godoc
 // @Summary      List opportunities
-// @Description  Returns a paginated list of opportunities with sorting.
+// @Description  Returns a paginated list of opportunities with filters and sorting.
 // @Tags         Opportunities
 // @Param        page      query int    false "Page" default(1)
 // @Param        per_page  query int    false "Page size" default(20)
 // @Param        sort      query string false "Sort field" Enums(id,title,type,organism,deadline,created_at,updated_at) default(created_at)
 // @Param        order     query string false "Sort order" Enums(asc,desc) default(desc)
+// @Param        type      query string false "Filter by type (grant, loan, etc.)"
+// @Param        organism  query string false "Filter by organism"
+// @Param        deadline  query string false "Filter by deadline (YYYY-MM-DD)"
 // @Success      200 {object} response.OpportunityListResponse
 // @Failure      400 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
 // @Router       /opportunities [get]
 func (h *OpportunityHandler) GetOpportunities(c *gin.Context) {
-	params := pagination.Parse(c)
-	offset := (params.Page - 1) * params.PerPage
+	var params listOpportunitiesParams
+	params.pagination = pagination.Parse(c)
 
-	if !slices.Contains(validSortFields, params.Sort) {
-		h.log.WithField("sort", params.Sort).Warn("slices.Contains()")
+	if err := c.ShouldBindQuery(&params); err != nil {
+		response.JSON(c, http.StatusBadRequest,
+			gin.H{"code": "invalid_params", "message": err.Error()})
+		return
+	}
+
+	if !slices.Contains(validSortFields, params.pagination.Sort) {
 		response.JSON(c, http.StatusBadRequest, gin.H{
 			"code":    2117,
-			"message": fmt.Sprintf("invalid sort field '%s'. Allowed fields: %v", params.Sort, validSortFields),
+			"message": fmt.Sprintf("invalid sort field '%s'. Allowed fields: %v", params.pagination.Sort, validSortFields),
 		})
 		return
+	}
+
+	query := h.db.Model(&models.Opportunity{})
+	if params.Type != "" {
+		query = query.Where("type = ?", params.Type)
+	}
+	if params.Organism != "" {
+		query = query.Where("organism = ?", params.Organism)
+	}
+	if params.Deadline != "" {
+		query = query.Where("deadline::date = ?", params.Deadline)
 	}
 
 	var total int64
-	if err := h.db.Model(&models.Opportunity{}).Count(&total).Error; err != nil {
-		h.log.WithError(err).Error("h.db.Model().Count().Error")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to retrieve opportunities count",
-		})
+	if err := query.Count(&total).Error; err != nil {
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to count opportunities"})
 		return
 	}
 
-	orderBy := fmt.Sprintf("%s %s", params.Sort, params.Order)
-
+	orderBy := fmt.Sprintf("%s %s", params.pagination.Sort, params.pagination.Order)
 	var opportunities []models.Opportunity
-	if err := h.db.Order(orderBy).Offset(offset).Limit(params.PerPage).Find(&opportunities).Error; err != nil {
-		h.log.WithError(err).Error("h.db.Order().Offset().Limit().Find().Error")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to retrieve opportunities",
-		})
+	if err := query.Order(orderBy).
+		Offset((params.pagination.Page - 1) * params.pagination.PerPage).
+		Limit(params.pagination.PerPage).
+		Find(&opportunities).Error; err != nil {
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to retrieve opportunities"})
 		return
 	}
 
-	totalPages := (int(total) + params.PerPage - 1) / params.PerPage
-	hasNext := params.Page < totalPages
-	hasPrev := params.Page > 1
-
+	totalPages := (int(total) + params.pagination.PerPage - 1) / params.pagination.PerPage
 	response.JSON(c, http.StatusOK, gin.H{
 		"data": opportunities,
 		"pagination": gin.H{
-			"page":     params.Page,
-			"per_page": params.PerPage,
+			"page":     params.pagination.Page,
+			"per_page": params.pagination.PerPage,
 			"total":    total,
-			"has_next": hasNext,
-			"has_prev": hasPrev,
+			"has_next": params.pagination.Page < totalPages,
+			"has_prev": params.pagination.Page > 1,
 		},
 	})
 }

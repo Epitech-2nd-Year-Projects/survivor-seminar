@@ -30,6 +30,13 @@ var validEventSortFields = []string{
 	"updated_at",
 }
 
+type listEventsParams struct {
+	pagination pagination.Params
+	EventType  string `form:"event_type" binding:"omitempty"`
+	Location   string `form:"location" binding:"omitempty"`
+	StartDate  string `form:"start_date" binding:"omitempty"`
+}
+
 func NewEventsHandler(log *logrus.Logger, db *gorm.DB) *EventsHandler {
 	return &EventsHandler{
 		log: log,
@@ -39,62 +46,70 @@ func NewEventsHandler(log *logrus.Logger, db *gorm.DB) *EventsHandler {
 
 // GetEvents godoc
 // @Summary      List events
-// @Description  Returns a paginated list of events with sorting.
+// @Description  Returns a paginated list of events with filters and sorting.
 // @Tags         Events
-// @Param        page      query int    false "Page" default(1)
-// @Param        per_page  query int    false "Page size" default(20)
-// @Param        sort      query string false "Sort field" Enums(id,name,event_type,start_date,end_date,created_at,updated_at) default(start_date)
-// @Param        order     query string false "Sort order" Enums(asc,desc) default(desc)
+// @Param        page       query int    false "Page" default(1)
+// @Param        per_page   query int    false "Page size" default(20)
+// @Param        sort       query string false "Sort field" Enums(id,name,event_type,start_date,end_date,created_at,updated_at) default(start_date)
+// @Param        order      query string false "Sort order" Enums(asc,desc) default(desc)
+// @Param        event_type query string false "Filter by event type"
+// @Param        location   query string false "Filter by location"
+// @Param        start_date query string false "Filter by start date (YYYY-MM-DD)"
 // @Success      200 {object} response.EventListResponse
 // @Failure      400 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
 // @Router       /events [get]
 func (h *EventsHandler) GetEvents(c *gin.Context) {
-	params := pagination.Parse(c)
-	offset := (params.Page - 1) * params.PerPage
-
-	if !slices.Contains(validEventSortFields, params.Sort) {
-		h.log.WithField("sort", params.Sort).Warn("!slices.Contains()")
+	var params listEventsParams
+	params.pagination = pagination.Parse(c)
+	if err := c.ShouldBindQuery(&params); err != nil {
+		response.JSON(c, http.StatusBadRequest, gin.H{"code": "invalid_params", "message": err.Error()})
+		return
+	}
+	if !slices.Contains(validEventSortFields, params.pagination.Sort) {
 		response.JSON(c, http.StatusBadRequest, gin.H{
 			"code":    2117,
-			"message": fmt.Sprintf("invalid sort field '%s'. Allowed fields: %v", params.Sort, validEventSortFields),
+			"message": fmt.Sprintf("invalid sort field '%s'. Allowed fields: %v", params.pagination.Sort, validEventSortFields),
 		})
 		return
+	}
+	query := h.db.Model(&models.Event{})
+	if params.EventType != "" {
+		query = query.Where("event_type = ?", params.EventType)
+	}
+	if params.Location != "" {
+		query = query.Where("location ILIKE ?", "%"+params.Location+"%")
+	}
+	if params.StartDate != "" {
+		query = query.Where("start_date::date = ?", params.StartDate)
 	}
 
 	var total int64
-	if err := h.db.Model(&models.Event{}).Count(&total).Error; err != nil {
-		h.log.WithError(err).Error("failed to count events")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to retrieve events count",
-		})
+	if err := query.Count(&total).Error; err != nil {
+		response.JSON(c, http.StatusInternalServerError,
+			gin.H{"code": "internal_error", "message": "failed to count events"})
 		return
 	}
 
-	orderBy := fmt.Sprintf("%s %s", params.Sort, params.Order)
+	orderBy := fmt.Sprintf("%s %s", params.pagination.Sort, params.pagination.Order)
 	var events []models.Event
-	if err := h.db.Order(orderBy).Offset(offset).Limit(params.PerPage).Find(&events).Error; err != nil {
-		h.log.WithError(err).Error("failed to fetch events")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to retrieve events",
-		})
+	if err := query.Order(orderBy).
+		Offset((params.pagination.Page - 1) * params.pagination.PerPage).
+		Limit(params.pagination.PerPage).
+		Find(&events).Error; err != nil {
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to retrieve events"})
 		return
 	}
 
-	totalPages := (int(total) + params.PerPage - 1) / params.PerPage
-	hasNext := params.Page < totalPages
-	hasPrev := params.Page > 1
-
+	totalPages := (int(total) + params.pagination.PerPage - 1) / params.pagination.PerPage
 	response.JSON(c, http.StatusOK, gin.H{
 		"data": events,
 		"pagination": gin.H{
-			"page":     params.Page,
-			"per_page": params.PerPage,
+			"page":     params.pagination.Page,
+			"per_page": params.pagination.PerPage,
 			"total":    total,
-			"has_next": hasNext,
-			"has_prev": hasPrev,
+			"has_next": params.pagination.Page < totalPages,
+			"has_prev": params.pagination.Page > 1,
 		},
 	})
 }
