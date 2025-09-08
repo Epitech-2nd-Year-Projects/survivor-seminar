@@ -35,11 +35,7 @@ export const AnimatedThemeToggler = ({ className }: props) => {
       });
     };
 
-    type StartViewTransition = (cb: () => void) => ViewTransition;
-    const maybeSVT = (document as Document & {
-      startViewTransition?: StartViewTransition;
-    }).startViewTransition;
-    const vt = maybeSVT?.(run);
+    const vt = document.startViewTransition?.(run);
     if (!vt) {
       run();
       return;
