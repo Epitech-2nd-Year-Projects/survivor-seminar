@@ -113,7 +113,7 @@ export function LandingNavbar({
                                         title: "See more",
                                         description: "Explore more projects",
                                         icon: <ChevronRight className="size-5 shrink-0" />,
-                                        url: "/projects",
+                                        url: "/startups",
                                       },
                                     ],
                                   },
