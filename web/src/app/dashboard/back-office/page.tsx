@@ -29,22 +29,13 @@ export default function BackOfficePage() {
   const [entity, setEntity] = useState<Entity>("Startups");
   const router = useRouter();
 
-  const projectsQ = useQuery<Project[], Error>({
-    queryKey: ["projects"],
-    queryFn: fetchProjects,
-    enabled: entity === "Startups",
+  const query = useQuery({
+    queryKey: [entity.toLowerCase()],
+    queryFn: entity === "Startups" ? fetchProjects : fetchUsers,
+    enabled: !!entity,
     staleTime: 5 * 60_000,
     retry: 2,
-    placeholderData: (prev) => prev,
-  });
-
-  const usersQ = useQuery<User[], Error>({
-    queryKey: ["users"],
-    queryFn: fetchUsers,
-    enabled: entity === "Users",
-    staleTime: 5 * 60_000,
-    retry: 2,
-    placeholderData: (prev) => prev,
+    placeholderData: [],
   });
 
   return (
