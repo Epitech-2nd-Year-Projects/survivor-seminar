@@ -1,18 +1,23 @@
+'use client'
 import { Component as SignUpCard } from "@/components/ui/sign-up-card";
-import { GridBeams } from "@/components/magicui/grid-beams";
+import { AuroraBackground } from "@/components/ui/aurora-background";
+import { motion } from "framer-motion";
 import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
 
 export default function RegisterClient() {
   return (
-    <GridBeams
-      className="relative flex min-h-screen w-full items-center justify-center"
-      backgroundColor="var(--background)"
-      gridColor="color-mix(in oklch, var(--foreground) 28%, transparent)"
-    >
+    <AuroraBackground>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.8, ease: 'easeInOut' }}
+        className="relative flex flex-col gap-4 items-center justify-center"
+      >
       <div className="absolute right-4 top-4 z-20">
-        <AnimatedThemeToggler className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-background/60 ring-1 ring-border/60 backdrop-blur supports-[backdrop-filter]:bg-background/40" />
+        <AnimatedThemeToggler className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-background/60 ring-1 ring-border/60 backdrop-blur supports-[backdrop-filter]:bg-background/40 text-primary" />
       </div>
       <SignUpCard />
-    </GridBeams>
+      </motion.div>
+    </AuroraBackground>
   );
 }

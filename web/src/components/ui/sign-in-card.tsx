@@ -89,9 +89,9 @@ export function Component() {
 
               {/* Traveling light beam effect - reduced opacity */}
               <div className="absolute -inset-[1px] rounded-2xl overflow-hidden">
-                {/* Top light beam - enhanced glow */}
+                {/* Top light beam - enhanced glow (theme primary) */}
                 <motion.div 
-                  className="absolute top-0 left-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-white to-transparent opacity-70"
+                  className="absolute top-0 left-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-primary to-transparent opacity-70"
                   animate={{ 
                     left: ["-50%", "100%"],
                     opacity: [0.3, 0.7, 0.3]
@@ -111,9 +111,9 @@ export function Component() {
                   }}
                 />
                 
-                {/* Right light beam - enhanced glow */}
+                {/* Right light beam - enhanced glow (theme primary) */}
                 <motion.div 
-                  className="absolute top-0 right-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-white to-transparent opacity-70"
+                  className="absolute top-0 right-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-primary to-transparent opacity-70"
                   animate={{ 
                     top: ["-50%", "100%"],
                     opacity: [0.3, 0.7, 0.3]
@@ -135,9 +135,9 @@ export function Component() {
                   }}
                 />
                 
-                {/* Bottom light beam - enhanced glow */}
+                {/* Bottom light beam - enhanced glow (theme primary) */}
                 <motion.div 
-                  className="absolute bottom-0 right-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-white to-transparent opacity-70"
+                  className="absolute bottom-0 right-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-primary to-transparent opacity-70"
                   animate={{ 
                     right: ["-50%", "100%"],
                     opacity: [0.3, 0.7, 0.3]
@@ -159,9 +159,9 @@ export function Component() {
                   }}
                 />
                 
-                {/* Left light beam - enhanced glow */}
+                {/* Left light beam - enhanced glow (theme primary) */}
                 <motion.div 
-                  className="absolute bottom-0 left-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-white to-transparent opacity-70"
+                  className="absolute bottom-0 left-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-primary to-transparent opacity-70"
                   animate={{ 
                     bottom: ["-50%", "100%"],
                     opacity: [0.3, 0.7, 0.3]
@@ -183,9 +183,9 @@ export function Component() {
                   }}
                 />
                 
-                {/* Subtle corner glow spots - reduced opacity */}
+                {/* Subtle corner glow spots - use theme primary */}
                 <motion.div 
-                  className="absolute top-0 left-0 h-[5px] w-[5px] rounded-full bg-white/40"
+                  className="absolute top-0 left-0 h-[5px] w-[5px] rounded-full bg-primary/40"
                   animate={{ 
                     opacity: [0.2, 0.4, 0.2] 
                   }}
@@ -196,7 +196,7 @@ export function Component() {
                   }}
                 />
                 <motion.div 
-                  className="absolute top-0 right-0 h-[8px] w-[8px] rounded-full bg-white/60"
+                  className="absolute top-0 right-0 h-[8px] w-[8px] rounded-full bg-primary/60"
                   animate={{ 
                     opacity: [0.2, 0.4, 0.2] 
                   }}
@@ -208,7 +208,7 @@ export function Component() {
                   }}
                 />
                 <motion.div 
-                  className="absolute bottom-0 right-0 h-[8px] w-[8px] rounded-full bg-white/60"
+                  className="absolute bottom-0 right-0 h-[8px] w-[8px] rounded-full bg-primary/60"
                   animate={{ 
                     opacity: [0.2, 0.4, 0.2] 
                   }}
@@ -220,7 +220,7 @@ export function Component() {
                   }}
                 />
                 <motion.div 
-                  className="absolute bottom-0 left-0 h-[5px] w-[5px] rounded-full bg-white/40"
+                  className="absolute bottom-0 left-0 h-[5px] w-[5px] rounded-full bg-primary/40"
                   animate={{ 
                     opacity: [0.2, 0.4, 0.2] 
                   }}
@@ -235,13 +235,16 @@ export function Component() {
 
               
               
-              {/* Glass card background */}
-              <div className="relative bg-black/40 rounded-2xl p-6 border border-white/[0.05] shadow-2xl overflow-hidden">
+              {/* Glass card background (theme-aware) */}
+              <div className="relative rounded-2xl p-6 shadow-2xl overflow-hidden ring-1 ring-border/40 bg-background/20 backdrop-blur-md supports-[backdrop-filter]:bg-background/10">
                 {/* Subtle card inner patterns */}
-                <div className="absolute inset-0 opacity-[0.03]" 
+                <div
+                  className="absolute inset-0 opacity-[0.03]"
                   style={{
-                    backgroundImage: `linear-gradient(135deg, white 0.5px, transparent 0.5px), linear-gradient(45deg, white 0.5px, transparent 0.5px)`,
-                    backgroundSize: '30px 30px'
+                    backgroundImage:
+                      `linear-gradient(135deg, color-mix(in oklch, var(--foreground) 45%, transparent) 0.5px, transparent 0.5px), ` +
+                      `linear-gradient(45deg, color-mix(in oklch, var(--foreground) 45%, transparent) 0.5px, transparent 0.5px)`,
+                    backgroundSize: "30px 30px",
                   }}
                 />
 
@@ -251,21 +254,21 @@ export function Component() {
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", duration: 0.8 }}
-                    className="mx-auto w-10 h-10 rounded-full border border-white/10 flex items-center justify-center relative overflow-hidden"
+                    className="mx-auto w-10 h-10 rounded-full border border-border/60 flex items-center justify-center relative overflow-hidden"
                   >
                     {/* Logo placeholder - would be an SVG in practice */}
                     {/* <!-- SVG_LOGO --> */}
-                    <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70">S</span>
+                    <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">S</span>
                     
                     {/* Inner lighting effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-50" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/15 to-transparent opacity-60" />
                   </motion.div>
 
                   <motion.h1
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80"
+                    className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/80"
                   >
                     Welcome Back
                   </motion.h1>
@@ -274,7 +277,7 @@ export function Component() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="text-white/60 text-xs"
+                    className="text-foreground/60 text-xs"
                   >
                     Sign in to continue to StyleMe
                   </motion.p>
@@ -297,7 +300,7 @@ export function Component() {
                       
                       <div className="relative flex items-center overflow-hidden rounded-lg">
                         <Mail className={`absolute left-3 w-4 h-4 transition-all duration-300 ${
-                          focusedInput === "email" ? 'text-white' : 'text-white/40'
+                          focusedInput === "email" ? 'text-foreground' : 'text-foreground/40'
                         }`} />
                         
                         <Input
@@ -307,14 +310,14 @@ export function Component() {
                           onChange={(e) => setEmail(e.target.value)}
                           onFocus={() => setFocusedInput("email")}
                           onBlur={() => setFocusedInput(null)}
-                          className="w-full bg-white/5 border-transparent focus:border-white/20 text-white placeholder:text-white/30 h-10 transition-all duration-300 pl-10 pr-3 focus:bg-white/10"
+                          className="w-full bg-foreground/5 border-transparent focus:border-foreground/20 text-foreground placeholder:text-foreground/40 h-10 transition-all duration-300 pl-10 pr-3 focus:bg-foreground/10"
                         />
                         
                         {/* Input highlight effect */}
                         {focusedInput === "email" && (
                           <motion.div 
                             layoutId="input-highlight"
-                            className="absolute inset-0 bg-white/5 -z-10"
+                            className="absolute inset-0 bg-foreground/5 -z-10"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -331,11 +334,11 @@ export function Component() {
                       whileHover={{ scale: 1.01 }}
                       transition={{ type: "spring", stiffness: 400, damping: 25 }}
                     >
-                      <div className="absolute -inset-[0.5px] bg-gradient-to-r from-white/10 via-white/5 to-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                      <div className="absolute -inset-[0.5px] bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300" />
                       
                       <div className="relative flex items-center overflow-hidden rounded-lg">
                         <Lock className={`absolute left-3 w-4 h-4 transition-all duration-300 ${
-                          focusedInput === "password" ? 'text-white' : 'text-white/40'
+                          focusedInput === "password" ? 'text-foreground' : 'text-foreground/40'
                         }`} />
                         
                         <Input
@@ -345,7 +348,7 @@ export function Component() {
                           onChange={(e) => setPassword(e.target.value)}
                           onFocus={() => setFocusedInput("password")}
                           onBlur={() => setFocusedInput(null)}
-                          className="w-full bg-white/5 border-transparent focus:border-white/20 text-white placeholder:text-white/30 h-10 transition-all duration-300 pl-10 pr-10 focus:bg-white/10"
+                          className="w-full bg-foreground/5 border-transparent focus:border-foreground/20 text-foreground placeholder:text-foreground/40 h-10 transition-all duration-300 pl-10 pr-10 focus:bg-foreground/10"
                         />
                         
                         {/* Toggle password visibility */}
@@ -354,9 +357,9 @@ export function Component() {
                           className="absolute right-3 cursor-pointer"
                         >
                           {showPassword ? (
-                            <Eye className="w-4 h-4 text-white/40 hover:text-white transition-colors duration-300" />
+                          <Eye className="w-4 h-4 text-foreground/40 hover:text-foreground transition-colors duration-300" />
                           ) : (
-                            <EyeClosed className="w-4 h-4 text-white/40 hover:text-white transition-colors duration-300" />
+                          <EyeClosed className="w-4 h-4 text-foreground/40 hover:text-foreground transition-colors duration-300" />
                           )}
                         </div>
                         
@@ -364,7 +367,7 @@ export function Component() {
                         {focusedInput === "password" && (
                           <motion.div 
                             layoutId="input-highlight"
-                            className="absolute inset-0 bg-white/5 -z-10"
+                            className="absolute inset-0 bg-foreground/5 -z-10"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -385,13 +388,13 @@ export function Component() {
                           type="checkbox"
                           checked={rememberMe}
                           onChange={() => setRememberMe(!rememberMe)}
-                          className="appearance-none h-4 w-4 rounded border border-white/20 bg-white/5 checked:bg-white checked:border-white focus:outline-none focus:ring-1 focus:ring-white/30 transition-all duration-200"
+                          className="appearance-none h-4 w-4 rounded border border-foreground/20 bg-foreground/5 checked:bg-primary checked:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all duration-200"
                         />
                         {rememberMe && (
                           <motion.div 
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="absolute inset-0 flex items-center justify-center text-black pointer-events-none"
+                            className="absolute inset-0 flex items-center justify-center text-primary-foreground pointer-events-none"
                           >
                             {/* <!-- SVG_CHECKMARK --> */}
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -400,13 +403,13 @@ export function Component() {
                           </motion.div>
                         )}
                       </div>
-                      <label htmlFor="remember-me" className="text-xs text-white/60 hover:text-white/80 transition-colors duration-200">
+                      <label htmlFor="remember-me" className="text-xs text-foreground/60 hover:text-foreground transition-colors duration-200">
                         Remember me
                       </label>
                     </div>
                     
                     <div className="text-xs relative group/link">
-                      <Link href="/forgot-password" className="text-white/60 hover:text-white transition-colors duration-200">
+                      <Link href="/forgot-password" className="text-foreground/60 hover:text-foreground transition-colors duration-200">
                         Forgot password?
                       </Link>
                     </div>
@@ -420,10 +423,10 @@ export function Component() {
                     disabled={isPending}
                     className="w-full relative group/button mt-5"
                   >
-                    <div className="relative overflow-hidden bg-white text-black font-medium h-10 rounded-lg transition-all duration-300 flex items-center justify-center">
+                    <div className="relative overflow-hidden bg-primary text-primary-foreground font-medium h-10 rounded-lg transition-all duration-300 flex items-center justify-center">
                       {/* Button background animation */}
                       <motion.div 
-                        className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -z-10"
+                        className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary-foreground/30 to-primary/0 -z-10"
                         animate={{ 
                           x: ['-100%', '100%'],
                         }}
@@ -448,7 +451,7 @@ export function Component() {
                             exit={{ opacity: 0 }}
                             className="flex items-center justify-center"
                           >
-                            <div className="w-4 h-4 border-2 border-black/70 border-t-transparent rounded-full animate-spin" />
+                            <div className="w-4 h-4 border-2 border-primary-foreground/70 border-t-transparent rounded-full animate-spin" />
                           </motion.div>
                         ) : (
                           <motion.span
@@ -468,16 +471,16 @@ export function Component() {
 
                   {/* Minimal Divider */}
                   <div className="relative mt-2 mb-5 flex items-center">
-                    <div className="flex-grow border-t border-white/5"></div>
+                    <div className="flex-grow border-t border-border/40"></div>
                     <motion.span 
-                      className="mx-3 text-xs text-white/40"
+                      className="mx-3 text-xs text-foreground/40"
                       initial={{ opacity: 0.7 }}
                       animate={{ opacity: [0.7, 0.9, 0.7] }}
                       transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
                       or
                     </motion.span>
-                    <div className="flex-grow border-t border-white/5"></div>
+                    <div className="flex-grow border-t border-border/40"></div>
                   </div>
 
                   {/* Google Sign In */}
@@ -489,17 +492,17 @@ export function Component() {
                   >
                       
                     
-                    <div className="relative overflow-hidden bg-white/5 text-white font-medium h-10 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-300 flex items-center justify-center gap-2">
+                    <div className="relative overflow-hidden bg-foreground/5 text-foreground font-medium h-10 rounded-lg border border-border/60 hover:border-border transition-all duration-300 flex items-center justify-center gap-2">
                       {/* <!-- SVG_GOOGLE_LOGO --> */}
-                      <div className="w-4 h-4 flex items-center justify-center text-white/80 group-hover/google:text-white transition-colors duration-300">G</div>
+                      <div className="w-4 h-4 flex items-center justify-center text-foreground/80 group-hover/google:text-foreground transition-colors duration-300">G</div>
                       
-                      <span className="text-white/80 group-hover/google:text-white transition-colors text-xs">
+                      <span className="text-foreground/80 group-hover/google:text-foreground transition-colors text-xs">
                         Sign in with Google
                       </span>
                       
                       {/* Button hover effect */}
                       <motion.div 
-                        className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0"
+                        className="absolute inset-0 bg-gradient-to-r from-foreground/0 via-foreground/10 to-foreground/0"
                         initial={{ x: '-100%' }}
                         whileHover={{ x: '100%' }}
                         transition={{ 
@@ -512,7 +515,7 @@ export function Component() {
 
                 {/* Sign up link */}
                 <motion.p 
-                  className="text-center text-xs text-white/60 mt-4"
+                  className="text-center text-xs text-foreground/60 mt-4"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
@@ -522,10 +525,10 @@ export function Component() {
                     href="/register" 
                     className="relative inline-block group/signup"
                   >
-                    <span className="relative z-10 text-white group-hover/signup:text-white/70 transition-colors duration-300 font-medium">
+                    <span className="relative z-10 text-foreground group-hover/signup:text-foreground/70 transition-colors duration-300 font-medium">
                       Sign up
                     </span>
-                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white group-hover/signup:w-full transition-all duration-300" />
+                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-foreground group-hover/signup:w-full transition-all duration-300" />
                   </Link>
                 </motion.p>
               </form>
