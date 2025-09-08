@@ -5,7 +5,9 @@ import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-mo
 import { Mail, Lock,Eye,EyeClosed, ArrowRight } from 'lucide-react';
 
 import { cn } from "@/lib/utils"
-import { useLogin } from "@/hooks/useLogin";
+import { useLogin } from "@/lib/api/services/auth/hooks";
+import { userMessageFromError } from "@/lib/api/http/messages";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
@@ -49,7 +51,23 @@ export function Component() {
     mouseY.set(0);
   };
 
-  const { mutate, isPending } = useLogin();
+  const router = useRouter();
+  const sp = useSearchParams();
+  const next = sp.get("next") ?? "/";
+
+  const { mutateAsync, isPending } = useLogin();
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setErrorMsg(null);
+    try {
+      await mutateAsync({ email, password });
+      router.replace(next);
+      router.refresh();
+    } catch (err) {
+      setErrorMsg(userMessageFromError(err));
+    }
+  }
 
   return (
     <div className="min-h-screen w-screen relative overflow-hidden flex items-center justify-center">
@@ -263,7 +281,7 @@ export function Component() {
                 </div>
 
                 {/* Login form */}
-                <form onSubmit={(e) => { e.preventDefault(); setErrorMsg(null); mutate({ email, password }, { onError: (err) => setErrorMsg(err.message) }); }} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   {errorMsg && (
                     <p className="text-center text-sm text-red-400">{errorMsg}</p>
                   )}

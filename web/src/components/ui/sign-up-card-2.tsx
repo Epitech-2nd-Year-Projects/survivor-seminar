@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { Mail, Lock, Eye, EyeClosed, ArrowRight, User, Check, X } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useRegister } from "@/hooks/useRegister";
+import { useRegister } from "@/lib/api/services/auth/hooks";
+import { userMessageFromError } from "@/lib/api/http/messages";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
@@ -49,7 +51,24 @@ export function Component() {
     mouseY.set(0);
   };
 
-  const { mutate, isPending } = useRegister();
+  const router = useRouter();
+  const sp = useSearchParams();
+  const next = sp.get("next") ?? "/login";
+
+  const { mutateAsync, isPending } = useRegister();
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!passwordsMatch) return;
+    setErrorMsg(null);
+    try {
+      await mutateAsync({ email, password, name, role: "investor" });
+      router.replace(next);
+      router.refresh();
+    } catch (err) {
+      setErrorMsg(userMessageFromError(err));
+    }
+  }
 
   const checkStrength = (pass: string) => {
     const requirements = [
@@ -165,7 +184,7 @@ export function Component() {
                 </motion.p>
               </div>
 
-              <form onSubmit={(e) => { e.preventDefault(); setErrorMsg(null); if (password !== confirmPassword) { setErrorMsg('Passwords do not match'); return; } mutate({ email, name, password, role: 'investor' }, { onError: (err) => setErrorMsg(err.message) }); }} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {errorMsg && (
                   <p className="text-center text-sm text-red-400">{errorMsg}</p>
                 )}
