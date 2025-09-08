@@ -188,3 +188,98 @@ func (h *ConversationsHandler) GetConversation(c *gin.Context) {
 
 	response.JSON(c, http.StatusOK, gin.H{"data": conversation})
 }
+
+// CreateConversation godoc
+// @Summary      Create conversation
+// @Description  Creates a new conversation with specified participants.
+// @Tags         Conversations
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        payload body requests.ConversationCreateRequest true "Conversation" Example({"participant_ids":[1,2],"title":"Project Discussion","is_group":false})
+// @Success      201 {object} response.ConversationObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /conversations [post]
+func (h *ConversationsHandler) CreateConversation(c *gin.Context) {
+	claims := middleware.GetClaims(c)
+	if claims == nil {
+		response.JSONError(c, http.StatusUnauthorized,
+			"unauthorized", "missing auth", nil)
+		return
+	}
+
+	var req struct {
+		ParticipantIDs []uint64 `json:"participant_ids" binding:"required,min=1"`
+		Title          *string  `json:"title,omitempty"`
+		IsGroup        bool     `json:"is_group"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.JSONError(c, http.StatusBadRequest,
+			"invalid_payload", "invalid request payload", err.Error())
+		return
+	}
+
+	if !slices.Contains(req.ParticipantIDs, claims.UserID) {
+		req.ParticipantIDs = append(req.ParticipantIDs, claims.UserID)
+	}
+
+	var userCount int64
+	if err := h.db.Model(&models.User{}).Where("id IN ?", req.ParticipantIDs).Count(&userCount).Error; err != nil {
+		h.log.WithError(err).Error("failed to validate participants")
+		response.JSONError(c, http.StatusInternalServerError,
+			"internal_error", "failed to validate participants", nil)
+		return
+	}
+
+	if int64(len(req.ParticipantIDs)) != userCount {
+		response.JSONError(c, http.StatusBadRequest,
+			"invalid_participants", "some participants do not exist", nil)
+		return
+	}
+
+	conversation := models.Conversation{
+		Title:   req.Title,
+		IsGroup: req.IsGroup,
+	}
+
+	if err := h.db.Create(&conversation).Error; err != nil {
+		h.log.WithError(err).Error("failed to create conversation")
+		response.JSONError(c, http.StatusInternalServerError, "internal_error", "failed to create conversation", nil)
+		return
+	}
+
+	for i, userID := range req.ParticipantIDs {
+		role := "member"
+		if userID == claims.UserID {
+			role = "owner"
+		}
+
+		participant := models.ConversationParticipant{
+			ConversationID: conversation.ID,
+			UserID:         userID,
+			Role:           role,
+		}
+
+		if err := h.db.Create(&participant).Error; err != nil {
+			h.log.WithError(err).WithField("user_id", userID).Error("failed to add participant")
+		}
+
+		if i == 0 {
+			conversation.Participants = []models.ConversationParticipant{participant}
+		} else {
+			conversation.Participants = append(conversation.Participants, participant)
+		}
+	}
+
+	if err := h.db.Preload("Participants.User").First(&conversation, conversation.ID).Error; err != nil {
+		h.log.WithError(err).Error("failed to reload conversation")
+	}
+
+	response.JSON(c, http.StatusCreated, gin.H{
+		"message": "conversation created successfully",
+		"data":    conversation,
+	})
+}
