@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"strconv"
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
@@ -351,5 +352,145 @@ func (h *ConversationsHandler) GetMessages(c *gin.Context) {
 			"has_next": hasNext,
 			"has_prev": hasPrev,
 		},
+	})
+}
+
+// SendMessage godoc
+// @Summary      Send message
+// @Description  Sends a message to a conversation.
+// @Tags         Conversations
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id      path int true "Conversation ID"
+// @Param        payload body requests.MessageSendRequest true "Message" Example({"content":"Hello, how are you?"})
+// @Success      201 {object} response.MessageObjectResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      403 {object} response.ErrorBody
+// @Failure      404 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /conversations/{id}/messages [post]
+func (h *ConversationsHandler) SendMessage(c *gin.Context) {
+	claims := middleware.GetClaims(c)
+	if claims == nil {
+		response.JSONError(c, http.StatusUnauthorized, "unauthorized", "missing auth", nil)
+		return
+	}
+
+	id := c.Param("id")
+	conversationID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		response.JSONError(c, http.StatusBadRequest, "invalid_id", "invalid conversation id", nil)
+		return
+	}
+
+	if !h.isUserParticipant(claims.UserID, id) {
+		response.JSONError(c, http.StatusForbidden, "forbidden", "not a participant", nil)
+		return
+	}
+
+	var req struct {
+		Content string `json:"content" binding:"required,max=2000"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.JSONError(c, http.StatusBadRequest, "invalid_payload", "invalid request payload", err.Error())
+		return
+	}
+
+	message := models.Message{
+		ConversationID: conversationID,
+		SenderID:       claims.UserID,
+		Content:        req.Content,
+	}
+
+	if err := h.db.Create(&message).Error; err != nil {
+		h.log.WithError(err).Error("failed to create message")
+		response.JSONError(c, http.StatusInternalServerError, "internal_error", "failed to send message", nil)
+		return
+	}
+
+	if err := h.db.Model(&models.Conversation{}).Where("id = ?", conversationID).Update("last_message_id", message.ID).Error; err != nil {
+		h.log.WithError(err).Error("failed to update conversation last_message_id")
+	}
+
+	if err := h.db.Preload("Sender").First(&message, message.ID).Error; err != nil {
+		h.log.WithError(err).Error("failed to reload message with sender")
+	}
+
+	response.JSON(c, http.StatusCreated, gin.H{
+		"message": "message sent successfully",
+		"data":    message,
+	})
+}
+
+// MarkMessageRead godoc
+// @Summary      Mark message as read
+// @Description  Marks messages as read up to a specific message ID.
+// @Tags         Conversations
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id      path int true "Conversation ID"
+// @Param        payload body requests.MessageMarkReadRequest true "Message ID" Example({"message_id":1})
+// @Success      200 {object} response.MessageResponse
+// @Failure      400 {object} response.ErrorBody
+// @Failure      401 {object} response.ErrorBody
+// @Failure      403 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /conversations/{id}/mark-read [post]
+func (h *ConversationsHandler) MarkMessageRead(c *gin.Context) {
+	claims := middleware.GetClaims(c)
+	if claims == nil {
+		response.JSONError(c, http.StatusUnauthorized,
+			"unauthorized", "missing auth", nil)
+		return
+	}
+
+	id := c.Param("id")
+	conversationID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		response.JSONError(c, http.StatusBadRequest,
+			"invalid_id", "invalid conversation id", nil)
+		return
+	}
+
+	if !h.isUserParticipant(claims.UserID, id) {
+		response.JSONError(c, http.StatusForbidden,
+			"forbidden", "not a participant", nil)
+		return
+	}
+
+	var req struct {
+		MessageID uint64 `json:"message_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.JSONError(c, http.StatusBadRequest,
+			"invalid_payload", "invalid request payload", err.Error())
+		return
+	}
+
+	if err := h.db.Model(&models.ConversationParticipant{}).
+		Where("conversation_id = ? AND user_id = ?", conversationID, claims.UserID).
+		Update("last_read_message_id", req.MessageID).Error; err != nil {
+		h.log.WithError(err).Error("failed to update last read message")
+		response.JSONError(c, http.StatusInternalServerError,
+			"internal_error", "failed to mark message as read", nil)
+		return
+	}
+
+	messageRead := models.MessageRead{
+		MessageID: req.MessageID,
+		UserID:    claims.UserID,
+	}
+
+	if err := h.db.Create(&messageRead).Error; err != nil {
+		h.log.WithError(err).Debug("failed to create message read record (might already exist)")
+	}
+
+	response.JSON(c, http.StatusOK, gin.H{
+		"message": "message marked as read",
 	})
 }
