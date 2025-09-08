@@ -29,6 +29,13 @@ var validNewsSortFields = []string{
 	"updated_at",
 }
 
+type listNewsParams struct {
+	pagination pagination.Params
+	Category   string `form:"category" binding:"omitempty"`
+	StartupID  uint64 `form:"startup_id" binding:"omitempty"`
+	NewsDate   string `form:"news_date" binding:"omitempty"`
+}
+
 func NewNewsHandler(db *gorm.DB, log *logrus.Logger) *NewsHandler {
 	return &NewsHandler{
 		db:  db,
@@ -38,56 +45,73 @@ func NewNewsHandler(db *gorm.DB, log *logrus.Logger) *NewsHandler {
 
 // GetNews godoc
 // @Summary      List news
-// @Description  Returns a paginated list of news with sorting.
+// @Description  Returns a paginated list of news with filters and sorting.
 // @Tags         News
-// @Param        page      query int    false "Page" default(1)
-// @Param        per_page  query int    false "Page size" default(20)
-// @Param        sort      query string false "Sort field" Enums(id,title,news_date,category,startup_id,created_at,updated_at) default(news_date)
-// @Param        order     query string false "Sort order" Enums(asc,desc) default(desc)
+// @Param        page       query int    false "Page" default(1)
+// @Param        per_page   query int    false "Page size" default(20)
+// @Param        sort       query string false "Sort field" Enums(id,title,news_date,category,startup_id,created_at,updated_at) default(news_date)
+// @Param        order      query string false "Sort order" Enums(asc,desc) default(desc)
+// @Param        category   query string false "Filter by category"
+// @Param        startup_id query int    false "Filter by startup ID"
+// @Param        news_date  query string false "Filter by news date (YYYY-MM-DD)"
 // @Success      200 {object} response.NewsListResponse
 // @Failure      400 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
 // @Router       /news [get]
 func (h *NewsHandler) GetNews(c *gin.Context) {
-	params := pagination.Parse(c)
-	offset := (params.Page - 1) * params.PerPage
+	var params listNewsParams
+	params.pagination = pagination.Parse(c)
 
-	if !slices.Contains(validNewsSortFields, params.Sort) {
-		response.JSONError(c, http.StatusBadRequest,
-			"invalid_sort",
-			fmt.Sprintf("invalid sort field '%s'. Allowed: %v", params.Sort, validNewsSortFields), nil)
+	if err := c.ShouldBindQuery(&params); err != nil {
+		response.JSON(c, http.StatusBadRequest,
+			gin.H{"code": "invalid_params", "message": err.Error()})
 		return
+	}
+
+	if !slices.Contains(validNewsSortFields, params.pagination.Sort) {
+		response.JSON(c, http.StatusBadRequest, gin.H{
+			"code":    2117,
+			"message": fmt.Sprintf("invalid sort field '%s'. Allowed fields: %v", params.pagination.Sort, validNewsSortFields),
+		})
+		return
+	}
+
+	query := h.db.Model(&models.News{})
+	if params.Category != "" {
+		query = query.Where("category = ?", params.Category)
+	}
+	if params.StartupID != 0 {
+		query = query.Where("startup_id = ?", params.StartupID)
+	}
+	if params.NewsDate != "" {
+		query = query.Where("news_date = ?", params.NewsDate)
 	}
 
 	var total int64
-	if err := h.db.Model(&models.News{}).Count(&total).Error; err != nil {
-		h.log.WithError(err).Error("h.db.Model().Count().Error")
-		response.JSONError(c, http.StatusInternalServerError,
-			"internal_error", "failed to retrieve news count", nil)
+	if err := query.Count(&total).Error; err != nil {
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to count news"})
 		return
 	}
 
-	orderBy := fmt.Sprintf("%s %s", params.Sort, params.Order)
+	orderBy := fmt.Sprintf("%s %s", params.pagination.Sort, params.pagination.Order)
 	var news []models.News
-	if err := h.db.Order(orderBy).Offset(offset).Limit(params.PerPage).Find(&news).Error; err != nil {
-		h.log.WithError(err).Error("failed to fetch news")
-		response.JSONError(c, http.StatusInternalServerError,
-			"internal_error", "failed to retrieve news", nil)
+	if err := query.Order(orderBy).
+		Offset((params.pagination.Page - 1) * params.pagination.PerPage).
+		Limit(params.pagination.PerPage).
+		Find(&news).Error; err != nil {
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to retrieve news"})
 		return
 	}
 
-	totalPages := (int(total) + params.PerPage - 1) / params.PerPage
-	hasNext := params.Page < totalPages
-	hasPrev := params.Page > 1
-
+	totalPages := (int(total) + params.pagination.PerPage - 1) / params.pagination.PerPage
 	response.JSON(c, http.StatusOK, gin.H{
 		"data": news,
 		"pagination": gin.H{
-			"page":     params.Page,
-			"per_page": params.PerPage,
+			"page":     params.pagination.Page,
+			"per_page": params.pagination.PerPage,
 			"total":    total,
-			"has_next": hasNext,
-			"has_prev": hasPrev,
+			"has_next": params.pagination.Page < totalPages,
+			"has_prev": params.pagination.Page > 1,
 		},
 	})
 }
@@ -117,41 +141,6 @@ func (h *NewsHandler) GetNewsItem(c *gin.Context) {
 	}
 
 	response.JSON(c, http.StatusOK, gin.H{"data": news})
-}
-
-// GetNewsImage godoc
-// @Summary      News image URL
-// @Description  Returns the image URL of a news item.
-// @Tags         News
-// @Param        id path int true "News ID"
-// @Success      200 {object} response.ImageURLResponse
-// @Failure      404 {object} response.ErrorBody
-// @Failure      500 {object} response.ErrorBody
-// @Router       /news/{id}/image [get]
-func (h *NewsHandler) GetNewsImage(c *gin.Context) {
-	id := c.Param("id")
-
-	var news models.News
-	if err := h.db.Select("image_url").Where("id = ?", id).First(&news).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			response.JSONError(c, http.StatusNotFound,
-				"not_found", "news not found", nil)
-			return
-		}
-		response.JSONError(c, http.StatusInternalServerError,
-			"internal_error", "failed to retrieve news", nil)
-		return
-	}
-
-	if news.ImageURL == nil || *news.ImageURL == "" {
-		response.JSONError(c, http.StatusNotFound,
-			"not_found", "image not found", nil)
-		return
-	}
-
-	response.JSON(c, http.StatusOK, gin.H{
-		"image_url": *news.ImageURL,
-	})
 }
 
 // CreateNews godoc

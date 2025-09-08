@@ -297,3 +297,22 @@ type PartnerUpdateRequest struct {
 	// New partnership type
 	PartnershipType *string `json:"partnership_type,omitempty" example:"institutional"`
 }
+
+type ConversationCreateRequest struct {
+	// Participant user IDs
+	ParticipantIDs []uint64 `json:"participant_ids" binding:"required,min=1" example:"[1,2,3]"`
+	// Optional conversation title
+	Title *string `json:"title,omitempty" example:"Project Discussion"`
+	// Whether this is a group conversation
+	IsGroup bool `json:"is_group" example:"false"`
+}
+
+type MessageSendRequest struct {
+	// Message content
+	Content string `json:"content" binding:"required,max=2000" example:"Hello, how are you?"`
+}
+
+type MessageMarkReadRequest struct {
+	// Message ID to mark as read
+	MessageID uint64 `json:"message_id" binding:"required" example:"1"`
+}

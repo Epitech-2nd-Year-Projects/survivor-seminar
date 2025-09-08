@@ -31,7 +31,6 @@ func setupUsersRouter(h *v1.UsersHandler) *gin.Engine {
 	r.GET("/users", h.GetUsers)
 	r.GET("/users/:id", h.GetUser)
 	r.GET("/users/email/:email", h.GetUserByEmail)
-	r.GET("/users/:id/image", h.GetUserImage)
 	r.POST("/admin/users", h.CreateUser)
 	r.PATCH("/admin/users/:id", h.UpdateUser)
 	r.DELETE("/admin/users/:id", h.DeleteUser)
@@ -77,11 +76,6 @@ func TestUsersHandler_FullCoverage(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	req = httptest.NewRequest(http.MethodGet, "/users/email/unknown@example.com", nil)
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusNotFound, w.Code)
-
-	req = httptest.NewRequest(http.MethodGet, "/users/1/image", nil)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
