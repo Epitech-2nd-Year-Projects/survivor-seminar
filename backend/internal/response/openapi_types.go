@@ -3,7 +3,6 @@ package response
 import (
 	"time"
 
-	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/auth"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 )
 
@@ -16,12 +15,12 @@ type ImageURLResponse struct {
 }
 
 type AuthRegisterResponse struct {
-	User   models.User    `json:"user"`
-	Tokens auth.TokenPair `json:"tokens"`
+	User    models.User `json:"user"`
+	Message string      `json:"message"`
 }
 
-type TokenPairResponse struct {
-	Tokens auth.TokenPair `json:"tokens"`
+type AuthLoginResponse struct {
+	User models.User `json:"user"`
 }
 type SyncStatusResponse struct {
 	Running  bool       `json:"running"`

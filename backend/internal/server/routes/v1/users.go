@@ -10,16 +10,19 @@ import (
 )
 
 func RegisterUsers(r *gin.RouterGroup, cfg *config.Config, db *gorm.DB, logger *logrus.Logger) {
-	h := v1handlers.NewUsersHandler(db, logger)
+    h := v1handlers.NewUsersHandler(db, logger)
 
-	users := r.Group("/users")
-	users.GET("", h.GetUsers)
-	users.GET("/:id", middleware.AuthRequired(cfg), middleware.RequireSelfOrAdminByParam("id"), h.GetUser)
-	users.GET("/email/:email", middleware.AuthRequired(cfg), middleware.RequireSelfOrAdminByEmailParam("email"), h.GetUserByEmail)
+    users := r.Group("/users")
+    users.GET("", h.GetUsers)
+    // Register static route before param route to avoid conflicts ("me" vs ":id")
+    users.GET("/me", middleware.AuthRequired(cfg), h.GetMe)
+    users.GET("/email/:email", middleware.AuthRequired(cfg), middleware.RequireSelfOrAdminByEmailParam("email"), h.GetUserByEmail)
+    users.GET("/:id", middleware.AuthRequired(cfg), middleware.RequireSelfOrAdminByParam("id"), h.GetUser)
 
-	me := r.Group("")
-	me.Use(middleware.AuthRequired(cfg))
-	me.GET("/me", h.GetMe)
+    // Keep legacy /me route temporarily for backward compatibility
+    me := r.Group("")
+    me.Use(middleware.AuthRequired(cfg))
+    me.GET("/me", h.GetMe)
 
 	admin := r.Group("/admin/users")
 	admin.Use(middleware.AuthRequired(cfg), middleware.RequireAdmin())

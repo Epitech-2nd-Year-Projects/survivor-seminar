@@ -15,6 +15,7 @@ func RegisterAuth(r *gin.RouterGroup, cfg *config.Config, db *gorm.DB, logger *l
 	auth.POST("/register", h.Register)
 	auth.POST("/login", h.Login)
 	auth.POST("/refresh", h.Refresh)
+	auth.POST("/logout", h.Logout)
 
 	auth.POST("/verify", h.VerifyEmail)
 	auth.GET("/verify", h.VerifyEmail)

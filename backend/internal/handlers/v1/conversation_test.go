@@ -82,7 +82,7 @@ func TestConversationsHandler_FullCoverage(t *testing.T) {
 	body := `{"participant_ids":[1,2],"title":"Test Chat","is_group":false}`
 	req := httptest.NewRequest(http.MethodPost, "/conversations", bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token1)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: token1})
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusCreated, w.Code)
@@ -97,13 +97,13 @@ func TestConversationsHandler_FullCoverage(t *testing.T) {
 	conversationID := createResp.Data.ID
 
 	req = httptest.NewRequest(http.MethodGet, "/conversations", nil)
-	req.Header.Set("Authorization", "Bearer "+token1)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: token1})
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	req = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/conversations/%d", conversationID), nil)
-	req.Header.Set("Authorization", "Bearer "+token1)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: token1})
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -111,7 +111,7 @@ func TestConversationsHandler_FullCoverage(t *testing.T) {
 	body = `{"content":"Hello there!"}`
 	req = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/conversations/%d/messages", conversationID), bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token1)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: token1})
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusCreated, w.Code)
@@ -126,7 +126,7 @@ func TestConversationsHandler_FullCoverage(t *testing.T) {
 	messageID := msgResp.Data.ID
 
 	req = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/conversations/%d/messages", conversationID), nil)
-	req.Header.Set("Authorization", "Bearer "+token2)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: token2})
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -134,7 +134,7 @@ func TestConversationsHandler_FullCoverage(t *testing.T) {
 	body = fmt.Sprintf(`{"message_id":%d}`, messageID)
 	req = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/conversations/%d/mark-read", conversationID), bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token2)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: token2})
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -149,7 +149,7 @@ func TestConversationsHandler_FullCoverage(t *testing.T) {
 	token3 := createTestToken(3, "user3@test.com", "founder")
 
 	req = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/conversations/%d", conversationID), nil)
-	req.Header.Set("Authorization", "Bearer "+token3)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: token3})
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusForbidden, w.Code)

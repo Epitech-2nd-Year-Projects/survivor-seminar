@@ -153,7 +153,7 @@ func (h *EventsHandler) GetEvent(c *gin.Context) {
 // @Summary      Create event
 // @Description  Creates an event (admin required).
 // @Tags         Events
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        payload body requests.EventCreateRequest true "Event" Example({"name":"Conf 2025","start_date":"2025-10-01T09:00:00Z","event_type":"conference"})
@@ -217,7 +217,7 @@ func (h *EventsHandler) CreateEvent(c *gin.Context) {
 // @Summary      Update event
 // @Description  Updates an event (admin required).
 // @Tags         Events
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        id      path   int    true  "Event ID"
@@ -337,7 +337,7 @@ func (h *EventsHandler) UpdateEvent(c *gin.Context) {
 // @Summary      Delete event
 // @Description  Deletes an event (admin required).
 // @Tags         Events
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id path int true "Event ID"
 // @Success      200 {object} response.MessageResponse
 // @Failure      401 {object} response.ErrorBody

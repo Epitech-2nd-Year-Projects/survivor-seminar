@@ -28,8 +28,8 @@ type AuthLoginRequest struct {
 }
 
 type AuthRefreshRequest struct {
-	// Valid refresh token
-	RefreshToken string `json:"refresh_token" example:"<jwt>"`
+	// Optional refresh token (normally sent via HttpOnly cookie)
+	RefreshToken string `json:"refresh_token,omitempty" example:"<jwt>"`
 }
 
 type AuthVerifyRequest struct {
