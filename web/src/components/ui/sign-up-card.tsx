@@ -32,7 +32,7 @@ export function Component() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [focusedInput, setFocusedInput] = useState<null | 'email' | 'password' | 'name' | 'confirm'>(null);
-  
+
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const mouseX = useMotionValue(0);
@@ -89,7 +89,7 @@ export function Component() {
   const strengthScore = strength.filter((req) => req.met).length;
   const strengthWidth = `${(strengthScore / 5) * 100}%`;
   const getStrengthColor = (score: number) => {
-    if (score === 0) return "bg-white/10";
+    if (score === 0) return "bg-foreground/10";
     if (score <= 1) return "bg-red-500";
     if (score <= 2) return "bg-orange-500";
     if (score === 3) return "bg-amber-500";
@@ -124,34 +124,34 @@ export function Component() {
         >
           <div className="relative">
             <div className="absolute -inset-[1px] rounded-2xl overflow-hidden">
-              <motion.div 
-                className="absolute top-0 left-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-white to-transparent opacity-70"
+              <motion.div
+                className="absolute top-0 left-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-primary to-transparent opacity-70"
                 animate={{ left: ["-50%", "100%"], opacity: [0.3, 0.7, 0.3] }}
                 transition={{ left: { duration: 2.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 1 }, opacity: { duration: 1.2, repeat: Infinity, repeatType: "mirror" } }}
               />
-              <motion.div 
-                className="absolute top-0 right-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-white to-transparent opacity-70"
+              <motion.div
+                className="absolute top-0 right-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-primary to-transparent opacity-70"
                 animate={{ top: ["-50%", "100%"], opacity: [0.3, 0.7, 0.3] }}
                 transition={{ top: { duration: 2.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 1, delay: 0.6 }, opacity: { duration: 1.2, repeat: Infinity, repeatType: "mirror", delay: 0.6 } }}
               />
-              <motion.div 
-                className="absolute bottom-0 right-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-white to-transparent opacity-70"
+              <motion.div
+                className="absolute bottom-0 right-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-primary to-transparent opacity-70"
                 animate={{ right: ["-50%", "100%"], opacity: [0.3, 0.7, 0.3] }}
                 transition={{ right: { duration: 2.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 1, delay: 1.2 }, opacity: { duration: 1.2, repeat: Infinity, repeatType: "mirror", delay: 1.2 } }}
               />
-              <motion.div 
-                className="absolute bottom-0 left-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-white to-transparent opacity-70"
+              <motion.div
+                className="absolute bottom-0 left-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-primary to-transparent opacity-70"
                 animate={{ bottom: ["-50%", "100%"], opacity: [0.3, 0.7, 0.3] }}
                 transition={{ bottom: { duration: 2.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 1, delay: 1.8 }, opacity: { duration: 1.2, repeat: Infinity, repeatType: "mirror", delay: 1.8 } }}
               />
             </div>
-            <div className="absolute -inset-[0.5px] rounded-2xl bg-gradient-to-r from-white/3 via-white/7 to-white/3 opacity-0 group-hover:opacity-70 transition-opacity duration-500" />
-            <div className="relative bg-black/40 rounded-2xl p-6 border border-white/[0.05] shadow-2xl overflow-hidden">
-              <div className="absolute inset-0 opacity-[0.03]" 
-                style={{
-                  backgroundImage: `linear-gradient(135deg, white 0.5px, transparent 0.5px), linear-gradient(45deg, white 0.5px, transparent 0.5px)`,
-                  backgroundSize: '30px 30px'
-                }}
+            <div className="absolute -inset-[0.5px] rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 opacity-0 group-hover:opacity-70 transition-opacity duration-500" />
+            <div className="relative rounded-2xl p-6 shadow-2xl overflow-hidden ring-1 ring-border/40 bg-background/20 backdrop-blur-md supports-[backdrop-filter]:bg-background/10">
+              <div className="absolute inset-0 opacity-[0.03]"
+                   style={{
+                     backgroundImage: `linear-gradient(135deg, color-mix(in oklch, var(--foreground) 45%, transparent) 0.5px, transparent 0.5px), linear-gradient(45deg, color-mix(in oklch, var(--foreground) 45%, transparent) 0.5px, transparent 0.5px)`,
+                     backgroundSize: '30px 30px'
+                   }}
               />
 
               <div className="text-center space-y-1 mb-5">
@@ -159,26 +159,26 @@ export function Component() {
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", duration: 0.8 }}
-                  className="mx-auto w-10 h-10 rounded-full border border-white/10 flex items-center justify-center relative overflow-hidden"
+                  className="mx-auto w-10 h-10 rounded-full border border-border/60 flex items-center justify-center relative overflow-hidden"
                 >
-                  <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70">S</span>
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-50" />
+                  <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">S</span>
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/15 to-transparent opacity-60" />
                 </motion.div>
 
                 <motion.h1
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80"
+                  className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/80"
                 >
                   Create Account
                 </motion.h1>
-                
+
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-white/60 text-xs"
+                  className="text-foreground/60 text-xs"
                 >
                   Sign up to get started
                 </motion.p>
@@ -189,16 +189,16 @@ export function Component() {
                   <p className="text-center text-sm text-red-400">{errorMsg}</p>
                 )}
                 <motion.div className="space-y-3">
-                  <motion.div 
+                  <motion.div
                     className={`relative ${focusedInput === "name" ? 'z-10' : ''}`}
                     whileFocus={{ scale: 1.02 }}
                     whileHover={{ scale: 1.01 }}
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   >
-                    
+
                     <div className="relative flex items-center overflow-hidden rounded-lg">
                       <User className={`absolute left-3 w-4 h-4 transition-all duration-300 ${
-                        focusedInput === "name" ? 'text-white' : 'text-white/40'
+                        focusedInput === "name" ? 'text-foreground' : 'text-foreground/40'
                       }`} />
                       <Input
                         type="text"
@@ -207,24 +207,24 @@ export function Component() {
                         onChange={(e) => setName(e.target.value)}
                         onFocus={() => setFocusedInput("name")}
                         onBlur={() => setFocusedInput(null)}
-                        className="w-full bg-white/5 border-transparent focus:border-white/20 text-white placeholder:text-white/30 h-10 transition-all duration-300 pl-10 pr-3 focus:bg-white/10"
+                        className="w-full bg-foreground/5 border-transparent focus:border-foreground/20 text-foreground placeholder:text-foreground/40 h-10 transition-all duration-300 pl-10 pr-3 focus:bg-foreground/10"
                       />
                       {focusedInput === "name" && (
-                        <motion.div layoutId="input-highlight" className="absolute inset-0 bg-white/5 -z-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
+                        <motion.div layoutId="input-highlight" className="absolute inset-0 bg-foreground/5 -z-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
                       )}
                     </div>
                   </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     className={`relative ${focusedInput === "email" ? 'z-10' : ''}`}
                     whileFocus={{ scale: 1.02 }}
                     whileHover={{ scale: 1.01 }}
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   >
-                    
+
                     <div className="relative flex items-center overflow-hidden rounded-lg">
                       <Mail className={`absolute left-3 w-4 h-4 transition-all duration-300 ${
-                        focusedInput === "email" ? 'text-white' : 'text-white/40'
+                        focusedInput === "email" ? 'text-foreground' : 'text-foreground/40'
                       }`} />
                       <Input
                         type="email"
@@ -233,24 +233,24 @@ export function Component() {
                         onChange={(e) => setEmail(e.target.value)}
                         onFocus={() => setFocusedInput("email")}
                         onBlur={() => setFocusedInput(null)}
-                        className="w-full bg-white/5 border-transparent focus:border-white/20 text-white placeholder:text-white/30 h-10 transition-all duration-300 pl-10 pr-3 focus:bg-white/10"
+                        className="w-full bg-foreground/5 border-transparent focus:border-foreground/20 text-foreground placeholder:text-foreground/40 h-10 transition-all duration-300 pl-10 pr-3 focus:bg-foreground/10"
                       />
                       {focusedInput === "email" && (
-                        <motion.div layoutId="input-highlight" className="absolute inset-0 bg-white/5 -z-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
+                        <motion.div layoutId="input-highlight" className="absolute inset-0 bg-foreground/5 -z-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
                       )}
                     </div>
                   </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     className={`relative ${focusedInput === "password" ? 'z-10' : ''}`}
                     whileFocus={{ scale: 1.02 }}
                     whileHover={{ scale: 1.01 }}
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   >
-                    
+
                     <div className="relative flex items-center overflow-hidden rounded-lg">
                       <Lock className={`absolute left-3 w-4 h-4 transition-all duration-300 ${
-                        focusedInput === "password" ? 'text-white' : 'text-white/40'
+                        focusedInput === "password" ? 'text-foreground' : 'text-foreground/40'
                       }`} />
                       <Input
                         type={showPassword ? "text" : "password"}
@@ -259,50 +259,50 @@ export function Component() {
                         onChange={(e) => setPassword(e.target.value)}
                         onFocus={() => setFocusedInput("password")}
                         onBlur={() => setFocusedInput(null)}
-                        className="w-full bg-white/5 border-transparent focus:border-white/20 text-white placeholder:text-white/30 h-10 transition-all duration-300 pl-10 pr-10 focus:bg-white/10"
+                        className="w-full bg-foreground/5 border-transparent focus:border-foreground/20 text-foreground placeholder:text-foreground/40 h-10 transition-all duration-300 pl-10 pr-10 focus:bg-foreground/10"
                       />
                       <div onClick={() => setShowPassword(!showPassword)} className="absolute right-3 cursor-pointer">
                         {showPassword ? (
-                          <Eye className="w-4 h-4 text-white/40 hover:text-white transition-colors duration-300" />
+                          <Eye className="w-4 h-4 text-foreground/40 hover:text-foreground transition-colors duration-300" />
                         ) : (
-                          <EyeClosed className="w-4 h-4 text-white/40 hover:text-white transition-colors duration-300" />
+                          <EyeClosed className="w-4 h-4 text-foreground/40 hover:text-foreground transition-colors duration-300" />
                         )}
                       </div>
                       {focusedInput === "password" && (
-                        <motion.div layoutId="input-highlight" className="absolute inset-0 bg-white/5 -z-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
+                        <motion.div layoutId="input-highlight" className="absolute inset-0 bg-foreground/5 -z-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
                       )}
                     </div>
                   </motion.div>
 
                   <div className="mt-2">
-                    <div className="mb-3 h-1 w-full overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuenow={strengthScore} aria-valuemin={0} aria-valuemax={5} aria-label="Password strength">
+                    <div className="mb-3 h-1 w-full overflow-hidden rounded-full bg-foreground/10" role="progressbar" aria-valuenow={strengthScore} aria-valuemin={0} aria-valuemax={5} aria-label="Password strength">
                       <div className={cn("h-full transition-all duration-500 ease-out", getStrengthColor(strengthScore))} style={{ width: strengthWidth }} />
                     </div>
-                    <p className="mb-2 text-[11px] font-medium text-white/80">{getStrengthText(strengthScore)}.</p>
+                    <p className="mb-2 text-[11px] font-medium text-foreground/80">{getStrengthText(strengthScore)}.</p>
                     <ul className="space-y-1.5" aria-label="Password requirements">
                       {strength.map((req, index) => (
                         <li key={index} className="flex items-center gap-2">
                           {req.met ? (
                             <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
                           ) : (
-                            <X className="h-3.5 w-3.5 text-white/50" aria-hidden="true" />
+                            <X className="h-3.5 w-3.5 text-foreground/50" aria-hidden="true" />
                           )}
-                          <span className={cn("text-[11px]", req.met ? "text-emerald-400/90" : "text-white/60")}>{req.text}</span>
+                          <span className={cn("text-[11px]", req.met ? "text-emerald-400/90" : "text-foreground/60")}>{req.text}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  <motion.div 
+                  <motion.div
                     className={`relative ${focusedInput === "confirm" ? 'z-10' : ''}`}
                     whileFocus={{ scale: 1.02 }}
                     whileHover={{ scale: 1.01 }}
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   >
-                    <div className="absolute -inset-[0.5px] bg-gradient-to-r from-white/10 via-white/5 to-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                    <div className="absolute -inset-[0.5px] bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300" />
                     <div className="relative flex items-center overflow-hidden rounded-lg">
                       <Lock className={`absolute left-3 w-4 h-4 transition-all duration-300 ${
-                        focusedInput === "confirm" ? 'text-white' : 'text-white/40'
+                        focusedInput === "confirm" ? 'text-foreground' : 'text-foreground/40'
                       }`} />
                       <Input
                         type={showConfirmPassword ? "text" : "password"}
@@ -312,17 +312,17 @@ export function Component() {
                         onFocus={() => setFocusedInput("confirm")}
                         onBlur={() => setFocusedInput(null)}
                         aria-invalid={!passwordsMatch}
-                        className="w-full bg-white/5 border-transparent focus:border-white/20 text-white placeholder:text-white/30 h-10 transition-all duration-300 pl-10 pr-10 focus:bg-white/10"
+                        className="w-full bg-foreground/5 border-transparent focus:border-foreground/20 text-foreground placeholder:text-foreground/40 h-10 transition-all duration-300 pl-10 pr-10 focus:bg-foreground/10"
                       />
                       <div onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 cursor-pointer">
                         {showConfirmPassword ? (
-                          <Eye className="w-4 h-4 text-white/40 hover:text-white transition-colors duration-300" />
+                          <Eye className="w-4 h-4 text-foreground/40 hover:text-foreground transition-colors duration-300" />
                         ) : (
-                          <EyeClosed className="w-4 h-4 text-white/40 hover:text-white transition-colors duration-300" />
+                          <EyeClosed className="w-4 h-4 text-foreground/40 hover:text-foreground transition-colors duration-300" />
                         )}
                       </div>
                       {focusedInput === "confirm" && (
-                        <motion.div layoutId="input-highlight" className="absolute inset-0 bg-white/5 -z-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
+                        <motion.div layoutId="input-highlight" className="absolute inset-0 bg-foreground/5 -z-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
                       )}
                     </div>
                     {!passwordsMatch && (
@@ -332,12 +332,12 @@ export function Component() {
                 </motion.div>
 
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={isPending || !passwordsMatch} className="w-full relative group/button mt-5 disabled:opacity-60 disabled:cursor-not-allowed">
-                  <div className="relative overflow-hidden bg-white text-black font-medium h-10 rounded-lg transition-all duration-300 flex items-center justify-center">
-                    <motion.div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -z-10" animate={{ x: ['-100%', '100%'] }} transition={{ duration: 1.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 1 }} style={{ opacity: isPending ? 1 : 0, transition: 'opacity 0.3s ease' }} />
+                  <div className="relative overflow-hidden bg-primary text-primary-foreground font-medium h-10 rounded-lg transition-all duration-300 flex items-center justify-center">
+                    <motion.div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary-foreground/30 to-primary/0 -z-10" animate={{ x: ['-100%', '100%'] }} transition={{ duration: 1.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 1 }} style={{ opacity: isPending ? 1 : 0, transition: 'opacity 0.3s ease' }} />
                     <AnimatePresence mode="wait">
                       {isPending ? (
                         <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-center">
-                          <div className="w-4 h-4 border-2 border-black/70 border-t-transparent rounded-full animate-spin" />
+                          <div className="w-4 h-4 border-2 border-primary-foreground/70 border-t-transparent rounded-full animate-spin" />
                         </motion.div>
                       ) : (
                         <motion.span key="button-text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-center gap-1 text-sm font-medium">
@@ -350,25 +350,25 @@ export function Component() {
                 </motion.button>
 
                 <div className="relative mt-2 mb-5 flex items-center">
-                  <div className="flex-grow border-t border-white/5"></div>
-                  <span className="mx-3 text-xs text-white/40">or</span>
-                  <div className="flex-grow border-t border-white/5"></div>
+                  <div className="flex-grow border-t border-border/40"></div>
+                  <span className="mx-3 text-xs text-foreground/40">or</span>
+                  <div className="flex-grow border-t border-border/40"></div>
                 </div>
 
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="button" className="w-full relative group/google">
-                  
-                  <div className="relative overflow-hidden bg-white/5 text-white font-medium h-10 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-300 flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 flex items-center justify-center text-white/80 group-hover/google:text-white transition-colors duration-300">G</div>
-                    <span className="text-white/80 group-hover/google:text-white transition-colors text-xs">Sign up with Google</span>
-                    <motion.div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0" initial={{ x: '-100%' }} whileHover={{ x: '100%' }} transition={{ duration: 1, ease: "easeInOut" }} />
+
+                  <div className="relative overflow-hidden bg-foreground/5 text-foreground font-medium h-10 rounded-lg border border-border/60 hover:border-border transition-all duration-300 flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 flex items-center justify-center text-foreground/80 group-hover/google:text-foreground transition-colors duration-300">G</div>
+                    <span className="text-foreground/80 group-hover/google:text-foreground transition-colors text-xs">Sign up with Google</span>
+                    <motion.div className="absolute inset-0 bg-gradient-to-r from-foreground/0 via-foreground/10 to-foreground/0" initial={{ x: '-100%' }} whileHover={{ x: '100%' }} transition={{ duration: 1, ease: "easeInOut" }} />
                   </div>
                 </motion.button>
 
-                <motion.p className="text-center text-xs text-white/60 mt-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+                <motion.p className="text-center text-xs text-foreground/60 mt-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
                   Already have an account?{' '}
                   <Link href="/login" className="relative inline-block group/signin">
-                    <span className="relative z-10 text-white group-hover/signin:text-white/70 transition-colors duration-300 font-medium">Sign in</span>
-                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white group-hover/signin:w-full transition-all duration-300" />
+                    <span className="relative z-10 text-foreground group-hover/signin:text-foreground/70 transition-colors duration-300 font-medium">Sign in</span>
+                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-foreground group-hover/signin:w-full transition-all duration-300" />
                   </Link>
                 </motion.p>
               </form>
