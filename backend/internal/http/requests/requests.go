@@ -184,44 +184,44 @@ type NewsUpdateRequest struct {
 // Events
 type EventCreateRequest struct {
 	// Event name
-	Name string `json:"name" example:"Conf 2025"`
+	Name string `form:"name" json:"name" binding:"required" example:"Conf 2025"`
 	// Short description
-	Description *string `json:"description,omitempty" example:"Annual conference"`
+	Description *string `form:"description" json:"description,omitempty" example:"Annual conference"`
 	// Type (conference, meetup, ...)
-	EventType *string `json:"event_type,omitempty" example:"conference"`
+	EventType *string `form:"event_type" json:"event_type,omitempty" example:"conference"`
 	// Venue or city
-	Location *string `json:"location,omitempty" example:"Paris"`
+	Location *string `form:"location" json:"location,omitempty" example:"Paris"`
 	// Intended audience
-	TargetAudience *string `json:"target_audience,omitempty" example:"Startups"`
+	TargetAudience *string `form:"target_audience" json:"target_audience,omitempty" example:"Startups"`
 	// Start date/time (RFC3339)
-	StartDate *time.Time `json:"start_date,omitempty" format:"date-time"`
+	StartDate *time.Time `form:"start_date" json:"start_date,omitempty" format:"date-time"`
 	// End date/time (RFC3339)
-	EndDate *time.Time `json:"end_date,omitempty" format:"date-time"`
+	EndDate *time.Time `form:"end_date" json:"end_date,omitempty" format:"date-time"`
 	// Capacity (seats)
-	Capacity *int `json:"capacity,omitempty" example:"300"`
-	// Image URL
-	ImageURL *string `json:"image_url,omitempty" example:"https://cdn.example.com/events/1.png" format:"uri"`
+	Capacity *int `form:"capacity" json:"capacity,omitempty" example:"300"`
+	// Event image file (binary upload)
+	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(Event image file to upload)"`
 }
 
 type EventUpdateRequest struct {
 	// New name
-	Name *string `json:"name,omitempty" example:"Conf 2025"`
+	Name *string `form:"name" json:"name,omitempty" example:"Conf 2025"`
 	// New description
-	Description *string `json:"description,omitempty" example:"Updated agenda"`
+	Description *string `form:"description" json:"description,omitempty" example:"Updated agenda"`
 	// New type
-	EventType *string `json:"event_type,omitempty" example:"meetup"`
+	EventType *string `form:"event_type" json:"event_type,omitempty" example:"meetup"`
 	// New location
-	Location *string `json:"location,omitempty" example:"Lille"`
+	Location *string `form:"location" json:"location,omitempty" example:"Lille"`
 	// New target audience
-	TargetAudience *string `json:"target_audience,omitempty" example:"Developers"`
+	TargetAudience *string `form:"target_audience" json:"target_audience,omitempty" example:"Developers"`
 	// New start date/time
-	StartDate *time.Time `json:"start_date,omitempty" format:"date-time"`
+	StartDate *time.Time `form:"start_date" json:"start_date,omitempty" format:"date-time"`
 	// New end date/time
-	EndDate *time.Time `json:"end_date,omitempty" format:"date-time"`
+	EndDate *time.Time `form:"end_date" json:"end_date,omitempty" format:"date-time"`
 	// New capacity
-	Capacity *int `json:"capacity,omitempty" example:"350"`
-	// New image URL
-	ImageURL *string `json:"image_url,omitempty" example:"https://cdn.example.com/events/2.png" format:"uri"`
+	Capacity *int `form:"capacity" json:"capacity,omitempty" example:"350"`
+	// New event image file (binary upload)
+	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(New event image file to upload)"`
 }
 
 // Opportunities
