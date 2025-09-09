@@ -1,5 +1,5 @@
 import { useCalendarContext } from "@/components/calendar/calendar-context"
-import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, format, isWithinInterval } from "date-fns"
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, format, isWithinInterval, startOfDay, endOfDay } from "date-fns"
 import { cn } from "@/lib/utils"
 import CalendarEvent from "@/components/calendar/calendar-event"
 import { AnimatePresence, motion } from "framer-motion"
@@ -41,7 +41,9 @@ export default function CalendarBodyMonth() {
           transition={{ duration: 0.2, ease: "easeInOut" }}
         >
           {calendarDays.map((day) => {
-            const dayEvents = visibleEvents.filter((event) => isSameDay(event.start, day))
+            const dayStart = startOfDay(day)
+            const dayEnd = endOfDay(day)
+            const dayEvents = visibleEvents.filter((event) => event.start < dayEnd && event.end > dayStart)
             const isToday = isSameDay(day, today)
             const isCurrentMonth = isSameMonth(day, date)
 
@@ -94,4 +96,3 @@ export default function CalendarBodyMonth() {
     </div>
   )
 }
-

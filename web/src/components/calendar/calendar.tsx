@@ -5,6 +5,7 @@ import CalendarHeaderActions from "@/components/calendar/header/actions/calendar
 import CalendarHeaderDate from "@/components/calendar/header/date/calendar-header-date"
 import CalendarHeaderActionsMode from "@/components/calendar/header/actions/calendar-header-actions-mode"
 import CalendarHeaderActionsAdd from "@/components/calendar/header/actions/calendar-header-actions-add"
+import CalendarHeaderActionsNext from "@/components/calendar/header/actions/calendar-header-actions-next"
 import CalendarProvider from "@/components/calendar/calendar-provider"
 
 export default function Calendar({
@@ -29,6 +30,7 @@ export default function Calendar({
       <CalendarHeader>
         <CalendarHeaderDate />
         <CalendarHeaderActions>
+          <CalendarHeaderActionsNext />
           <CalendarHeaderActionsMode />
           <CalendarHeaderActionsAdd />
         </CalendarHeaderActions>
@@ -37,4 +39,3 @@ export default function Calendar({
     </CalendarProvider>
   )
 }
-

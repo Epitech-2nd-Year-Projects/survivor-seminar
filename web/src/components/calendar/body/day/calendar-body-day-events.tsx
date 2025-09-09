@@ -1,9 +1,11 @@
 import { useCalendarContext } from "@/components/calendar/calendar-context"
-import { isSameDay, format } from "date-fns"
+import { startOfDay, endOfDay, format } from "date-fns"
 
 export default function CalendarBodyDayEvents() {
   const { events, date, setManageEventDialogOpen, setSelectedEvent } = useCalendarContext()
-  const dayEvents = events.filter((event) => isSameDay(event.start, date))
+  const dayStart = startOfDay(date)
+  const dayEnd = endOfDay(date)
+  const dayEvents = events.filter((event) => event.start < dayEnd && event.end > dayStart)
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -26,4 +28,3 @@ export default function CalendarBodyDayEvents() {
     </div>
   )
 }
-

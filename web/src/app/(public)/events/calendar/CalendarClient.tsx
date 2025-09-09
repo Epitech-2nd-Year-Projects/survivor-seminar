@@ -7,6 +7,7 @@ import { useEventsList } from "@/lib/api/services/events/hooks";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { CalendarEvent, Mode } from "@/components/calendar/calendar-types";
+import { endOfDay, startOfDay } from "date-fns";
 
 function useUrlState() {
   const sp = useSearchParams();
@@ -40,7 +41,7 @@ export default function EventsCalendarClient() {
   const [mode, setMode] = useState<Mode>("month");
   const [date, setDate] = useState<Date>(new Date());
 
-  // Map API Event -> CalendarEvent
+  // Map API Event -> CalendarEvent with robust date parsing
   const mapToCalendarEvents = useMemo(() => {
     const colorFromType = (ev: Event) => {
       const t = ev.eventType?.toLowerCase();
@@ -51,15 +52,30 @@ export default function EventsCalendarClient() {
       if (t.includes("urgent")) return "red";
       return "blue";
     };
+
+    const toDate = (d: unknown): Date | null => {
+      if (!d) return null;
+      if (d instanceof Date) return d;
+      const parsed = new Date(d as string | number | Date);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    };
+
     return (listEvents as Event[])
-      .filter((e) => e.startDate && e.endDate)
-      .map<CalendarEvent>((e) => ({
-        id: e.id,
-        title: e.name,
-        start: e.startDate as Date,
-        end: e.endDate as Date,
-        color: colorFromType(e),
-      }));
+      .map((e) => {
+        const rawStart = toDate(e.startDate)
+        const parsedEnd = toDate(e.endDate)
+        const start = rawStart ?? null
+        const end = parsedEnd ?? (start ? endOfDay(start) : null)
+        const normalizedStart = parsedEnd ? start : start ? startOfDay(start) : null
+        return {
+          id: e.id,
+          title: e.name,
+          start: normalizedStart,
+          end,
+          color: colorFromType(e),
+        }
+      })
+      .filter((e): e is CalendarEvent => Boolean(e.start && e.end));
   }, [listEvents]);
 
   // Sync local state with server data, but only when content changes
