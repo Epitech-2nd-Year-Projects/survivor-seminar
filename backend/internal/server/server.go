@@ -12,6 +12,7 @@ import (
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/middleware"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/notifications/email"
 	v1routes "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/server/routes/v1"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/storage/s3"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/sync"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -101,10 +102,15 @@ func (s *HTTPServer) registerRoutes() {
 		})
 	}
 
+	uploader, err := s3.NewUploader(context.Background(), s.cfg.Storage.Media)
+	if err != nil {
+		s.log.WithError(err).Warn("failed to init S3 uploader")
+	}
+
 	v1routes.RegisterStartups(v1, s.cfg, s.db, s.log)
 	v1routes.RegisterInvestors(v1, s.cfg, s.db, s.log)
 	v1routes.RegisterUsers(v1, s.cfg, s.db, s.log)
-	v1routes.RegisterNews(v1, s.cfg, s.db, s.log)
+	v1routes.RegisterNews(v1, s.cfg, s.db, s.log, uploader)
 	v1routes.RegisterEvents(v1, s.cfg, s.db, s.log)
 	v1routes.RegisterOpportunities(v1, s.cfg, s.db, s.log)
 	v1routes.RegisterPartners(v1, s.cfg, s.db, s.log)
