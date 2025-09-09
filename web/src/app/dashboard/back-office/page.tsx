@@ -50,7 +50,6 @@ export default function BackOfficePage() {
   // const updateStartup = useUpdateStartup(editingStartup?.id ?? 0);
 
   const listStartups = startupsQ.data?.data ?? [];
-  console.log("Startups list:", listStartups);
   const listUsers = usersQ.data?.data ?? [];
 
   const handleEditStartup = (startup: Startup) => {
