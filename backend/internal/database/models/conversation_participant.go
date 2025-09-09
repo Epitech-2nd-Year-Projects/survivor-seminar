@@ -17,9 +17,7 @@ type ConversationParticipant struct {
 	JoinedAt time.Time `json:"joined_at" gorm:"autoCreateTime" format:"date-time"`
 
 	// Relationships
-	Conversation    *Conversation `json:"conversation,omitempty" gorm:"foreignKey:ConversationID"`
-	User            *User         `json:"user,omitempty" gorm:"foreignKey:UserID"`
-	LastReadMessage *Message      `json:"last_read_message,omitempty" gorm:"foreignKey:LastReadMessageID"`
+	User *User `json:"user,omitempty" gorm:"foreignKey:UserID"`
 }
 
 func (ConversationParticipant) TableName() string {
