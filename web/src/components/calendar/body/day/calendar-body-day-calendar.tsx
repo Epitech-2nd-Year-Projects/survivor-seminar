@@ -8,6 +8,7 @@ export default function CalendarBodyDayCalendar() {
       <Calendar
         mode="single"
         selected={date}
+        month={date}
         onSelect={(d) => d && setDate(d)}
         className="bg-transparent"
       />

@@ -106,17 +106,15 @@ const FormFieldContextProvider = ({ name, children }: { name: string; children: 
   <FormFieldContext.Provider value={{ name }}>{children}</FormFieldContext.Provider>
 )
 
-function FormFieldWrapper<TFieldValues extends FieldValues, TName extends FieldPath<TFieldValues>>({
-  control,
-  name,
-  render,
-}: ControllerProps<TFieldValues, TName>) {
+function FormFieldWrapper<TFieldValues extends FieldValues, TName extends FieldPath<TFieldValues>>(
+  props: ControllerProps<TFieldValues, TName>,
+) {
+  const { name } = props
   return (
     <FormFieldContextProvider name={name as string}>
-      <FormField control={control as any} name={name as any} render={render as any} />
+      <Controller<TFieldValues, TName> {...props} />
     </FormFieldContextProvider>
   )
 }
 
 export { Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormFieldWrapper as FormField }
-

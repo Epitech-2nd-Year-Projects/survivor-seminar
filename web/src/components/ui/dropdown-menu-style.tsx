@@ -19,7 +19,7 @@ type DropdownMenuProps = {
 const DropdownMenu = ({ options, children, open, onOpenChange }: DropdownMenuProps) => {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const isControlled = typeof open === "boolean";
-  const isOpen = isControlled ? open! : uncontrolledOpen;
+  const isOpen = isControlled ? Boolean(open) : uncontrolledOpen;
 
   // Force remount of the animated list on each open to reset animations
   const [mountId, setMountId] = useState(0);

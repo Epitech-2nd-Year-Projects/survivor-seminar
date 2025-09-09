@@ -60,7 +60,7 @@ export default function EventsCalendarClient() {
       return Number.isNaN(parsed.getTime()) ? null : parsed;
     };
 
-    return (listEvents as Event[])
+    return listEvents
       .map((e) => {
         const rawStart = toDate(e.startDate)
         const parsedEnd = toDate(e.endDate)
