@@ -124,7 +124,7 @@ export default function ProjectsTable({
       </CardHeader>
 
       <CardContent>
-        <div className="rounded-md border">
+        <div className="border">
           <ScrollArea className="h-[60vh] w-full">
             <Table className="min-w-[1100px]">
               <TableHeader className="bg-background sticky top-0 z-10">
