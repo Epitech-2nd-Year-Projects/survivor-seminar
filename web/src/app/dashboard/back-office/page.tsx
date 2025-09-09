@@ -1,3 +1,4 @@
+// app/dashboard/back-office/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -17,14 +18,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { useUsersList, useUpdateUser } from "@/lib/api/services/users/hooks";
-import {
-  useStartupsList,
-  useUpdateStartup,
-} from "@/lib/api/services/startups/hooks";
+import { useUsersList } from "@/lib/api/services/users/hooks";
+import { useStartupsList } from "@/lib/api/services/startups/hooks";
 import TableSkeletonWide from "@/components/tablesSkeletonWide";
 import EditDialogUser from "@/components/editDialogUser";
 import EditDialogStartup from "@/components/editDialogStartup";
+import { useUpdateUser } from "@/lib/api/services/users/hooks";
+import { updateStartupClient } from "@/lib/api/services/startups/client";
+import { toast as sonnerToast } from "sonner";
+
+type ToastFn = (message: string) => void;
+const toast: ToastFn = (message) => {
+  (sonnerToast as unknown as (msg: string) => void)(message);
+};
+
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  try {
+    return typeof err === "string" ? err : JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
+
+function tryRefetch(refetch: unknown): void {
+  if (typeof refetch === "function") {
+    void (refetch as () => Promise<unknown>)();
+  }
+}
 
 const ENTITIES = ["Users", "Startups"] as const;
 type Entity = (typeof ENTITIES)[number];
@@ -42,12 +63,14 @@ export default function BackOfficePage() {
   const [editingType, setEditingType] = useState<"startup" | "user" | null>(
     null,
   );
-
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editingStartup, setEditingStartup] = useState<Startup | null>(null);
 
-  // const updateUser = useUpdateUser(editingUser?.id ?? 0);
-  // const updateStartup = useUpdateStartup(editingStartup?.id ?? 0);
+  const {
+    mutateAsync: updateUserAsync,
+    isError: isUpdateUserError,
+    error: updateUserErrObj,
+  } = useUpdateUser(editingUser?.id ?? 0);
 
   const listStartups = startupsQ.data?.data ?? [];
   const listUsers = usersQ.data?.data ?? [];
@@ -62,6 +85,13 @@ export default function BackOfficePage() {
     setEditingType("user");
     setEditingUser(user);
     setEditOpen(true);
+  };
+
+  const closeEditors = () => {
+    setEditOpen(false);
+    setEditingStartup(null);
+    setEditingUser(null);
+    setEditingType(null);
   };
 
   return (
@@ -100,7 +130,7 @@ export default function BackOfficePage() {
 
           {startupsQ.isError && (
             <div className="text-destructive text-sm break-all">
-              Error: {startupsQ.error?.message}
+              Error: {getErrorMessage(startupsQ.error)}
             </div>
           )}
 
@@ -109,7 +139,7 @@ export default function BackOfficePage() {
               projects={listStartups}
               onCreate={() => router.push("/projects/new")}
               onView={(s) => router.push(`/projects/${s.id}`)}
-              onEdit={(s) => handleEditStartup(s)}
+              onEdit={handleEditStartup}
               onDelete={(s) => console.log("delete", s)}
               emptyLabel="No startups"
             />
@@ -129,7 +159,7 @@ export default function BackOfficePage() {
 
           {usersQ.isError && (
             <div className="text-destructive text-sm break-all">
-              Error: {usersQ.error?.message}
+              Error: {getErrorMessage(usersQ.error)}
             </div>
           )}
 
@@ -138,29 +168,33 @@ export default function BackOfficePage() {
               users={listUsers}
               onCreate={() => router.push("/users/new")}
               onView={(u) => router.push(`/users/${u.id}`)}
-              onEdit={(u) => handleEditUser(u)}
+              onEdit={handleEditUser}
               onDelete={(u) => console.log("delete", u)}
               emptyLabel="No users"
             />
           )}
         </>
       )}
+
       {editingType === "startup" && (
         <EditDialogStartup
           key={editingStartup?.id ?? "startup-empty"}
           open={editOpen}
           onOpenChange={(o) => {
             setEditOpen(o);
-            if (!o) {
-              setEditingStartup(null);
-              setEditingType(null);
-            }
+            if (!o) setEditingType(null);
           }}
           startup={editingStartup}
-          onSubmit={async (payload) => {
-            setEditOpen(false);
-            setEditingStartup(null);
-            setEditingType(null);
+          onSubmit={async (id, body) => {
+            try {
+              await updateStartupClient(id, body);
+              toast("Startup updated.");
+              tryRefetch(startupsQ.refetch);
+            } catch (e: unknown) {
+              toast(`Failed to update startup: ${getErrorMessage(e)}`);
+            } finally {
+              closeEditors();
+            }
           }}
         />
       )}
@@ -171,20 +205,28 @@ export default function BackOfficePage() {
           open={editOpen}
           onOpenChange={(o) => {
             setEditOpen(o);
-            if (!o) {
-              setEditingUser(null);
-              setEditingType(null);
-            }
+            if (!o) setEditingType(null);
           }}
           user={editingUser}
-          onSubmit={async (playload) => {
-            // await updateUser.mutateAsync({ name, email, role });
-            // si imageFile: upload puis patch image_url côté API
-            setEditOpen(false);
-            setEditingUser(null);
-            setEditingType(null);
+          onSubmit={async (_id, body) => {
+            if (!editingUser) return;
+            try {
+              await updateUserAsync(body);
+              toast("User updated.");
+              tryRefetch(usersQ.refetch);
+            } catch (e: unknown) {
+              toast(`Failed to update user: ${getErrorMessage(e)}`);
+            } finally {
+              closeEditors();
+            }
           }}
         />
+      )}
+
+      {isUpdateUserError && (
+        <p className="text-destructive text-sm break-all">
+          Update error: {getErrorMessage(updateUserErrObj)}
+        </p>
       )}
     </main>
   );

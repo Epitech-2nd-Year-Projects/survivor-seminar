@@ -11,11 +11,12 @@ import {
 import { mapUser, type UserDTO } from "../../contracts/users";
 
 export type CreateUserBody = {
+  id: number;
   email: string;
   name: string;
   role: string;
   password: string;
-  image_url?: string;
+  image?: string;
 };
 
 export type UpdateUserBody = Partial<CreateUserBody>;

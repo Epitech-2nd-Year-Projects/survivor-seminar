@@ -1,3 +1,4 @@
+// components/EditDialogUser.tsx
 "use client";
 
 import * as React from "react";
@@ -21,26 +22,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import type { User } from "@/lib/api/contracts/users";
+import type { UpdateUserBody } from "@/lib/api/services/users/client";
 
 type Role = "admin" | "manager" | "member" | "viewer";
-
 const isRole = (v: string): v is Role =>
   v === "admin" || v === "manager" || v === "member" || v === "viewer";
-
-type SubmitPayload = {
-  id: number;
-  name: string;
-  email: string;
-  role: Role;
-  imageFile: File | null;
-};
 
 type Props = {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   user: User | null;
-  onSubmit: (values: SubmitPayload) => void | Promise<void>;
+  onSubmit: (id: number, body: UpdateUserBody) => void | Promise<void>;
   description?: string;
 };
 
@@ -48,6 +42,23 @@ const getFDString = (fd: FormData, key: string) => {
   const v = fd.get(key);
   return typeof v === "string" ? v : "";
 };
+
+const fileToBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const res = reader.result;
+      if (typeof res !== "string") {
+        reject(new Error("Unexpected FileReader result (not a string)."));
+        return;
+      }
+      const commaIdx = res.indexOf(",");
+      resolve(commaIdx >= 0 ? res.slice(commaIdx + 1) : res);
+    };
+    reader.onerror = () =>
+      reject(reader.error ?? new Error("FileReader error"));
+    reader.readAsDataURL(file);
+  });
 
 export default function EditDialogUser({
   open,
@@ -57,18 +68,19 @@ export default function EditDialogUser({
   description = "Edit the user's data",
 }: Props) {
   const [role, setRole] = React.useState<Role | undefined>(undefined);
-
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
-  const [filePreviewUrl, setFilePreviewUrl] = React.useState<
-    string | undefined
-  >(undefined);
+  const [filePreviewUrl, setFilePreviewUrl] = React.useState<string>();
+  const [pwError, setPwError] = React.useState<string | null>(null);
 
+  // Reset quand on change d'utilisateur
   React.useEffect(() => {
     setRole(undefined);
     setSelectedFile(null);
     setFilePreviewUrl(undefined);
+    setPwError(null);
   }, [user?.id]);
 
+  // Cleanup URL de preview
   React.useEffect(() => {
     return () => {
       if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
@@ -108,29 +120,47 @@ export default function EditDialogUser({
 
         <form
           className="grid gap-6"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
             if (!user) return;
 
             const fd = new FormData(e.currentTarget);
             const nameInput = getFDString(fd, "name").trim();
             const emailInput = getFDString(fd, "email").trim();
+            const pwd = getFDString(fd, "password");
+            const pwdConfirm = getFDString(fd, "password_confirm");
 
-            const userRoleSafe: Role = isRole(user.role) ? user.role : "member";
-            const finalRole: Role = role ?? userRoleSafe;
+            // Validation password (si saisi)
+            if (pwd || pwdConfirm) {
+              if (pwd.length < 6) {
+                setPwError("Password must be at least 6 characters.");
+                return;
+              }
+              if (pwd !== pwdConfirm) {
+                setPwError("Passwords do not match.");
+                return;
+              }
+            } else {
+              setPwError(null);
+            }
 
-            const finalName = nameInput || user.name;
-            const finalEmail = emailInput || user.email;
+            const finalRole: Role =
+              role ?? (isRole(user.role) ? user.role : "member");
 
-            const playload: SubmitPayload = {
-              id: user.id,
-              name: finalName,
-              email: finalEmail,
-              role: finalRole,
-              imageFile: selectedFile,
-            };
+            // On n'envoie que les champs modifiés
+            const body: UpdateUserBody = {};
+            if (nameInput && nameInput !== user.name) body.name = nameInput;
+            if (emailInput && emailInput !== user.email)
+              body.email = emailInput;
+            if (finalRole !== user.role) body.role = finalRole;
+            if (pwd) body.password = pwd;
 
-            void onSubmit(playload);
+            if (selectedFile) {
+              const base64 = await fileToBase64(selectedFile);
+              body.image = base64; // adapte si l'API veut le base64 "pur"
+            }
+
+            await onSubmit(user.id, body);
           }}
         >
           <div className="grid gap-2">
@@ -172,6 +202,24 @@ export default function EditDialogUser({
             </Select>
           </div>
 
+          {/* Password (optionnel) */}
+          <div className="grid gap-2">
+            <Label htmlFor="password">New password</Label>
+            <Input id="password" name="password" type="password" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="password_confirm">Confirm new password</Label>
+            <Input
+              id="password_confirm"
+              name="password_confirm"
+              type="password"
+            />
+            {pwError ? (
+              <p className="text-destructive text-sm">{pwError}</p>
+            ) : null}
+          </div>
+
+          {/* Avatar upload */}
           <div className="grid gap-3">
             <Label>Profile picture</Label>
 

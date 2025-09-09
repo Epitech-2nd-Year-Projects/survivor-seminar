@@ -22,28 +22,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Startup } from "@/lib/api/contracts/startups";
-
-type SubmitPayload = {
-  id: number;
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  legalStatus?: string | null;
-  address?: string | null;
-  websiteUrl?: string | null;
-  socialMediaUrl?: string | null;
-  projectStatus?: string | null;
-  needs?: string | null;
-  sector?: string | null;
-  maturity?: string | null;
-  description?: string | null;
-};
+import type { UpdateStartupBody } from "@/lib/api/services/startups/client";
 
 type Props = {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   startup: Startup | null;
-  onSubmit: (values: SubmitPayload) => void | Promise<void>;
+  onSubmit: (id: number, values: UpdateStartupBody) => void | Promise<void>;
   description?: string;
 };
 
@@ -151,17 +136,17 @@ export default function EditDialogStartup({
               const maturityInput = getFDString(fd, "maturity").trim();
               const descriptionInput = getFDString(fd, "description").trim();
 
-              const payload: SubmitPayload = {
+              const startupBody: UpdateStartupBody = {
                 id: startup.id,
                 name: nameInput ?? startup.name,
                 email: emailInput ?? startup.email ?? null,
                 phone: phoneInput ?? startup.phone ?? null,
-                legalStatus: legalStatusInput ?? startup.legalStatus ?? null,
+                legal_status: legalStatusInput ?? startup.legalStatus ?? null,
                 address: addressInput ?? startup.address ?? null,
-                websiteUrl: websiteUrlInput ?? startup.websiteUrl ?? null,
-                socialMediaUrl:
+                website_url: websiteUrlInput ?? startup.websiteUrl ?? null,
+                social_media_url:
                   socialUrlInput ?? startup.socialMediaUrl ?? null,
-                projectStatus:
+                project_status:
                   projectStatusInput ?? startup.projectStatus ?? null,
                 needs: needsInput ?? startup.needs ?? null,
                 sector: sectorInput ?? startup.sector ?? null,
@@ -169,7 +154,7 @@ export default function EditDialogStartup({
                 description: descriptionInput ?? startup.description ?? null,
               };
 
-              void onSubmit(payload);
+              void onSubmit(startup.id, startupBody);
             }}
           >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

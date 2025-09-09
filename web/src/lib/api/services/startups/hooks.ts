@@ -15,6 +15,7 @@ import {
   listStartupsClient,
   updateStartupClient,
   type CreateStartupBody,
+  type UpdateStartupBody,
 } from "./client";
 import type { ListStartupsParams } from "./shared";
 
@@ -59,7 +60,7 @@ export function useCreateStartup() {
 export function useUpdateStartup(id: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: CreateStartupBody) => updateStartupClient(id, body),
+    mutationFn: (body: UpdateStartupBody) => updateStartupClient(id, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: startupsKeys.all }).catch(console.error);
       qc.invalidateQueries({ queryKey: startupsKeys.detail(id) }).catch(

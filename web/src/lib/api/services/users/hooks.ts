@@ -17,6 +17,7 @@ import {
   listUsersClient,
   updateUserClient,
   type CreateUserBody,
+  type UpdateUserBody,
 } from "./client";
 import type { ListUsersParams } from "./shared";
 
@@ -86,7 +87,7 @@ export function useCreateUser() {
 export function useUpdateUser(id: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: CreateUserBody) => updateUserClient(id, body),
+    mutationFn: (body: UpdateUserBody) => updateUserClient(id, body),
     onSuccess: (updated) => {
       qc.invalidateQueries({ queryKey: usersKeys.list() }).catch(console.error);
       qc.setQueryData(usersKeys.detailById(updated.id), updated);
