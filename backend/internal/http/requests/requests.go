@@ -149,36 +149,36 @@ type InvestorUpdateRequest struct {
 // News
 type NewsCreateRequest struct {
 	// News title
-	Title string `json:"title" example:"Funding round"`
+	Title string `form:"title" json:"title" binding:"required" example:"Funding round"`
 	// Publication date (YYYY-MM-DD)
-	NewsDate *string `json:"news_date,omitempty" example:"2025-09-01" format:"date"`
+	NewsDate *string `form:"news_date" json:"news_date,omitempty" example:"2025-09-01" format:"date"`
 	// Location (if relevant)
-	Location *string `json:"location,omitempty" example:"Paris"`
+	Location *string `form:"location" json:"location,omitempty" example:"Paris"`
 	// Category or topic
-	Category *string `json:"category,omitempty" example:"startup"`
+	Category *string `form:"category" json:"category,omitempty" example:"startup"`
 	// Related startup ID
-	StartupID *uint64 `json:"startup_id,omitempty" example:"1"`
+	StartupID *uint64 `form:"startup_id" json:"startup_id,omitempty" example:"1"`
 	// Body text
-	Description string `json:"description" example:"Series A raised"`
-	// Image URL
-	ImageURL *string `json:"image_url,omitempty" example:"https://cdn.example.com/news/1.png" format:"uri"`
+	Description string `form:"description" json:"description" binding:"required" example:"Series A raised"`
+	// Image file (binary upload)
+	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(Image file to upload)"`
 }
 
 type NewsUpdateRequest struct {
 	// New title
-	Title *string `json:"title,omitempty" example:"Updated title"`
+	Title *string `form:"title" json:"title,omitempty" example:"Updated title"`
 	// New publication date
-	NewsDate *string `json:"news_date,omitempty" example:"2025-09-02" format:"date"`
+	NewsDate *string `form:"news_date" json:"news_date,omitempty" example:"2025-09-02" format:"date"`
 	// New location
-	Location *string `json:"location,omitempty" example:"Lyon"`
+	Location *string `form:"location" json:"location,omitempty" example:"Lyon"`
 	// New category
-	Category *string `json:"category,omitempty" example:"event"`
+	Category *string `form:"category" json:"category,omitempty" example:"event"`
 	// New related startup
-	StartupID *uint64 `json:"startup_id,omitempty" example:"2"`
+	StartupID *uint64 `form:"startup_id" json:"startup_id,omitempty" example:"2"`
 	// New body text
-	Description *string `json:"description,omitempty" example:"Updated description"`
-	// New image URL
-	ImageURL *string `json:"image_url,omitempty" example:"https://cdn.example.com/news/2.png" format:"uri"`
+	Description *string `form:"description" json:"description,omitempty" example:"Updated description"`
+	// New image file (binary upload)
+	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(New image file to upload)"`
 }
 
 // Events
