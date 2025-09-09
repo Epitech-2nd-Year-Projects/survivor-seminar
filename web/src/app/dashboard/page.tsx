@@ -117,7 +117,9 @@ export default function StatisticsPage() {
                     <tr className="border-t">
                       <td className="py-2">{project.title}</td>
                       <td className="py-2">{project.views}</td>
-                      <td className="py-2">{project.engagementRatePercent}</td>
+                      <td className="py-2">
+                        {round(project.engagementRatePercent)}%
+                      </td>
                     </tr>
                   </tbody>
                 );
