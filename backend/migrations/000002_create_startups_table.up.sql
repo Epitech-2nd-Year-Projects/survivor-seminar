@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS startups (
     sector           TEXT,
     maturity         TEXT,
     founders         JSONB       NOT NULL DEFAULT '[]'::jsonb,
+    views_count      BIGINT      NOT NULL DEFAULT 0,
 
     CONSTRAINT startups_founders_is_array CHECK (jsonb_typeof(founders) = 'array')
 );

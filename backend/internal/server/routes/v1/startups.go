@@ -15,6 +15,7 @@ func RegisterStartups(r *gin.RouterGroup, cfg *config.Config, db *gorm.DB, logge
 	g := r.Group("/startups")
 	g.GET("", h.ListStartups)
 	g.GET("/:id", h.GetStartup)
+	g.POST("/:id/views", h.IncrementViews)
 
 	admin := r.Group("/admin/startups")
 	admin.Use(middleware.AuthRequired(cfg), middleware.RequireAdmin())
