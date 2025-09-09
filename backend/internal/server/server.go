@@ -109,7 +109,7 @@ func (s *HTTPServer) registerRoutes() {
 
 	v1routes.RegisterStartups(v1, s.cfg, s.db, s.log)
 	v1routes.RegisterInvestors(v1, s.cfg, s.db, s.log)
-	v1routes.RegisterUsers(v1, s.cfg, s.db, s.log)
+	v1routes.RegisterUsers(v1, s.cfg, s.db, s.log, uploader)
 	v1routes.RegisterNews(v1, s.cfg, s.db, s.log, uploader)
 	v1routes.RegisterEvents(v1, s.cfg, s.db, s.log)
 	v1routes.RegisterOpportunities(v1, s.cfg, s.db, s.log)

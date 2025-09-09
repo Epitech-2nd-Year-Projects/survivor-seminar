@@ -306,7 +306,7 @@ func (h *NewsHandler) UpdateNews(c *gin.Context) {
 		}
 	}
 
-	if len(updates) == 0 {
+	if len(updates) == 0 && err != nil {
 		response.JSONError(c, http.StatusBadRequest, "no_fields", "no fields provided for update", nil)
 		return
 	}
