@@ -39,7 +39,7 @@ func (h *StatisticsHandler) GetStatistics(c *gin.Context) {
 	stats := gin.H{
 		"total_projects":          totalProjects,
 		"projects_growth":         rand.Intn(100),
-		"tota_views":              rand.Intn(100000),
+		"total_views":             rand.Intn(100000),
 		"views_growth_percent":    rand.Float64() * 20.0,
 		"engagement_rate_percent": rand.Float64() * 15.0,
 		"period":                  period,
