@@ -1,9 +1,21 @@
 "server-only";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { parseAndThrowApiError } from "./errors";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
+
+async function buildApiUrl(path: string): Promise<string> {
+  if (/^https?:\/\//i.test(API_BASE)) {
+    return new URL(path, API_BASE).toString();
+  }
+  const h = headers();
+  const host = (await h).get("x-forwarded-host") ?? (await h).get("host");
+  const proto = (await h).get("x-forwarded-proto") ?? "http";
+  if (!host) throw new Error("Cannot resolve host for server fetch");
+  const origin = `${proto}://${host}`;
+  return new URL(`${API_BASE}${path}`, origin).toString();
+}
 
 type FetchOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
@@ -24,7 +36,9 @@ export async function apiFetchServer<T>(
     .map((c) => `${c.name}=${c.value}`)
     .join("; ");
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const url = await buildApiUrl(path);
+
+  const res = await fetch(url, {
     method: opts.method ?? "GET",
     headers: {
       Accept: "application/json",
