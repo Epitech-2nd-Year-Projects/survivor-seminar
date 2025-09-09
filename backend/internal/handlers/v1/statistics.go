@@ -67,7 +67,7 @@ func (h *StatisticsHandler) GetTopProjects(c *gin.Context) {
 	var topProjects []gin.H
 	for _, s := range startups {
 		topProjects = append(topProjects, gin.H{
-			"projectId":               s.ID,
+			"project_id":               s.ID,
 			"title":                   s.Name,
 			"views":                   rand.Intn(5000) + 100,
 			"likes":                   rand.Intn(1000),
