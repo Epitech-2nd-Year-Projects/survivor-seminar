@@ -23,7 +23,7 @@ func NewSyncHandler(log *logrus.Logger, sched sync.Scheduler) *SyncHandler {
 // @Summary      Sync status
 // @Description  Returns the scheduler state (running flag, queue length, last runs).
 // @Tags         Admin/Sync
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Produce      json
 // @Success      200 {object} response.SyncStatusResponse
 // @Router       /admin/sync/status [get]
@@ -41,7 +41,7 @@ func (h *SyncHandler) Status(c *gin.Context) {
 // @Summary      Trigger full sync
 // @Description  Queues a full synchronization.
 // @Tags         Admin/Sync
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Produce      json
 // @Success      202 {object} map[string]string
 // @Failure      500 {object} response.ErrorBody
@@ -58,7 +58,7 @@ func (h *SyncHandler) TriggerFull(c *gin.Context) {
 // @Summary      Trigger incremental sync
 // @Description  Queues an incremental synchronization.
 // @Tags         Admin/Sync
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Produce      json
 // @Success      202 {object} map[string]string
 // @Failure      500 {object} response.ErrorBody

@@ -20,3 +20,9 @@ test:
 
 cover-html: test
 	go tool cover -html=coverage.out
+
+openapi-install:
+	go install github.com/swaggo/swag/cmd/swag@latest
+
+openapi:
+	swag init -g ./cmd/jeb/main.go -o ./docs --outputTypes yaml --parseInternal

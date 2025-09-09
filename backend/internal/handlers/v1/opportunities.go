@@ -156,7 +156,7 @@ func (h *OpportunityHandler) GetOpportunity(c *gin.Context) {
 // @Summary      Delete opportunity
 // @Description  Deletes an opportunity (admin required).
 // @Tags         Opportunities
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id path int true "Opportunity ID"
 // @Success      200 {object} response.MessageResponse
 // @Failure      401 {object} response.ErrorBody
@@ -203,7 +203,7 @@ func (h *OpportunityHandler) DeleteOpportunity(c *gin.Context) {
 // @Summary      Create opportunity
 // @Description  Creates an opportunity (admin required).
 // @Tags         Opportunities
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        payload body requests.OpportunityCreateRequest true "Opportunity" Example({"title":"AI Grant","type":"grant","organism":"EU","deadline":"2025-12-31T00:00:00Z"})
@@ -263,7 +263,7 @@ func (h *OpportunityHandler) CreateOpportunity(c *gin.Context) {
 // @Summary      Update opportunity
 // @Description  Updates an opportunity (admin required).
 // @Tags         Opportunities
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        id      path   int    true  "Opportunity ID"

@@ -66,7 +66,7 @@ func (h *ConversationsHandler) getUnreadCount(userID, conversationID uint64) int
 // @Summary      List user conversations
 // @Description  Returns a paginated list of conversations for the authenticated user with unread counts.
 // @Tags         Conversations
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        page      query int    false "Page" default(1)
 // @Param        per_page  query int    false "Page size" default(20)
 // @Param        sort      query string false "Sort field" Enums(id,created_at,updated_at) default(updated_at)
@@ -145,7 +145,7 @@ func (h *ConversationsHandler) GetConversations(c *gin.Context) {
 // @Summary      Get conversation
 // @Description  Retrieves a conversation by ID with messages.
 // @Tags         Conversations
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id path int true "Conversation ID"
 // @Success      200 {object} response.ConversationObjectResponse
 // @Failure      401 {object} response.ErrorBody
@@ -193,7 +193,7 @@ func (h *ConversationsHandler) GetConversation(c *gin.Context) {
 // @Summary      Create conversation
 // @Description  Creates a new conversation with specified participants.
 // @Tags         Conversations
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        payload body requests.ConversationCreateRequest true "Conversation" Example({"participant_ids":[1,2],"title":"Project Discussion","is_group":false})
@@ -288,7 +288,7 @@ func (h *ConversationsHandler) CreateConversation(c *gin.Context) {
 // @Summary      Get conversation messages
 // @Description  Returns paginated messages for a conversation.
 // @Tags         Conversations
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id        path  int false "Conversation ID"
 // @Param        page      query int false "Page" default(1)
 // @Param        per_page  query int false "Page size" default(20)
@@ -359,7 +359,7 @@ func (h *ConversationsHandler) GetMessages(c *gin.Context) {
 // @Summary      Send message
 // @Description  Sends a message to a conversation.
 // @Tags         Conversations
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        id      path int true "Conversation ID"
@@ -429,7 +429,7 @@ func (h *ConversationsHandler) SendMessage(c *gin.Context) {
 // @Summary      Mark message as read
 // @Description  Marks messages as read up to a specific message ID.
 // @Tags         Conversations
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        id      path int true "Conversation ID"

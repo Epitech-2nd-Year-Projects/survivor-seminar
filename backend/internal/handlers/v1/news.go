@@ -147,7 +147,7 @@ func (h *NewsHandler) GetNewsItem(c *gin.Context) {
 // @Summary      Create news
 // @Description  Creates a news item (admin required).
 // @Tags         News
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        payload body requests.NewsCreateRequest true "News" Example({"title":"Funding round","category":"startup","description":"Series A raised","startup_id":1})
@@ -199,7 +199,7 @@ func (h *NewsHandler) CreateNews(c *gin.Context) {
 // @Summary      Update news
 // @Description  Updates a news item (admin required).
 // @Tags         News
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        id      path   int    true  "News ID"
@@ -283,7 +283,7 @@ func (h *NewsHandler) UpdateNews(c *gin.Context) {
 // @Summary      Delete news
 // @Description  Deletes a news item (admin required).
 // @Tags         News
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id path int true "News ID"
 // @Success      200 {object} response.MessageResponse
 // @Failure      401 {object} response.ErrorBody
