@@ -3,6 +3,7 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"slices"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/middleware"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/response"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/storage/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
@@ -17,8 +19,9 @@ import (
 )
 
 type UsersHandler struct {
-	db  *gorm.DB
-	log *logrus.Logger
+	db       *gorm.DB
+	log      *logrus.Logger
+	uploader s3.Uploader
 }
 
 var validUserSortFields = []string{
@@ -38,10 +41,11 @@ type listUsersParams struct {
 }
 
 // NewUsersHandler returns a new UsersHandler
-func NewUsersHandler(db *gorm.DB, log *logrus.Logger) *UsersHandler {
+func NewUsersHandler(db *gorm.DB, log *logrus.Logger, uploader s3.Uploader) *UsersHandler {
 	return &UsersHandler{
-		db:  db,
-		log: log,
+		db:       db,
+		log:      log,
+		uploader: uploader,
 	}
 }
 
@@ -122,7 +126,7 @@ func (h *UsersHandler) GetUsers(c *gin.Context) {
 // @Summary      Get user
 // @Description  Retrieves a user by ID.
 // @Tags         Users
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id   path int true "User ID"
 // @Success      200 {object} response.UserObjectResponse
 // @Failure      401 {object} response.ErrorBody
@@ -159,7 +163,7 @@ func (h *UsersHandler) GetUser(c *gin.Context) {
 // @Summary      Get user by email
 // @Description  Retrieves a user by email.
 // @Tags         Users
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        email   path string true "User email"
 // @Success      200 {object} response.UserObjectResponse
 // @Failure      401 {object} response.ErrorBody
@@ -196,12 +200,12 @@ func (h *UsersHandler) GetUserByEmail(c *gin.Context) {
 // @Summary      My profile
 // @Description  Returns the current authenticated user's profile.
 // @Tags         Users
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Success      200 {object} response.UserObjectResponse
 // @Failure      401 {object} response.ErrorBody
 // @Failure      404 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
-// @Router       /me [get]
+// @Router       /users/me [get]
 func (h *UsersHandler) GetMe(c *gin.Context) {
 	claims := middleware.GetClaims(c)
 	if claims == nil {
@@ -225,7 +229,7 @@ func (h *UsersHandler) GetMe(c *gin.Context) {
 // @Summary      Create user
 // @Description  Creates a user (admin required).
 // @Tags         Users
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        payload body requests.UserCreateRequest true "User" Example({"email":"jane@doe.tld","name":"Jane","role":"admin","password":"secret123"})
@@ -236,30 +240,21 @@ func (h *UsersHandler) GetMe(c *gin.Context) {
 // @Router       /admin/users [post]
 func (h *UsersHandler) CreateUser(c *gin.Context) {
 	var req struct {
-		Email    string  `json:"email" binding:"required,email"`
-		Name     string  `json:"name" binding:"required"`
-		Role     string  `json:"role" binding:"required"`
-		Password string  `json:"password" binding:"required,min=6"`
-		ImageURL *string `json:"image_url,omitempty"`
+		Email    string `form:"email" binding:"required,email"`
+		Name     string `form:"name" binding:"required"`
+		Role     string `form:"role" binding:"required"`
+		Password string `form:"password" binding:"required,min=6"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.log.WithError(err).Warn(" c.ShouldBindJSON()")
-		response.JSON(c, http.StatusBadRequest, gin.H{
-			"code":    2100,
-			"message": "invalid request payload",
-			"errors":  err.Error(),
-		})
+	if err := c.ShouldBind(&req); err != nil {
+		response.JSONError(c, http.StatusBadRequest, "invalid_payload", "invalid request payload", err.Error())
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		h.log.WithError(err).Error("failed to hash password")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to process password",
-		})
+		response.JSONError(c, http.StatusInternalServerError, "internal_error", "failed to process password", nil)
 		return
 	}
 
@@ -268,30 +263,38 @@ func (h *UsersHandler) CreateUser(c *gin.Context) {
 		Name:         req.Name,
 		Role:         req.Role,
 		PasswordHash: string(hash),
-		ImageURL:     req.ImageURL,
+	}
+
+	file, err := c.FormFile("image")
+	if err == nil {
+		f, _ := file.Open()
+		defer f.Close()
+		data, _ := io.ReadAll(f)
+		contentType := file.Header.Get("Content-Type")
+		if contentType == "" {
+			contentType = http.DetectContentType(data)
+		}
+		key := fmt.Sprintf("user_image/%s%s", req.Email, extFromContentType(contentType))
+		if url, upErr := h.uploader.Upload(c, key, contentType, data); upErr == nil {
+			user.ImageURL = &url
+		} else {
+			h.log.WithError(upErr).Warn("upload user image failed")
+		}
 	}
 
 	if err := h.db.Create(&user).Error; err != nil {
-		h.log.WithError(err).Error("h.db.Create().Error")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to create user",
-		})
+		response.JSONError(c, http.StatusInternalServerError, "internal_error", "failed to create user", nil)
 		return
 	}
 
-	h.log.WithField("id", user.ID).Info("user created successfully")
-	response.JSON(c, http.StatusCreated, gin.H{
-		"message": "user created successfully",
-		"data":    user,
-	})
+	response.JSON(c, http.StatusCreated, gin.H{"message": "user created successfully", "data": user})
 }
 
 // UpdateUser godoc
 // @Summary      Update user
 // @Description  Updates a user (admin required).
 // @Tags         Users
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        id      path   int    true  "User ID"
@@ -307,36 +310,19 @@ func (h *UsersHandler) UpdateUser(c *gin.Context) {
 
 	var user models.User
 	if err := h.db.Where("id = ?", id).First(&user).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			response.JSON(c, http.StatusNotFound, gin.H{
-				"code":    "not_found",
-				"message": "user not found",
-			})
-			return
-		}
-		h.log.WithError(err).Error("failed to fetch user for update")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to retrieve user",
-		})
+		response.JSONError(c, http.StatusNotFound, "not_found", "user not found", nil)
 		return
 	}
 
 	var req struct {
-		Email    *string `json:"email,omitempty" binding:"omitempty,email"`
-		Name     *string `json:"name,omitempty"`
-		Role     *string `json:"role,omitempty"`
-		Password *string `json:"password,omitempty" binding:"omitempty,min=6"`
-		ImageURL *string `json:"image_url,omitempty"`
+		Email    *string `form:"email,omitempty"`
+		Name     *string `form:"name,omitempty"`
+		Role     *string `form:"role,omitempty"`
+		Password *string `form:"password,omitempty"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.log.WithError(err).Warn("invalid request payload for user update")
-		response.JSON(c, http.StatusBadRequest, gin.H{
-			"code":    2100,
-			"message": "invalid request payload",
-			"errors":  err.Error(),
-		})
+	if err := c.ShouldBind(&req); err != nil {
+		response.JSONError(c, http.StatusBadRequest, "invalid_payload", "invalid request payload", err.Error())
 		return
 	}
 
@@ -354,39 +340,42 @@ func (h *UsersHandler) UpdateUser(c *gin.Context) {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
 		updates["password_hash"] = string(hash)
 	}
-	if req.ImageURL != nil {
-		updates["image_url"] = *req.ImageURL
+
+	file, err := c.FormFile("image")
+	if err == nil {
+		f, _ := file.Open()
+		defer f.Close()
+		data, _ := io.ReadAll(f)
+		contentType := file.Header.Get("Content-Type")
+		if contentType == "" {
+			contentType = http.DetectContentType(data)
+		}
+		key := fmt.Sprintf("user_image/%s%s", user.Email, extFromContentType(contentType))
+		if url, upErr := h.uploader.Upload(c, key, contentType, data); upErr == nil {
+			updates["image_url"] = url
+		} else {
+			h.log.WithError(upErr).Warn("upload user image failed")
+		}
 	}
 
-	if len(updates) == 0 {
-		response.JSON(c, http.StatusBadRequest, gin.H{
-			"code":    2101,
-			"message": "no fields provided for update",
-		})
+	if len(updates) == 0 && err != nil {
+		response.JSONError(c, http.StatusBadRequest, "no_fields", "no fields provided for update", nil)
 		return
 	}
 
 	if err := h.db.Model(&user).Updates(updates).Error; err != nil {
-		h.log.WithError(err).Error("failed to update user")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to update user",
-		})
+		response.JSONError(c, http.StatusInternalServerError, "internal_error", "failed to update user", nil)
 		return
 	}
 
-	h.log.WithField("id", id).Info("user updated successfully")
-	response.JSON(c, http.StatusOK, gin.H{
-		"message": "user updated successfully",
-		"data":    user,
-	})
+	response.JSON(c, http.StatusOK, gin.H{"message": "user updated successfully", "data": user})
 }
 
 // DeleteUser godoc
 // @Summary      Delete user
 // @Description  Deletes a user by ID (admin required).
 // @Tags         Users
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id   path int true "User ID"
 // @Success      200 {object} response.MessageResponse
 // @Failure      401 {object} response.ErrorBody

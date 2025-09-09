@@ -151,7 +151,7 @@ func (h *StartupsHandler) GetStartup(ctx *gin.Context) {
 // @Summary      Create startup
 // @Description  Creates a startup (admin required).
 // @Tags         Startups
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        payload body requests.StartupCreateRequest true "Startup" Example({"name":"Acme","email":"contact@acme.tld","sector":"tech","maturity":"early","project_status":"ongoing"})
@@ -202,7 +202,7 @@ func (h *StartupsHandler) CreateStartup(ctx *gin.Context) {
 // @Summary      Update startup
 // @Description  Updates a startup by ID (admin required).
 // @Tags         Startups
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        id      path   int    true  "Startup ID"
@@ -284,7 +284,7 @@ func (h *StartupsHandler) UpdateStartup(ctx *gin.Context) {
 // @Summary      Delete startup
 // @Description  Deletes a startup by ID (admin required).
 // @Tags         Startups
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id   path int true "Startup ID"
 // @Success      200 {object} response.MessageResponse
 // @Failure      401 {object} response.ErrorBody

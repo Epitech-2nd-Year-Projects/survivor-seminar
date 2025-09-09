@@ -138,7 +138,7 @@ func (h *PartnersHandler) GetPartner(c *gin.Context) {
 // @Summary      Create partner
 // @Description  Creates a partner (admin required).
 // @Tags         Partners
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        payload body requests.PartnerCreateRequest true "Partner" Example({"name":"ACME Corp","email":"partners@acme.tld","partnership_type":"sponsor"})
@@ -201,7 +201,7 @@ func (h *PartnersHandler) CreatePartner(c *gin.Context) {
 // @Summary      Update partner
 // @Description  Updates a partner (admin required).
 // @Tags         Partners
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        id      path   int    true  "Partner ID"
@@ -318,7 +318,7 @@ func (h *PartnersHandler) UpdatePartner(c *gin.Context) {
 // @Summary      Delete partner
 // @Description  Deletes a partner (admin required).
 // @Tags         Partners
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id path int true "Partner ID"
 // @Success      200 {object} response.MessageResponse
 // @Failure      401 {object} response.ErrorBody

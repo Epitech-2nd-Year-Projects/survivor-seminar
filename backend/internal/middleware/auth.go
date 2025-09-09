@@ -14,15 +14,18 @@ const (
 	ctxClaimsKey = "auth_claims"
 )
 
-// AuthRequired parses and validates a Bearer JWT, attaching claims to context
+// AuthRequired validates the access token from HttpOnly cookies and attaches claims to context
 func AuthRequired(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authz := c.GetHeader("Authorization")
-		if authz == "" || !strings.HasPrefix(strings.ToLower(authz), "bearer ") {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "missing bearer token"})
+		// Strict cookie-only authentication
+		var token string
+		if cookieVal, err := c.Cookie("access_token"); err == nil {
+			token = cookieVal
+		}
+		if token == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "missing access token"})
 			return
 		}
-		token := strings.TrimSpace(authz[len("Bearer "):])
 		claims, err := auth.ParseClaims(cfg, token)
 		if err != nil || claims == nil || claims.Type != "access" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"code": "invalid_token", "message": "invalid access token"})

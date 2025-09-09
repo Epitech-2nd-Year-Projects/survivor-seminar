@@ -3,6 +3,7 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"slices"
 	"time"
@@ -10,14 +11,16 @@ import (
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/response"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/storage/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type EventsHandler struct {
-	log *logrus.Logger
-	db  *gorm.DB
+	log      *logrus.Logger
+	db       *gorm.DB
+	uploader s3.Uploader
 }
 
 var validEventSortFields = []string{
@@ -37,10 +40,11 @@ type listEventsParams struct {
 	StartDate  string `form:"start_date" binding:"omitempty"`
 }
 
-func NewEventsHandler(log *logrus.Logger, db *gorm.DB) *EventsHandler {
+func NewEventsHandler(log *logrus.Logger, db *gorm.DB, uploader s3.Uploader) *EventsHandler {
 	return &EventsHandler{
-		log: log,
-		db:  db,
+		log:      log,
+		db:       db,
+		uploader: uploader,
 	}
 }
 
@@ -153,29 +157,34 @@ func (h *EventsHandler) GetEvent(c *gin.Context) {
 // @Summary      Create event
 // @Description  Creates an event (admin required).
 // @Tags         Events
-// @Security     BearerAuth
-// @Accept       json
+// @Security     CookieAuth
+// @Accept       multipart/form-data
 // @Produce      json
-// @Param        payload body requests.EventCreateRequest true "Event" Example({"name":"Conf 2025","start_date":"2025-10-01T09:00:00Z","event_type":"conference"})
+// @Param        name            formData string  true  "Event name"
+// @Param        description     formData string  false "Description"
+// @Param        event_type      formData string  false "Type (conference, meetup, ...)"
+// @Param        location        formData string  false "Location"
+// @Param        target_audience formData string  false "Target audience"
+// @Param        start_date      formData string  false "Start date (RFC3339)"
+// @Param        end_date        formData string  false "End date (RFC3339)"
+// @Param        capacity        formData int     false "Capacity"
+// @Param        image           formData file    false "Event image"
 // @Success      201 {object} response.EventObjectResponse
-// @Failure      400 {object} response.ErrorBody
-// @Failure      401 {object} response.ErrorBody
-// @Failure      500 {object} response.ErrorBody
+// @Failure      400,401,500 {object} response.ErrorBody
 // @Router       /admin/events [post]
 func (h *EventsHandler) CreateEvent(c *gin.Context) {
 	var req struct {
-		Name           string     `json:"name" binding:"required,max=255"`
-		Description    *string    `json:"description,omitempty"`
-		EventType      *string    `json:"event_type,omitempty"`
-		Location       *string    `json:"location,omitempty"`
-		TargetAudience *string    `json:"target_audience,omitempty"`
-		StartDate      *time.Time `json:"start_date,omitempty"`
-		EndDate        *time.Time `json:"end_date,omitempty"`
-		Capacity       *int       `json:"capacity,omitempty"`
-		ImageURL       *string    `json:"image_url,omitempty"`
+		Name           string     `form:"name" binding:"required,max=255"`
+		Description    *string    `form:"description"`
+		EventType      *string    `form:"event_type"`
+		Location       *string    `form:"location"`
+		TargetAudience *string    `form:"target_audience"`
+		StartDate      *time.Time `form:"start_date"`
+		EndDate        *time.Time `form:"end_date"`
+		Capacity       *int       `form:"capacity"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		h.log.WithError(err).Warn("invalid request payload")
 		response.JSON(c, http.StatusBadRequest, gin.H{
 			"code":    2100,
@@ -194,11 +203,27 @@ func (h *EventsHandler) CreateEvent(c *gin.Context) {
 		StartDate:      req.StartDate,
 		EndDate:        req.EndDate,
 		Capacity:       req.Capacity,
-		ImageURL:       req.ImageURL,
+	}
+
+	file, err := c.FormFile("image")
+	if err == nil {
+		f, _ := file.Open()
+		defer f.Close()
+		data, _ := io.ReadAll(f)
+		contentType := file.Header.Get("Content-Type")
+		if contentType == "" {
+			contentType = http.DetectContentType(data)
+		}
+		key := fmt.Sprintf("event_image/%d%s", time.Now().UnixNano(), extFromContentType(contentType))
+		if url, upErr := h.uploader.Upload(c, key, contentType, data); upErr == nil {
+			event.ImageURL = &url
+		} else {
+			h.log.WithError(upErr).Warn("upload event image failed")
+		}
 	}
 
 	if err := h.db.Create(&event).Error; err != nil {
-		h.log.WithError(err).Error("h.db.Create().Error")
+		h.log.WithError(err).Error("db.Create event failed")
 		response.JSON(c, http.StatusInternalServerError, gin.H{
 			"code":    "internal_error",
 			"message": "failed to create event",
@@ -217,16 +242,21 @@ func (h *EventsHandler) CreateEvent(c *gin.Context) {
 // @Summary      Update event
 // @Description  Updates an event (admin required).
 // @Tags         Events
-// @Security     BearerAuth
-// @Accept       json
+// @Security     CookieAuth
+// @Accept       multipart/form-data
 // @Produce      json
-// @Param        id      path   int    true  "Event ID"
-// @Param        payload body   requests.EventUpdateRequest true  "Fields to update" Example({"location":"Paris","capacity":300})
+// @Param        id              path     int    true  "Event ID"
+// @Param        name            formData string false "Event name"
+// @Param        description     formData string false "Description"
+// @Param        event_type      formData string false "Type"
+// @Param        location        formData string false "Location"
+// @Param        target_audience formData string false "Audience"
+// @Param        start_date      formData string false "Start date (RFC3339)"
+// @Param        end_date        formData string false "End date (RFC3339)"
+// @Param        capacity        formData int    false "Capacity"
+// @Param        image           formData file   false "Event image"
 // @Success      200 {object} response.EventObjectResponse
-// @Failure      400 {object} response.ErrorBody
-// @Failure      401 {object} response.ErrorBody
-// @Failure      404 {object} response.ErrorBody
-// @Failure      500 {object} response.ErrorBody
+// @Failure      400,401,404,500 {object} response.ErrorBody
 // @Router       /admin/events/{id} [patch]
 func (h *EventsHandler) UpdateEvent(c *gin.Context) {
 	id := c.Param("id")
@@ -234,33 +264,26 @@ func (h *EventsHandler) UpdateEvent(c *gin.Context) {
 	var event models.Event
 	if err := h.db.Where("id = ?", id).First(&event).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			response.JSON(c, http.StatusNotFound, gin.H{
-				"code":    "not_found",
-				"message": "event not found",
-			})
+			response.JSON(c, http.StatusNotFound, gin.H{"code": "not_found", "message": "event not found"})
 			return
 		}
-		h.log.WithError(err).WithField("id", id).Error("failed to fetch event for update")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to retrieve event",
-		})
+		h.log.WithError(err).WithField("id", id).Error("failed to fetch event")
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to retrieve event"})
 		return
 	}
 
 	var req struct {
-		Name           *string    `json:"name,omitempty" binding:"omitempty,max=255"`
-		Description    *string    `json:"description,omitempty"`
-		EventType      *string    `json:"event_type,omitempty"`
-		Location       *string    `json:"location,omitempty"`
-		TargetAudience *string    `json:"target_audience,omitempty"`
-		StartDate      *time.Time `json:"start_date,omitempty"`
-		EndDate        *time.Time `json:"end_date,omitempty"`
-		Capacity       *int       `json:"capacity,omitempty"`
-		ImageURL       *string    `json:"image_url,omitempty"`
+		Name           *string    `form:"name"`
+		Description    *string    `form:"description"`
+		EventType      *string    `form:"event_type"`
+		Location       *string    `form:"location"`
+		TargetAudience *string    `form:"target_audience"`
+		StartDate      *time.Time `form:"start_date"`
+		EndDate        *time.Time `form:"end_date"`
+		Capacity       *int       `form:"capacity"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		h.log.WithError(err).Warn("invalid request payload for event update")
 		response.JSON(c, http.StatusBadRequest, gin.H{
 			"code":    2100,
@@ -295,49 +318,42 @@ func (h *EventsHandler) UpdateEvent(c *gin.Context) {
 	if req.Capacity != nil {
 		updates["capacity"] = *req.Capacity
 	}
-	if req.ImageURL != nil {
-		updates["image_url"] = *req.ImageURL
+
+	file, err := c.FormFile("image")
+	if err == nil {
+		f, _ := file.Open()
+		defer f.Close()
+		data, _ := io.ReadAll(f)
+		contentType := file.Header.Get("Content-Type")
+		if contentType == "" {
+			contentType = http.DetectContentType(data)
+		}
+		key := fmt.Sprintf("event_image/%s%s", id, extFromContentType(contentType))
+		if url, upErr := h.uploader.Upload(c, key, contentType, data); upErr == nil {
+			updates["image_url"] = url
+		} else {
+			h.log.WithError(upErr).Warn("upload event image failed")
+		}
 	}
 
 	if len(updates) == 0 {
-		h.log.WithField("id", id).Warn("len(updates) == 0")
-		response.JSON(c, http.StatusBadRequest, gin.H{
-			"code":    2101,
-			"message": "no fields provided for update",
-		})
+		response.JSON(c, http.StatusBadRequest, gin.H{"code": "no_fields", "message": "no fields provided for update"})
 		return
 	}
 
 	if err := h.db.Model(&event).Updates(updates).Error; err != nil {
-		h.log.WithError(err).WithField("id", id).Error("failed to update event")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to update event",
-		})
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to update event"})
 		return
 	}
 
-	if err := h.db.Where("id = ?", id).First(&event).Error; err != nil {
-		h.log.WithError(err).WithField("id", id).Error("failed to fetch updated event")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to retrieve updated event",
-		})
-		return
-	}
-
-	h.log.WithField("id", id).Info("event updated successfully")
-	response.JSON(c, http.StatusOK, gin.H{
-		"message": "event updated successfully",
-		"data":    event,
-	})
+	response.JSON(c, http.StatusOK, gin.H{"message": "event updated successfully", "data": event})
 }
 
 // DeleteEvent godoc
 // @Summary      Delete event
 // @Description  Deletes an event (admin required).
 // @Tags         Events
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id path int true "Event ID"
 // @Success      200 {object} response.MessageResponse
 // @Failure      401 {object} response.ErrorBody

@@ -28,8 +28,8 @@ type AuthLoginRequest struct {
 }
 
 type AuthRefreshRequest struct {
-	// Valid refresh token
-	RefreshToken string `json:"refresh_token" example:"<jwt>"`
+	// Optional refresh token (normally sent via HttpOnly cookie)
+	RefreshToken string `json:"refresh_token,omitempty" example:"<jwt>"`
 }
 
 type AuthVerifyRequest struct {
@@ -52,28 +52,28 @@ type AuthResetPasswordRequest struct {
 // Users
 type UserCreateRequest struct {
 	// Email address
-	Email string `json:"email" example:"jane@doe.tld" format:"email"`
+	Email string `form:"email" json:"email" binding:"required,email" example:"jane@doe.tld" format:"email"`
 	// Display name
-	Name string `json:"name" example:"Jane"`
+	Name string `form:"name" json:"name" binding:"required" example:"Jane"`
 	// Role to assign
-	Role string `json:"role" enums:"admin,user,investor,founder" example:"admin"`
+	Role string `form:"role" json:"role" binding:"required" enums:"admin,user,investor,founder" example:"admin"`
 	// Initial password
-	Password string `json:"password" example:"secret123"`
-	// Optional avatar URL
-	ImageURL *string `json:"image_url,omitempty" example:"https://cdn.example.com/avatars/jane.png" format:"uri"`
+	Password string `form:"password" json:"password" binding:"required,min=6" example:"secret123"`
+	// Avatar image file (binary upload)
+	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(Avatar image file to upload)"`
 }
 
 type UserUpdateRequest struct {
 	// New email address
-	Email *string `json:"email,omitempty" example:"jane@newmail.tld" format:"email"`
+	Email *string `form:"email" json:"email,omitempty" example:"jane@newmail.tld" format:"email"`
 	// New display name
-	Name *string `json:"name,omitempty" example:"Jane Doe"`
+	Name *string `form:"name" json:"name,omitempty" example:"Jane Doe"`
 	// New role
-	Role *string `json:"role,omitempty" enums:"admin,user,investor,founder" example:"user"`
+	Role *string `form:"role" json:"role,omitempty" enums:"admin,user,investor,founder" example:"user"`
 	// New password
-	Password *string `json:"password,omitempty" example:"newSecret123"`
-	// New avatar URL
-	ImageURL *string `json:"image_url,omitempty" example:"https://cdn.example.com/avatars/jane2.png" format:"uri"`
+	Password *string `form:"password" json:"password,omitempty" example:"newSecret123"`
+	// New avatar image file (binary upload)
+	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(New avatar image file to upload)"`
 }
 
 // Startups
@@ -149,79 +149,79 @@ type InvestorUpdateRequest struct {
 // News
 type NewsCreateRequest struct {
 	// News title
-	Title string `json:"title" example:"Funding round"`
+	Title string `form:"title" json:"title" binding:"required" example:"Funding round"`
 	// Publication date (YYYY-MM-DD)
-	NewsDate *string `json:"news_date,omitempty" example:"2025-09-01" format:"date"`
+	NewsDate *string `form:"news_date" json:"news_date,omitempty" example:"2025-09-01" format:"date"`
 	// Location (if relevant)
-	Location *string `json:"location,omitempty" example:"Paris"`
+	Location *string `form:"location" json:"location,omitempty" example:"Paris"`
 	// Category or topic
-	Category *string `json:"category,omitempty" example:"startup"`
+	Category *string `form:"category" json:"category,omitempty" example:"startup"`
 	// Related startup ID
-	StartupID *uint64 `json:"startup_id,omitempty" example:"1"`
+	StartupID *uint64 `form:"startup_id" json:"startup_id,omitempty" example:"1"`
 	// Body text
-	Description string `json:"description" example:"Series A raised"`
-	// Image URL
-	ImageURL *string `json:"image_url,omitempty" example:"https://cdn.example.com/news/1.png" format:"uri"`
+	Description string `form:"description" json:"description" binding:"required" example:"Series A raised"`
+	// Image file (binary upload)
+	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(Image file to upload)"`
 }
 
 type NewsUpdateRequest struct {
 	// New title
-	Title *string `json:"title,omitempty" example:"Updated title"`
+	Title *string `form:"title" json:"title,omitempty" example:"Updated title"`
 	// New publication date
-	NewsDate *string `json:"news_date,omitempty" example:"2025-09-02" format:"date"`
+	NewsDate *string `form:"news_date" json:"news_date,omitempty" example:"2025-09-02" format:"date"`
 	// New location
-	Location *string `json:"location,omitempty" example:"Lyon"`
+	Location *string `form:"location" json:"location,omitempty" example:"Lyon"`
 	// New category
-	Category *string `json:"category,omitempty" example:"event"`
+	Category *string `form:"category" json:"category,omitempty" example:"event"`
 	// New related startup
-	StartupID *uint64 `json:"startup_id,omitempty" example:"2"`
+	StartupID *uint64 `form:"startup_id" json:"startup_id,omitempty" example:"2"`
 	// New body text
-	Description *string `json:"description,omitempty" example:"Updated description"`
-	// New image URL
-	ImageURL *string `json:"image_url,omitempty" example:"https://cdn.example.com/news/2.png" format:"uri"`
+	Description *string `form:"description" json:"description,omitempty" example:"Updated description"`
+	// New image file (binary upload)
+	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(New image file to upload)"`
 }
 
 // Events
 type EventCreateRequest struct {
 	// Event name
-	Name string `json:"name" example:"Conf 2025"`
+	Name string `form:"name" json:"name" binding:"required" example:"Conf 2025"`
 	// Short description
-	Description *string `json:"description,omitempty" example:"Annual conference"`
+	Description *string `form:"description" json:"description,omitempty" example:"Annual conference"`
 	// Type (conference, meetup, ...)
-	EventType *string `json:"event_type,omitempty" example:"conference"`
+	EventType *string `form:"event_type" json:"event_type,omitempty" example:"conference"`
 	// Venue or city
-	Location *string `json:"location,omitempty" example:"Paris"`
+	Location *string `form:"location" json:"location,omitempty" example:"Paris"`
 	// Intended audience
-	TargetAudience *string `json:"target_audience,omitempty" example:"Startups"`
+	TargetAudience *string `form:"target_audience" json:"target_audience,omitempty" example:"Startups"`
 	// Start date/time (RFC3339)
-	StartDate *time.Time `json:"start_date,omitempty" format:"date-time"`
+	StartDate *time.Time `form:"start_date" json:"start_date,omitempty" format:"date-time"`
 	// End date/time (RFC3339)
-	EndDate *time.Time `json:"end_date,omitempty" format:"date-time"`
+	EndDate *time.Time `form:"end_date" json:"end_date,omitempty" format:"date-time"`
 	// Capacity (seats)
-	Capacity *int `json:"capacity,omitempty" example:"300"`
-	// Image URL
-	ImageURL *string `json:"image_url,omitempty" example:"https://cdn.example.com/events/1.png" format:"uri"`
+	Capacity *int `form:"capacity" json:"capacity,omitempty" example:"300"`
+	// Event image file (binary upload)
+	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(Event image file to upload)"`
 }
 
 type EventUpdateRequest struct {
 	// New name
-	Name *string `json:"name,omitempty" example:"Conf 2025"`
+	Name *string `form:"name" json:"name,omitempty" example:"Conf 2025"`
 	// New description
-	Description *string `json:"description,omitempty" example:"Updated agenda"`
+	Description *string `form:"description" json:"description,omitempty" example:"Updated agenda"`
 	// New type
-	EventType *string `json:"event_type,omitempty" example:"meetup"`
+	EventType *string `form:"event_type" json:"event_type,omitempty" example:"meetup"`
 	// New location
-	Location *string `json:"location,omitempty" example:"Lille"`
+	Location *string `form:"location" json:"location,omitempty" example:"Lille"`
 	// New target audience
-	TargetAudience *string `json:"target_audience,omitempty" example:"Developers"`
+	TargetAudience *string `form:"target_audience" json:"target_audience,omitempty" example:"Developers"`
 	// New start date/time
-	StartDate *time.Time `json:"start_date,omitempty" format:"date-time"`
+	StartDate *time.Time `form:"start_date" json:"start_date,omitempty" format:"date-time"`
 	// New end date/time
-	EndDate *time.Time `json:"end_date,omitempty" format:"date-time"`
+	EndDate *time.Time `form:"end_date" json:"end_date,omitempty" format:"date-time"`
 	// New capacity
-	Capacity *int `json:"capacity,omitempty" example:"350"`
-	// New image URL
-	ImageURL *string `json:"image_url,omitempty" example:"https://cdn.example.com/events/2.png" format:"uri"`
+	Capacity *int `form:"capacity" json:"capacity,omitempty" example:"350"`
+	// New event image file (binary upload)
+	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(New event image file to upload)"`
 }
 
 // Opportunities

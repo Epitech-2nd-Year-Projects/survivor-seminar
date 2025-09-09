@@ -9,9 +9,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
-import { apiFetchServer } from "@/lib/api/http/server";
-import type { ItemResponseDTO } from "@/lib/api/contracts/common";
-import { mapUser, type UserDTO } from "@/lib/api/contracts/users";
+import { getUserMeServer } from "@/lib/api/services/users/server";
 
 export default async function DashboardLayout({
   children,
@@ -19,16 +17,13 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   try {
-    const res = await apiFetchServer<ItemResponseDTO<UserDTO>>(`/users/me`, {
-      cache: "no-store",
-    });
-    /*
-    const me = mapUser(res.data ?? (res as any).user);
-    if (!me) { // TODO: Maybe check for role?
-      redirect('/');
-    }*/
+    const me = await getUserMeServer();
+
+    if (!me) {
+      redirect("/login?next=/dashboard");
+    }
   } catch (e) {
-    redirect(`/login?next=/admin`);
+    redirect(`/login?next=/dashboard`);
   }
 
   return (

@@ -1,5 +1,5 @@
 MIGRATION_DIR ?= migrations
-DB_URL ?=
+DB_URL ?= postgresql://neondb_owner:npg_Jkg2UASd1NLM@ep-raspy-star-a291ftcu-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 NAME = back
 
 build:
@@ -20,3 +20,9 @@ test:
 
 cover-html: test
 	go tool cover -html=coverage.out
+
+openapi-install:
+	go install github.com/swaggo/swag/cmd/swag@latest
+
+openapi:
+	swag init -g ./cmd/jeb/main.go -o ./docs --outputTypes yaml --parseInternal
