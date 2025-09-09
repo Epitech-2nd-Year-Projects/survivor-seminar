@@ -37,12 +37,12 @@ func (h *StatisticsHandler) GetStatistics(c *gin.Context) {
 	}
 
 	stats := gin.H{
-		"totalProjects":         totalProjects,
-		"projectsGrowth":        rand.Intn(100),
-		"totalViews":            rand.Intn(100000),
-		"viewsGrowthPercent":    rand.Float64() * 20.0,
-		"engagementRatePercent": rand.Float64() * 15.0,
-		"period":                period,
+		"total_projects":          totalProjects,
+		"projects_growth":         rand.Intn(100),
+		"tota_views":              rand.Intn(100000),
+		"views_growth_percent":    rand.Float64() * 20.0,
+		"engagement_rate_percent": rand.Float64() * 15.0,
+		"period":                  period,
 	}
 	response.JSON(c, http.StatusOK, stats)
 }
@@ -67,21 +67,21 @@ func (h *StatisticsHandler) GetTopProjects(c *gin.Context) {
 	var topProjects []gin.H
 	for _, s := range startups {
 		topProjects = append(topProjects, gin.H{
-			"projectId":             s.ID,
-			"title":                 s.Name,
-			"views":                 rand.Intn(5000) + 100,
-			"likes":                 rand.Intn(1000),
-			"comments":              rand.Intn(200),
-			"engagementRatePercent": rand.Float64() * 50.0,
+			"project_id":               s.ID,
+			"title":                   s.Name,
+			"views":                   rand.Intn(5000) + 100,
+			"likes":                   rand.Intn(1000),
+			"comments":                rand.Intn(200),
+			"engagement_rate_percent": rand.Float64() * 50.0,
 		})
 	}
 
 	payload := gin.H{
-		"period":      period,
-		"limit":       limit,
-		"count":       len(topProjects),
-		"topProjects": topProjects,
-		"generatedAt": time.Now().UTC(),
+		"period":       period,
+		"limit":        limit,
+		"count":        len(topProjects),
+		"top_projects": topProjects,
+		"generated_at": time.Now().UTC(),
 	}
 
 	response.JSON(c, http.StatusOK, payload)
