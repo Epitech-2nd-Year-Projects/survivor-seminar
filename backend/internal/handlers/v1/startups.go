@@ -3,6 +3,7 @@ package v1
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
@@ -154,21 +155,14 @@ func (h *StartupsHandler) GetStartup(ctx *gin.Context) {
 // @Security     CookieAuth
 // @Accept       json
 // @Produce      json
-// @Param        payload body requests.StartupCreateRequest true "Startup" Example({"name":"Acme","email":"contact@acme.tld","sector":"tech","maturity":"early","project_status":"ongoing"})
+// @Param        payload body models.Startup true "Startup"
 // @Success      201 {object} response.StartupObjectResponse
 // @Failure      400 {object} response.ErrorBody
 // @Failure      401 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
 // @Router       /admin/startups [post]
 func (h *StartupsHandler) CreateStartup(ctx *gin.Context) {
-	var req struct {
-		Name          string  `json:"name" binding:"required"`
-		Email         *string `json:"email,omitempty" binding:"omitempty,email"`
-		Sector        *string `json:"sector,omitempty"`
-		Maturity      *string `json:"maturity,omitempty"`
-		ProjectStatus *string `json:"project_status,omitempty"`
-		Description   *string `json:"description,omitempty"`
-	}
+	var req models.Startup
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.JSONError(ctx, http.StatusBadRequest,
@@ -176,25 +170,17 @@ func (h *StartupsHandler) CreateStartup(ctx *gin.Context) {
 		return
 	}
 
-	startup := models.Startup{
-		Name:          req.Name,
-		Email:         req.Email,
-		Sector:        req.Sector,
-		Maturity:      req.Maturity,
-		ProjectStatus: req.ProjectStatus,
-		Description:   req.Description,
-	}
+	req.CreatedAt = time.Now().UTC()
 
-	if err := h.db.Create(&startup).Error; err != nil {
+	if err := h.db.Create(&req).Error; err != nil {
 		h.log.WithError(err).Error("h.db.Create().Error")
 		response.JSONError(ctx, http.StatusInternalServerError,
 			"internal_error", "failed to create startup", nil)
 		return
 	}
-
 	ctx.JSON(http.StatusCreated, gin.H{
 		"message": "startup created successfully",
-		"data":    startup,
+		"data":    req,
 	})
 }
 
@@ -205,8 +191,8 @@ func (h *StartupsHandler) CreateStartup(ctx *gin.Context) {
 // @Security     CookieAuth
 // @Accept       json
 // @Produce      json
-// @Param        id      path   int    true  "Startup ID"
-// @Param        payload body   requests.StartupUpdateRequest true  "Fields to update" Example({"description":"New description","maturity":"middle"})
+// @Param        id      path   int true "Startup ID"
+// @Param        payload body   object true "Fields to update"
 // @Success      200 {object} response.StartupObjectResponse
 // @Failure      400 {object} response.ErrorBody
 // @Failure      401 {object} response.ErrorBody
@@ -219,56 +205,32 @@ func (h *StartupsHandler) UpdateStartup(ctx *gin.Context) {
 	var startup models.Startup
 	if err := h.db.Where("id = ?", id).First(&startup).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			response.JSONError(ctx, http.StatusNotFound, "not_found", "startup not found", nil)
+			response.JSONError(ctx, http.StatusNotFound,
+				"not_found", "startup not found", nil)
 			return
 		}
-		response.JSONError(ctx, http.StatusInternalServerError, "internal_error", "failed to retrieve startup", nil)
+		response.JSONError(ctx, http.StatusInternalServerError,
+			"internal_error", "failed to retrieve startup", nil)
 		return
 	}
 
-	var req struct {
-		Name          *string `json:"name,omitempty"`
-		Email         *string `json:"email,omitempty" binding:"omitempty,email"`
-		Sector        *string `json:"sector,omitempty"`
-		Maturity      *string `json:"maturity,omitempty"`
-		ProjectStatus *string `json:"project_status,omitempty"`
-		Description   *string `json:"description,omitempty"`
-	}
-
+	var req map[string]interface{}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		h.log.WithError(err).Warn("invalid request payload for startup update")
 		response.JSONError(ctx, http.StatusBadRequest,
 			"invalid_payload", "invalid request payload", err.Error())
 		return
 	}
 
-	updates := make(map[string]interface{})
-	if req.Name != nil {
-		updates["name"] = *req.Name
-	}
-	if req.Email != nil {
-		updates["email"] = *req.Email
-	}
-	if req.Sector != nil {
-		updates["sector"] = *req.Sector
-	}
-	if req.Maturity != nil {
-		updates["maturity"] = *req.Maturity
-	}
-	if req.ProjectStatus != nil {
-		updates["project_status"] = *req.ProjectStatus
-	}
-	if req.Description != nil {
-		updates["description"] = *req.Description
-	}
+	delete(req, "id")
+	delete(req, "created_at")
 
-	if len(updates) == 0 {
+	if len(req) == 0 {
 		response.JSONError(ctx, http.StatusBadRequest,
 			"no_fields", "no fields provided for update", nil)
 		return
 	}
 
-	if err := h.db.Model(&startup).Updates(updates).Error; err != nil {
+	if err := h.db.Model(&startup).Updates(req).Error; err != nil {
 		response.JSONError(ctx, http.StatusInternalServerError,
 			"internal_error", "failed to update startup", nil)
 		return

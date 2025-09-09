@@ -1,6 +1,10 @@
 package requests
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/datatypes"
+)
 
 // Auth
 type AuthRegisterRequest struct {
@@ -79,32 +83,60 @@ type UserUpdateRequest struct {
 // Startups
 type StartupCreateRequest struct {
 	// Startup name
-	Name string `json:"name" example:"Acme"`
+	Name string `json:"name" binding:"required" example:"Acme"`
+	// Legal status
+	LegalStatus *string `json:"legal_status,omitempty" example:"SAS"`
+	// Mailing address
+	Address *string `json:"address,omitempty" example:"10 Rue de Rivoli, Paris"`
 	// Contact email
 	Email *string `json:"email,omitempty" example:"contact@acme.tld" format:"email"`
+	// Contact phone
+	Phone *string `json:"phone,omitempty" example:"+33 1 23 45 67 89"`
+	// Short description
+	Description *string `json:"description,omitempty" example:"AI platform for SMBs"`
+	// Website URL
+	WebsiteURL *string `json:"website_url,omitempty" example:"https://acme.tld" format:"uri"`
+	// Social media URL
+	SocialMediaURL *string `json:"social_media_url,omitempty" example:"https://x.com/acme" format:"uri"`
+	// Project status
+	ProjectStatus *string `json:"project_status,omitempty" enums:"ongoing,completed" example:"ongoing"`
+	// Stated needs
+	Needs *string `json:"needs,omitempty" example:"Funding, Mentorship"`
 	// Business sector
 	Sector *string `json:"sector,omitempty" enums:"tech,health,finance" example:"tech"`
 	// Maturity stage
 	Maturity *string `json:"maturity,omitempty" enums:"early,middle,late" example:"early"`
-	// Project status
-	ProjectStatus *string `json:"project_status,omitempty" enums:"ongoing,completed" example:"ongoing"`
-	// Short description
-	Description *string `json:"description,omitempty" example:"AI platform for SMBs"`
+	// Founders array
+	Founders datatypes.JSON `json:"founders,omitempty" swaggertype:"array,string" example:"[\"Jane Doe\", \"John Roe\"]"`
 }
 
 type StartupUpdateRequest struct {
-	// New name
-	Name *string `json:"name,omitempty" example:"Acme Corp"`
-	// New contact email
+	// New startup name
+	Name *string `json:"name,omitempty" example:"Acme Updated"`
+	// Legal status
+	LegalStatus *string `json:"legal_status,omitempty" example:"SARL"`
+	// Mailing address
+	Address *string `json:"address,omitempty" example:"12 Avenue République, Paris"`
+	// Contact email
 	Email *string `json:"email,omitempty" example:"hello@acme.tld" format:"email"`
-	// New sector
-	Sector *string `json:"sector,omitempty" enums:"tech,health,finance" example:"tech"`
-	// New maturity
-	Maturity *string `json:"maturity,omitempty" enums:"early,middle,late" example:"middle"`
-	// New project status
+	// Contact phone
+	Phone *string `json:"phone,omitempty" example:"+33 6 12 34 56 78"`
+	// Short description
+	Description *string `json:"description,omitempty" example:"New description"`
+	// Website URL
+	WebsiteURL *string `json:"website_url,omitempty" example:"https://new-acme.tld" format:"uri"`
+	// Social media URL
+	SocialMediaURL *string `json:"social_media_url,omitempty" example:"https://linkedin.com/acme" format:"uri"`
+	// Project status
 	ProjectStatus *string `json:"project_status,omitempty" enums:"ongoing,completed" example:"completed"`
-	// New description
-	Description *string `json:"description,omitempty" example:"Updated description"`
+	// Stated needs
+	Needs *string `json:"needs,omitempty" example:"Funding only"`
+	// Business sector
+	Sector *string `json:"sector,omitempty" enums:"tech,health,finance" example:"finance"`
+	// Maturity stage
+	Maturity *string `json:"maturity,omitempty" enums:"early,middle,late" example:"late"`
+	// Founders array
+	Founders datatypes.JSON `json:"founders,omitempty" swaggertype:"array,string" example:"[\"Alice\", \"Bob\"]"`
 }
 
 // Investors
