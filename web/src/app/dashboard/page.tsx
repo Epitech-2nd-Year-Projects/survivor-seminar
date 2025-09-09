@@ -11,6 +11,10 @@ import {
 } from "@/lib/api/services/statistics/hooks";
 import { userMessageFromError } from "@/lib/api/http/messages";
 
+function round(n: number) {
+  return Math.round((n + Number.EPSILON) * 100) / 100;
+}
+
 export default function StatisticsPage() {
   const {
     data: stats,
@@ -51,9 +55,12 @@ export default function StatisticsPage() {
               <CardTitle>Projects</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">128</div>
+              <div className="text-3xl font-bold">
+                {stats?.totalProjects ?? 0}
+              </div>
               <p className="text-muted-foreground text-sm">
-                <span className="font-bold">+6</span> this week
+                <span className="font-bold">{stats?.projectsGrowth ?? 0}</span>{" "}
+                this week
               </p>
             </CardContent>
           </Card>
@@ -64,10 +71,12 @@ export default function StatisticsPage() {
             <CardTitle>Project views</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats?.totalViews}</div>
+            <div className="text-3xl font-bold">{stats?.totalViews ?? 0}</div>
             <p className="text-muted-foreground text-sm">
-              <span className="font-bold">{stats?.viewsGrowthPercent}%</span> vs
-              the last week
+              <span className="font-bold">
+                {round(stats?.viewsGrowthPercent ?? 0)}%
+              </span>{" "}
+              vs the last week
             </p>
           </CardContent>
         </Card>
@@ -78,9 +87,12 @@ export default function StatisticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              {stats?.engagementRatePercent}%
+              {round(stats?.engagementRatePercent ?? 0)}%
             </div>
-            <Progress value={54} className="mt-2" />
+            <Progress
+              value={stats?.engagementRatePercent ?? 0}
+              className="mt-2"
+            />
           </CardContent>
         </Card>
       </div>
