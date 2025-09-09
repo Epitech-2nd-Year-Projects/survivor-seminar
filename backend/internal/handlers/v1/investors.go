@@ -146,7 +146,7 @@ func (h *InvestorsHandler) GetInvestor(c *gin.Context) {
 // @Summary      Create investor
 // @Description  Creates an investor (admin required).
 // @Tags         Investors
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        payload body requests.InvestorCreateRequest true "Investor" Example({"name":"VC Alpha","email":"contact@vcalpha.tld","investor_type":"VC","investment_focus":"Seed"})
@@ -200,7 +200,7 @@ func (h *InvestorsHandler) CreateInvestor(c *gin.Context) {
 // @Summary      Update investor
 // @Description  Updates an investor (admin required).
 // @Tags         Investors
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        id      path   int    true  "Investor ID"
@@ -288,7 +288,7 @@ func (h *InvestorsHandler) UpdateInvestor(c *gin.Context) {
 // @Summary      Delete investor
 // @Description  Deletes an investor (admin required).
 // @Tags         Investors
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id path int true "Investor ID"
 // @Success      200 {object} response.MessageResponse
 // @Failure      401 {object} response.ErrorBody

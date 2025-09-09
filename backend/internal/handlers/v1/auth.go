@@ -34,7 +34,7 @@ func NewAuthHandler(cfg *config.Config, db *gorm.DB, log *logrus.Logger, mailer 
 
 // Register godoc
 // @Summary      Sign up
-// @Description  Creates a user and returns the profile plus JWT tokens.
+// @Description  Creates a user, sends a verification email, and returns the profile. No tokens are returned; cookies are set after login.
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
@@ -112,35 +112,35 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		}
 	}
 
-    if h.mailer != nil {
-        if token, err := h.createOneTimeToken(c, u.ID, "verify", h.cfg.Auth.EmailVerificationTTL); err != nil {
-            h.log.WithError(err).Warn("createOneTimeToken verify failed")
-        } else {
-            link := fmt.Sprintf("%s/api/%s/auth/verify?token=%s", strings.TrimRight(h.cfg.App.BaseURL, "/"), h.cfg.App.Version, token)
-            subject := "Verify your email"
-            body := fmt.Sprintf("<p>Welcome %s,</p><p>Please verify your email by clicking the link below:</p><p><a href=\"%s\">Verify Email</a></p>", u.Name, link)
-            if err := h.mailer.Send(c.Request.Context(), u.Email, subject, body); err != nil {
-                h.log.WithError(err).Warn("mailer.Send verify email failed")
-            }
-        }
-    } else {
-        h.log.Warn("mailer is nil; skipping verification email")
-    }
+	if h.mailer != nil {
+		if token, err := h.createOneTimeToken(c, u.ID, "verify", h.cfg.Auth.EmailVerificationTTL); err != nil {
+			h.log.WithError(err).Warn("createOneTimeToken verify failed")
+		} else {
+			link := fmt.Sprintf("%s/api/%s/auth/verify?token=%s", strings.TrimRight(h.cfg.App.BaseURL, "/"), h.cfg.App.Version, token)
+			subject := "Verify your email"
+			body := fmt.Sprintf("<p>Welcome %s,</p><p>Please verify your email by clicking the link below:</p><p><a href=\"%s\">Verify Email</a></p>", u.Name, link)
+			if err := h.mailer.Send(c.Request.Context(), u.Email, subject, body); err != nil {
+				h.log.WithError(err).Warn("mailer.Send verify email failed")
+			}
+		}
+	} else {
+		h.log.Warn("mailer is nil; skipping verification email")
+	}
 
-    response.JSON(c, http.StatusCreated, gin.H{
-        "user":    u,
-        "message": "verification email sent; please verify before logging in",
-    })
+	response.JSON(c, http.StatusCreated, gin.H{
+		"user":    u,
+		"message": "verification email sent; please verify before logging in",
+	})
 }
 
 // Login godoc
 // @Summary      Sign in
-// @Description  Verifies credentials and returns a JWT token pair.
+// @Description  Verifies credentials, sets HttpOnly cookies, and returns the user profile. No tokens in response.
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
 // @Param        payload body requests.AuthLoginRequest true "Credentials" Example({"email":"john@doe.tld","password":"secret123"})
-// @Success      200 {object} response.AuthRegisterResponse
+// @Success      200 {object} response.AuthLoginResponse
 // @Failure      400 {object} response.ErrorBody
 // @Failure      401 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
@@ -165,69 +165,69 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to process request"})
 		return
 	}
-    if bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(req.Password)) != nil {
-        response.JSON(c, http.StatusUnauthorized, gin.H{"code": "invalid_credentials", "message": "invalid credentials"})
-        return
-    }
+	if bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(req.Password)) != nil {
+		response.JSON(c, http.StatusUnauthorized, gin.H{"code": "invalid_credentials", "message": "invalid credentials"})
+		return
+	}
 
 	if !u.EmailVerified {
-        response.JSON(c, http.StatusForbidden, gin.H{"code": "email_not_verified", "message": "please verify your email before logging in"})
-        return
-    }
-    pair, err := auth.GenerateTokenPair(h.cfg, u.ID, u.Email, u.Role)
-    if err != nil {
-        h.log.WithError(err).Error("GenerateTokenPair")
-        response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to issue tokens"})
-        return
-    }
-    response.JSON(c, http.StatusOK, gin.H{"user": u, "tokens": pair})
+		response.JSON(c, http.StatusForbidden, gin.H{"code": "email_not_verified", "message": "please verify your email before logging in"})
+		return
+	}
+	pair, err := auth.GenerateTokenPair(h.cfg, u.ID, u.Email, u.Role)
+	if err != nil {
+		h.log.WithError(err).Error("GenerateTokenPair")
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to issue tokens"})
+		return
+	}
+	h.setAuthCookies(c, pair)
+	response.JSON(c, http.StatusOK, gin.H{"user": u})
 }
 
 // Refresh godoc
-// @Summary      Refresh tokens
-// @Description  Exchanges a valid refresh token for a new token pair.
+// @Summary      Refresh session
+// @Description  Issues new cookies using the refresh token cookie. No body required; no content returned.
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
-// @Param        payload body requests.AuthRefreshRequest true "Refresh token" Example({"refresh_token":"<jwt>"})
-// @Success      200 {object} response.TokenPairResponse
+// @Success      204  "No Content"
 // @Failure      400 {object} response.ErrorBody
 // @Failure      401 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
 // @Router       /auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
-	var req struct {
-		RefreshToken string `json:"refresh_token" binding:"required"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.JSON(c, http.StatusBadRequest, gin.H{"code": 2100, "message": "invalid request payload", "errors": err.Error()})
+	// Strict cookie-based refresh
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil || refreshToken == "" {
+		response.JSON(c, http.StatusUnauthorized, gin.H{"code": "invalid_token", "message": "missing refresh token"})
 		return
 	}
 
-	claims, err := auth.ParseClaims(h.cfg, req.RefreshToken)
+	claims, err := auth.ParseClaims(h.cfg, refreshToken)
 	if err != nil || claims.Type != "refresh" {
 		response.JSON(c, http.StatusUnauthorized, gin.H{"code": "invalid_token", "message": "invalid refresh token"})
 		return
 	}
 
-    var u models.User
-    if err := h.db.First(&u, claims.UserID).Error; err != nil {
-        response.JSON(c, http.StatusUnauthorized, gin.H{"code": "invalid_token", "message": "user no longer exists"})
-        return
-    }
+	var u models.User
+	if err := h.db.First(&u, claims.UserID).Error; err != nil {
+		response.JSON(c, http.StatusUnauthorized, gin.H{"code": "invalid_token", "message": "user no longer exists"})
+		return
+	}
 
-    if !u.EmailVerified {
-        response.JSON(c, http.StatusUnauthorized, gin.H{"code": "email_not_verified", "message": "email not verified"})
-        return
-    }
+	if !u.EmailVerified {
+		response.JSON(c, http.StatusUnauthorized, gin.H{"code": "email_not_verified", "message": "email not verified"})
+		return
+	}
 
-    pair, err := auth.GenerateTokenPair(h.cfg, u.ID, u.Email, u.Role)
-    if err != nil {
-        h.log.WithError(err).Error("GenerateTokenPair")
-        response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to issue tokens"})
-        return
-    }
-    response.JSON(c, http.StatusOK, gin.H{"tokens": pair})
+	pair, err := auth.GenerateTokenPair(h.cfg, u.ID, u.Email, u.Role)
+	if err != nil {
+		h.log.WithError(err).Error("GenerateTokenPair")
+		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to issue tokens"})
+		return
+	}
+	h.setAuthCookies(c, pair)
+	c.Status(http.StatusNoContent)
 }
 
 // VerifyEmail godoc
@@ -367,6 +367,17 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"message": "password updated"})
 }
 
+// Logout clears auth cookies
+// @Summary      Logout
+// @Description  Clears auth cookies.
+// @Tags         Auth
+// @Success      204 "No Content"
+// @Router       /auth/logout [post]
+func (h *AuthHandler) Logout(c *gin.Context) {
+	h.clearAuthCookies(c)
+	c.Status(http.StatusNoContent)
+}
+
 // alignInvestorSequence bumps investors.id sequence above both existing investors.id
 // and any users.investor_id references, to ensure new investors get a fresh ID
 func (h *AuthHandler) alignInvestorSequence() error {
@@ -441,4 +452,68 @@ func (h *AuthHandler) consumeOneTimeToken(c *gin.Context, secret string, tokenTy
 		h.log.WithError(err).Warn("failed to delete consumed token")
 	}
 	return at.UserID, nil
+}
+
+// setAuthCookies sets access and refresh tokens as HttpOnly cookies
+func (h *AuthHandler) setAuthCookies(c *gin.Context, pair *auth.TokenPair) {
+	// Determine cookie attributes based on environment
+	env := strings.ToLower(strings.TrimSpace(h.cfg.App.Env))
+	// In production-like envs, require Secure and SameSite=None for cross-site usage
+	secure := env == "staging" || env == "production" || env == "prod"
+	sameSite := http.SameSiteLaxMode
+	if secure {
+		sameSite = http.SameSiteNoneMode
+	}
+
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "access_token",
+		Value:    pair.AccessToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: sameSite,
+		Expires:  time.Now().Add(h.cfg.Auth.JWT.AccessTokenTTL),
+		MaxAge:   int(h.cfg.Auth.JWT.AccessTokenTTL.Seconds()),
+	})
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    pair.RefreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: sameSite,
+		Expires:  time.Now().Add(h.cfg.Auth.JWT.RefreshTokenTTL),
+		MaxAge:   int(h.cfg.Auth.JWT.RefreshTokenTTL.Seconds()),
+	})
+}
+
+// clearAuthCookies deletes auth cookies
+func (h *AuthHandler) clearAuthCookies(c *gin.Context) {
+	env := strings.ToLower(strings.TrimSpace(h.cfg.App.Env))
+	secure := env == "staging" || env == "production" || env == "prod"
+	sameSite := http.SameSiteLaxMode
+	if secure {
+		sameSite = http.SameSiteNoneMode
+	}
+	expired := time.Now().Add(-time.Hour)
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: sameSite,
+		Expires:  expired,
+		MaxAge:   -1,
+	})
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: sameSite,
+		Expires:  expired,
+		MaxAge:   -1,
+	})
 }

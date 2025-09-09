@@ -14,10 +14,10 @@ package docs
 // @contact.url    https://example.com
 // @contact.email  team@example.com
 //
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
-// @description Enter "Bearer {token}". Admin routes require the admin role.
+// @securityDefinitions.apikey CookieAuth
+// @in cookie
+// @name access_token
+// @description HttpOnly cookie containing the access token. Admin routes require the admin role.
 //
 // @tag.name       Health
 // @tag.description API supervision (uptime, dependencies)

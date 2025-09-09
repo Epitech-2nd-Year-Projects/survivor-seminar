@@ -122,7 +122,7 @@ func (h *UsersHandler) GetUsers(c *gin.Context) {
 // @Summary      Get user
 // @Description  Retrieves a user by ID.
 // @Tags         Users
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id   path int true "User ID"
 // @Success      200 {object} response.UserObjectResponse
 // @Failure      401 {object} response.ErrorBody
@@ -159,7 +159,7 @@ func (h *UsersHandler) GetUser(c *gin.Context) {
 // @Summary      Get user by email
 // @Description  Retrieves a user by email.
 // @Tags         Users
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        email   path string true "User email"
 // @Success      200 {object} response.UserObjectResponse
 // @Failure      401 {object} response.ErrorBody
@@ -196,7 +196,7 @@ func (h *UsersHandler) GetUserByEmail(c *gin.Context) {
 // @Summary      My profile
 // @Description  Returns the current authenticated user's profile.
 // @Tags         Users
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Success      200 {object} response.UserObjectResponse
 // @Failure      401 {object} response.ErrorBody
 // @Failure      404 {object} response.ErrorBody
@@ -225,7 +225,7 @@ func (h *UsersHandler) GetMe(c *gin.Context) {
 // @Summary      Create user
 // @Description  Creates a user (admin required).
 // @Tags         Users
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        payload body requests.UserCreateRequest true "User" Example({"email":"jane@doe.tld","name":"Jane","role":"admin","password":"secret123"})
@@ -291,7 +291,7 @@ func (h *UsersHandler) CreateUser(c *gin.Context) {
 // @Summary      Update user
 // @Description  Updates a user (admin required).
 // @Tags         Users
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Accept       json
 // @Produce      json
 // @Param        id      path   int    true  "User ID"
@@ -386,7 +386,7 @@ func (h *UsersHandler) UpdateUser(c *gin.Context) {
 // @Summary      Delete user
 // @Description  Deletes a user by ID (admin required).
 // @Tags         Users
-// @Security     BearerAuth
+// @Security     CookieAuth
 // @Param        id   path int true "User ID"
 // @Success      200 {object} response.MessageResponse
 // @Failure      401 {object} response.ErrorBody
