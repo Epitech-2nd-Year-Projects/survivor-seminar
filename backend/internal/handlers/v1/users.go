@@ -201,7 +201,7 @@ func (h *UsersHandler) GetUserByEmail(c *gin.Context) {
 // @Failure      401 {object} response.ErrorBody
 // @Failure      404 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
-// @Router       /me [get]
+// @Router       /users/me [get]
 func (h *UsersHandler) GetMe(c *gin.Context) {
 	claims := middleware.GetClaims(c)
 	if claims == nil {
