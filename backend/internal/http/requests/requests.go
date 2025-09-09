@@ -52,28 +52,28 @@ type AuthResetPasswordRequest struct {
 // Users
 type UserCreateRequest struct {
 	// Email address
-	Email string `json:"email" example:"jane@doe.tld" format:"email"`
+	Email string `form:"email" json:"email" binding:"required,email" example:"jane@doe.tld" format:"email"`
 	// Display name
-	Name string `json:"name" example:"Jane"`
+	Name string `form:"name" json:"name" binding:"required" example:"Jane"`
 	// Role to assign
-	Role string `json:"role" enums:"admin,user,investor,founder" example:"admin"`
+	Role string `form:"role" json:"role" binding:"required" enums:"admin,user,investor,founder" example:"admin"`
 	// Initial password
-	Password string `json:"password" example:"secret123"`
-	// Optional avatar URL
-	ImageURL *string `json:"image_url,omitempty" example:"https://cdn.example.com/avatars/jane.png" format:"uri"`
+	Password string `form:"password" json:"password" binding:"required,min=6" example:"secret123"`
+	// Avatar image file (binary upload)
+	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(Avatar image file to upload)"`
 }
 
 type UserUpdateRequest struct {
 	// New email address
-	Email *string `json:"email,omitempty" example:"jane@newmail.tld" format:"email"`
+	Email *string `form:"email" json:"email,omitempty" example:"jane@newmail.tld" format:"email"`
 	// New display name
-	Name *string `json:"name,omitempty" example:"Jane Doe"`
+	Name *string `form:"name" json:"name,omitempty" example:"Jane Doe"`
 	// New role
-	Role *string `json:"role,omitempty" enums:"admin,user,investor,founder" example:"user"`
+	Role *string `form:"role" json:"role,omitempty" enums:"admin,user,investor,founder" example:"user"`
 	// New password
-	Password *string `json:"password,omitempty" example:"newSecret123"`
-	// New avatar URL
-	ImageURL *string `json:"image_url,omitempty" example:"https://cdn.example.com/avatars/jane2.png" format:"uri"`
+	Password *string `form:"password" json:"password,omitempty" example:"newSecret123"`
+	// New avatar image file (binary upload)
+	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(New avatar image file to upload)"`
 }
 
 // Startups
