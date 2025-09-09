@@ -42,6 +42,6 @@ export function mapPaginatedOpportunities(
     perPage: dto.pagination.per_page,
     total: dto.pagination.total,
     hasNext: dto.pagination.has_next,
-    hasPrev: dto.pagination.has_previous,
+    hasPrev: dto.pagination.has_prev,
   };
 }

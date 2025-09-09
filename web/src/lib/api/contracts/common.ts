@@ -1,6 +1,6 @@
 export type PaginationDTO = {
   has_next: boolean;
-  has_previous: boolean;
+  has_prev: boolean;
   page: number;
   per_page: number;
   total: number;
