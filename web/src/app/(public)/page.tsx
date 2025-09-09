@@ -176,26 +176,6 @@ export default async function LandingPage() {
           autoplay
         />
       </section>
-
-      {/* CTA with theme-aware beams at the very bottom */}
-      <section className="mx-auto max-w-6xl px-6 sm:px-10">
-        <LandingGridBeams className="rounded-3xl p-10 text-center">
-          <h3 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
-            Ready to showcase innovation?
-          </h3>
-          <p className="mx-auto mt-2 max-w-2xl text-muted-foreground">
-            Join the incubator or explore projects and investment opportunities.
-          </p>
-          <div className="mt-6 flex items-center justify-center gap-3">
-            <Button asChild size="lg" className="bg-primary text-primary-foreground">
-              <Link href="/register">Join as a startup</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="bg-accent/10">
-              <Link href="/startups">Discover projects</Link>
-            </Button>
-          </div>
-        </LandingGridBeams>
-      </section>
     </main>
   );
 }
