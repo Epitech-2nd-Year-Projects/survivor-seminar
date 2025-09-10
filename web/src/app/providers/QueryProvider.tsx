@@ -9,7 +9,7 @@ import { type ReactNode, useMemo } from "react";
 import { isRetryableError } from "@/lib/api/http/messages";
 import { ApiError } from "@/lib/api/http/errors";
 import { useRouter } from "next/navigation";
-import { authKeys } from "@/lib/api/services/auth/keys";
+import type { Query } from "@tanstack/query-core";
 
 export default function QueryProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -18,9 +18,13 @@ export default function QueryProvider({ children }: { children: ReactNode }) {
     () =>
       new QueryClient({
         queryCache: new QueryCache({
-          onError: (error, query) => {
+          onError: (
+            error: Error,
+            query: Query<unknown, unknown, unknown, readonly unknown[]>,
+          ) => {
             if (error instanceof ApiError && error.status === 401) {
-              const shouldRedirect = Boolean((query as any)?.meta?.redirectOn401);
+              const meta = query.meta as { redirectOn401?: boolean } | undefined;
+              const shouldRedirect = Boolean(meta?.redirectOn401);
               if (!shouldRedirect) return;
 
               const next = `${location.pathname}${location.search}`;
