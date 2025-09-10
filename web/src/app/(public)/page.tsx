@@ -31,7 +31,7 @@ export default async function LandingPage() {
 
   const products = [...newsProducts, ...eventProducts].slice(0, 15);
   return (
-    <main className="relative space-y-24 pb-24">
+    <main className="relative space-y-24">
       <LandingParticles />
       <HeroParallax products={products} />
 
