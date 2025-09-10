@@ -269,7 +269,7 @@ function getInitials(name: string) {
 
 function formatTime(d: Date) {
   try {
-    return new Date(d).toLocaleTimeString([], {
+    return new Date(d).toLocaleTimeString("fr-FR", {
       hour: "2-digit",
       minute: "2-digit",
     });
