@@ -1,8 +1,8 @@
-import { Calendar } from "@/components/ui/calendar"
-import { useCalendarContext } from "@/components/calendar/calendar-context"
+import { Calendar } from "@/components/ui/calendar";
+import { useCalendarContext } from "@/components/calendar/calendar-context";
 
 export default function CalendarBodyDayCalendar() {
-  const { date, setDate } = useCalendarContext()
+  const { date, setDate } = useCalendarContext();
   return (
     <div className="p-4">
       <Calendar
@@ -13,5 +13,5 @@ export default function CalendarBodyDayCalendar() {
         className="bg-transparent"
       />
     </div>
-  )
+  );
 }

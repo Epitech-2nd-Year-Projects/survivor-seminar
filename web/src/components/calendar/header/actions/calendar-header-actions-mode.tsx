@@ -1,39 +1,63 @@
-'use client'
+"use client";
 
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { type Mode, calendarModes } from "@/components/calendar/calendar-types"
-import { useCalendarContext } from "@/components/calendar/calendar-context"
-import { calendarModeIconMap } from "@/components/calendar/calendar-mode-icon-map"
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion"
-import { cn } from "@/lib/utils"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { type Mode, calendarModes } from "@/components/calendar/calendar-types";
+import { useCalendarContext } from "@/components/calendar/calendar-context";
+import { calendarModeIconMap } from "@/components/calendar/calendar-mode-icon-map";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export default function CalendarHeaderActionsMode() {
-  const { mode, setMode } = useCalendarContext()
+  const { mode, setMode } = useCalendarContext();
 
   return (
     <LayoutGroup>
       <ToggleGroup
-        className="flex gap-0 -space-x-px rounded-sm border overflow-hidden shadow-sm shadow-black/5 rtl:space-x-reverse"
+        className="flex gap-0 -space-x-px overflow-hidden rounded-sm border shadow-sm shadow-black/5 rtl:space-x-reverse"
         type="single"
         variant="outline"
         value={mode}
         onValueChange={(value) => {
-          if (value) setMode(value as Mode)
+          if (value) setMode(value as Mode);
         }}
       >
         {calendarModes.map((modeValue) => {
-          const isSelected = mode === modeValue
+          const isSelected = mode === modeValue;
           return (
-            <motion.div key={modeValue} layout className="flex-1 flex divide-x" animate={{ flex: isSelected ? 1.6 : 1 }} transition={{ flex: { type: 'spring', stiffness: 400, damping: 30 } }}>
+            <motion.div
+              key={modeValue}
+              layout
+              className="flex flex-1 divide-x"
+              animate={{ flex: isSelected ? 1.6 : 1 }}
+              transition={{
+                flex: { type: "spring", stiffness: 400, damping: 30 },
+              }}
+            >
               <ToggleGroupItem
                 value={modeValue}
                 className={cn(
-                  "w-full rounded-none shadow-none focus-visible:z-10 text-base flex items-center justify-center gap-2 relative border-none",
+                  "relative flex w-full items-center justify-center gap-2 rounded-none border-none text-base shadow-none focus-visible:z-10",
                   isSelected && "z-10",
                 )}
               >
-                <motion.div layout className="flex items-center justify-center gap-2 py-2 px-3" initial={false} animate={{ scale: isSelected ? 1 : 0.95 }} transition={{ scale: { type: 'spring', stiffness: 400, damping: 30 }, layout: { type: 'spring', stiffness: 400, damping: 30 } }}>
-                  <motion.div layout="position" initial={false} animate={{ scale: isSelected ? 0.9 : 1 }} transition={{ scale: { type: 'spring', stiffness: 400, damping: 30 } }}>
+                <motion.div
+                  layout
+                  className="flex items-center justify-center gap-2 px-3 py-2"
+                  initial={false}
+                  animate={{ scale: isSelected ? 1 : 0.95 }}
+                  transition={{
+                    scale: { type: "spring", stiffness: 400, damping: 30 },
+                    layout: { type: "spring", stiffness: 400, damping: 30 },
+                  }}
+                >
+                  <motion.div
+                    layout="position"
+                    initial={false}
+                    animate={{ scale: isSelected ? 0.9 : 1 }}
+                    transition={{
+                      scale: { type: "spring", stiffness: 400, damping: 30 },
+                    }}
+                  >
                     {calendarModeIconMap[modeValue]}
                   </motion.div>
                   <AnimatePresence mode="popLayout">
@@ -41,10 +65,30 @@ export default function CalendarHeaderActionsMode() {
                       <motion.p
                         layout="position"
                         key={`text-${modeValue}`}
-                        className="font-medium origin-left whitespace-nowrap"
+                        className="origin-left font-medium whitespace-nowrap"
                         initial={{ opacity: 0, x: -2, scale: 0.95 }}
-                        animate={{ opacity: 1, x: 0, scale: 1, transition: { type: 'spring', stiffness: 400, damping: 30, opacity: { duration: 0.15 } } }}
-                        exit={{ opacity: 0, x: -2, scale: 0.95, transition: { type: 'spring', stiffness: 400, damping: 30, opacity: { duration: 0.1 } } }}
+                        animate={{
+                          opacity: 1,
+                          x: 0,
+                          scale: 1,
+                          transition: {
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 30,
+                            opacity: { duration: 0.15 },
+                          },
+                        }}
+                        exit={{
+                          opacity: 0,
+                          x: -2,
+                          scale: 0.95,
+                          transition: {
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 30,
+                            opacity: { duration: 0.1 },
+                          },
+                        }}
                       >
                         {modeValue.charAt(0).toUpperCase() + modeValue.slice(1)}
                       </motion.p>
@@ -53,10 +97,9 @@ export default function CalendarHeaderActionsMode() {
                 </motion.div>
               </ToggleGroupItem>
             </motion.div>
-          )
+          );
         })}
       </ToggleGroup>
     </LayoutGroup>
-  )
+  );
 }
-

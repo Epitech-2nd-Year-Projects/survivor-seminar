@@ -1,47 +1,88 @@
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { useCalendarContext } from "@/components/calendar/calendar-context"
-import { DateTimePicker } from "@/components/form/date-time-picker"
-import { ColorPicker } from "@/components/form/color-picker"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter as AlertFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { useDeleteEvent, useUpdateEvent } from "@/lib/api/services/events/hooks"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useCalendarContext } from "@/components/calendar/calendar-context";
+import { DateTimePicker } from "@/components/form/date-time-picker";
+import { ColorPicker } from "@/components/form/color-picker";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter as AlertFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  useDeleteEvent,
+  useUpdateEvent,
+} from "@/lib/api/services/events/hooks";
 
 const formSchema = z
   .object({
     title: z.string().min(1, "Title is required"),
-    start: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid start date" }),
-    end: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid end date" }),
+    start: z
+      .string()
+      .refine((val) => !isNaN(Date.parse(val)), {
+        message: "Invalid start date",
+      }),
+    end: z
+      .string()
+      .refine((val) => !isNaN(Date.parse(val)), {
+        message: "Invalid end date",
+      }),
     color: z.string(),
   })
   .refine(
     (data) => {
       try {
-        const start = new Date(data.start)
-        const end = new Date(data.end)
-        return end >= start
+        const start = new Date(data.start);
+        const end = new Date(data.end);
+        return end >= start;
       } catch {
-        return false
+        return false;
       }
     },
     { message: "End time must be after start time", path: ["end"] },
-  )
+  );
 
 export default function CalendarManageEventDialog() {
-  const { manageEventDialogOpen, setManageEventDialogOpen, selectedEvent, setSelectedEvent, events, setEvents } = useCalendarContext()
+  const {
+    manageEventDialogOpen,
+    setManageEventDialogOpen,
+    selectedEvent,
+    setSelectedEvent,
+    events,
+    setEvents,
+  } = useCalendarContext();
 
-  const updateMutation = useUpdateEvent(selectedEvent?.id ?? 0)
-  const deleteMutation = useDeleteEvent()
+  const updateMutation = useUpdateEvent(selectedEvent?.id ?? 0);
+  const deleteMutation = useDeleteEvent();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { title: "", start: "", end: "", color: "blue" },
-  })
+  });
 
   useEffect(() => {
     if (selectedEvent) {
@@ -50,17 +91,17 @@ export default function CalendarManageEventDialog() {
         start: selectedEvent.start.toISOString(),
         end: selectedEvent.end.toISOString(),
         color: selectedEvent.color,
-      })
+      });
     }
-  }, [selectedEvent, form])
+  }, [selectedEvent, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!selectedEvent) return
+    if (!selectedEvent) return;
     await updateMutation.mutateAsync({
       name: values.title,
       start_date: new Date(values.start).toISOString(),
       end_date: new Date(values.end).toISOString(),
-    })
+    });
 
     const updatedEvent = {
       ...selectedEvent,
@@ -68,22 +109,24 @@ export default function CalendarManageEventDialog() {
       start: new Date(values.start),
       end: new Date(values.end),
       color: values.color,
-    }
-    setEvents(events.map((e) => (e.id === selectedEvent.id ? updatedEvent : e)))
-    handleClose()
+    };
+    setEvents(
+      events.map((e) => (e.id === selectedEvent.id ? updatedEvent : e)),
+    );
+    handleClose();
   }
 
   async function handleDelete() {
-    if (!selectedEvent) return
-    await deleteMutation.mutateAsync(selectedEvent.id)
-    setEvents(events.filter((event) => event.id !== selectedEvent.id))
-    handleClose()
+    if (!selectedEvent) return;
+    await deleteMutation.mutateAsync(selectedEvent.id);
+    setEvents(events.filter((event) => event.id !== selectedEvent.id));
+    handleClose();
   }
 
   function handleClose() {
-    setManageEventDialogOpen(false)
-    setSelectedEvent(null)
-    form.reset()
+    setManageEventDialogOpen(false);
+    setSelectedEvent(null);
+    form.reset();
   }
 
   return (
@@ -150,18 +193,23 @@ export default function CalendarManageEventDialog() {
             <DialogFooter className="flex justify-between gap-2">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" type="button">Delete</Button>
+                  <Button variant="destructive" type="button">
+                    Delete
+                  </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete event</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete this event? This action cannot be undone.
+                      Are you sure you want to delete this event? This action
+                      cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                    <AlertDialogAction onClick={handleDelete}>
+                      Delete
+                    </AlertDialogAction>
                   </AlertFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -171,6 +219,5 @@ export default function CalendarManageEventDialog() {
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

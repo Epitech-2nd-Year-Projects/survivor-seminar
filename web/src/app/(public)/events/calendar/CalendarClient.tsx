@@ -62,18 +62,22 @@ export default function EventsCalendarClient() {
 
     return listEvents
       .map((e) => {
-        const rawStart = toDate(e.startDate)
-        const parsedEnd = toDate(e.endDate)
-        const start = rawStart ?? null
-        const end = parsedEnd ?? (start ? endOfDay(start) : null)
-        const normalizedStart = parsedEnd ? start : start ? startOfDay(start) : null
+        const rawStart = toDate(e.startDate);
+        const parsedEnd = toDate(e.endDate);
+        const start = rawStart ?? null;
+        const end = parsedEnd ?? (start ? endOfDay(start) : null);
+        const normalizedStart = parsedEnd
+          ? start
+          : start
+            ? startOfDay(start)
+            : null;
         return {
           id: e.id,
           title: e.name,
           start: normalizedStart,
           end,
           color: colorFromType(e),
-        }
+        };
       })
       .filter((e): e is CalendarEvent => Boolean(e.start && e.end));
   }, [listEvents]);

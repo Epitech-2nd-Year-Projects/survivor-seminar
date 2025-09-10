@@ -132,33 +132,46 @@ export default function StartupsClient() {
           open={openFilter === "maturity"}
           onOpenChange={(o) => setOpenFilter(o ? "maturity" : null)}
           options={[
-            { label: "All maturities", onClick: () => setSelectedMaturity(undefined) },
+            {
+              label: "All maturities",
+              onClick: () => setSelectedMaturity(undefined),
+            },
             ...maturityOptions.map((m) => ({
               label: capitalize(m),
               onClick: () => setSelectedMaturity(m),
             })),
           ]}
         >
-          {selectedMaturity ? `Maturity: ${capitalize(selectedMaturity)}` : "Select a maturity"}
+          {selectedMaturity
+            ? `Maturity: ${capitalize(selectedMaturity)}`
+            : "Select a maturity"}
         </DropdownMenu>
         <DropdownMenu
           open={openFilter === "sector"}
           onOpenChange={(o) => setOpenFilter(o ? "sector" : null)}
           options={[
-            { label: "All sectors", onClick: () => setSelectedSector(undefined) },
+            {
+              label: "All sectors",
+              onClick: () => setSelectedSector(undefined),
+            },
             ...sectorOptions.map((m) => ({
               label: capitalize(m),
               onClick: () => setSelectedSector(m),
             })),
           ]}
         >
-          {selectedSector ? `Sector: ${capitalize(selectedSector)}` : "Select a sector"}
+          {selectedSector
+            ? `Sector: ${capitalize(selectedSector)}`
+            : "Select a sector"}
         </DropdownMenu>
         <DropdownMenu
           open={openFilter === "city"}
           onOpenChange={(o) => setOpenFilter(o ? "city" : null)}
           options={[
-            { label: "All cities", onClick: () => setSelectedLocation(undefined) },
+            {
+              label: "All cities",
+              onClick: () => setSelectedLocation(undefined),
+            },
             ...locationOptions.map((location) => ({
               label: location,
               onClick: () => setSelectedLocation(location),
