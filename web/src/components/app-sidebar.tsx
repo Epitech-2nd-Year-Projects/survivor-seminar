@@ -18,47 +18,37 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Mail, Pencil, ShieldUser, Users } from "lucide-react";
+import {
+  LayoutDashboard,
+  Mail,
+  MilestoneIcon,
+  NotebookTextIcon,
+  Pencil,
+  ShieldUser,
+  Users,
+} from "lucide-react";
 import { useMe } from "@/lib/api/services/auth/hooks";
-
-type User = {
-  name: string;
-  email: string;
-  avatar: string;
-  adminArea?: boolean;
-  startupArea?: boolean;
-};
+import { UserRole } from "@/lib/api/contracts/users";
 
 type NavItem = {
   title: string;
   href: string;
-  perm?: keyof User;
   icon?: React.ReactNode;
 };
 
 type NavGroup = {
   title: string;
-  perm?: keyof User;
+  requiredRole?: UserRole;
   items: NavItem[];
 };
 
-const data: {
-  versions: string[];
-  user: User;
+const navData: {
   navMain: NavGroup[];
 } = {
-  versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
-  user: {
-    name: "Laurent",
-    email: "laurent.aliu@epitech.eu",
-    avatar: "https://github.com/shadcn.png",
-    adminArea: true,
-    startupArea: true,
-  },
   navMain: [
     {
       title: "Admin",
-      perm: "adminArea",
+      requiredRole: UserRole.Admin,
       items: [
         { title: "Dashboard", href: "/dashboard/", icon: <LayoutDashboard /> },
         {
@@ -76,18 +66,32 @@ const data: {
           href: "/dashboard/user-management",
           icon: <Users />,
         },
-        // { title: "Users", href: "/dashboard/admin/users", perm: "adminArea" }, // exemple d'item protégé
       ],
     },
     {
       title: "Startup",
-      perm: "startupArea",
+      requiredRole: UserRole.Founder,
       items: [
-        { title: "Messages", href: "/dashboard/messages", icon: <Mail /> },
+        {
+          title: "My Profile",
+          href: "/dashboard/my-profile",
+          icon: <NotebookTextIcon />,
+        },
+        {
+          title: "Conversations",
+          href: "/dashboard/conversations",
+          icon: <Mail />,
+        },
       ],
     },
   ],
 };
+
+function canAccessGroup(userRole: UserRole, groupRole?: UserRole) {
+  if (!groupRole) return true;
+  if (userRole === UserRole.Admin) return true;
+  return userRole === groupRole;
+}
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
@@ -117,30 +121,28 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     <Sidebar {...props}>
       <SidebarHeader></SidebarHeader>
       <SidebarContent>
-        {data.navMain
-          .filter((group) => !group.perm || data.user[group.perm])
+        {navData.navMain
+          .filter((group) => canAccessGroup(user.role, group.requiredRole))
           .map((group) => (
             <SidebarGroup key={group.title}>
               <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {group.items
-                    .filter((item) => !item.perm || data.user[item.perm])
-                    .map((item) => {
-                      const isActive =
-                        pathname === item.href ||
-                        pathname.startsWith(item.href + "/");
-                      return (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton asChild isActive={isActive}>
-                            <Link href={item.href}>
-                              {item.icon}
-                              {item.title}
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
+                  {group.items.map((item) => {
+                    const isActive =
+                      pathname === item.href ||
+                      pathname.startsWith(item.href + "/");
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild isActive={isActive}>
+                          <Link href={item.href}>
+                            {item.icon}
+                            {item.title}
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

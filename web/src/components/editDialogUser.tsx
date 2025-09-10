@@ -22,12 +22,15 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-import type { User } from "@/lib/api/contracts/users";
+import {
+  mapUserRoleLabel,
+  UserRole,
+  type User,
+} from "@/lib/api/contracts/users";
 import type { UpdateUserBody } from "@/lib/api/services/users/client";
 
-type Role = "admin" | "manager" | "member" | "viewer";
-const isRole = (v: string): v is Role =>
-  v === "admin" || v === "manager" || v === "member" || v === "viewer";
+type Role = UserRole;
+const allRoles = Object.values(UserRole);
 
 type Props = {
   open: boolean;
@@ -66,17 +69,17 @@ export default function EditDialogUser({
   onSubmit,
   description = "Edit the user's data",
 }: Props) {
-  const [role, setRole] = React.useState<Role | undefined>(undefined);
+  const [role, setRole] = React.useState<Role | undefined>(user?.role);
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const [filePreviewUrl, setFilePreviewUrl] = React.useState<string>();
   const [pwError, setPwError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    setRole(undefined);
+    setRole(user?.role);
     setSelectedFile(null);
     setPwError(null);
     setFilePreviewUrl(undefined);
-  }, [user?.id]);
+  }, [user]);
 
   React.useEffect(() => {
     return () => {
@@ -138,8 +141,7 @@ export default function EditDialogUser({
             } else {
               setPwError(null);
             }
-            const finalRole: Role =
-              role ?? (isRole(user.role) ? user.role : "member");
+            const finalRole = role ?? user.role;
             const body: UpdateUserBody = {} as UpdateUserBody;
 
             if (nameInput && nameInput !== user.name) body.name = nameInput;
@@ -186,18 +188,20 @@ export default function EditDialogUser({
 
           <div className="grid gap-2">
             <Label>Role</Label>
-            <Select
-              value={role}
-              onValueChange={(v) => setRole(isRole(v) ? v : undefined)}
-            >
+            <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
               <SelectTrigger>
-                <SelectValue placeholder={user?.role ?? "Select a role"} />
+                <SelectValue
+                  placeholder={
+                    user ? mapUserRoleLabel(user.role) : "Select a role"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">admin</SelectItem>
-                <SelectItem value="manager">manager</SelectItem>
-                <SelectItem value="member">member</SelectItem>
-                <SelectItem value="viewer">viewer</SelectItem>
+                {allRoles.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {mapUserRoleLabel(r)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
