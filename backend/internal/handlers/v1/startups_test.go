@@ -17,6 +17,7 @@ func setupStartupsRouter(h *v1.StartupsHandler) *gin.Engine {
 	r := gin.Default()
 	r.GET("/startups", h.ListStartups)
 	r.GET("/startups/:id", h.GetStartup)
+	r.POST("/startups/:id/views", h.IncrementViews)
 	r.POST("/admin/startups", h.CreateStartup)
 	r.PATCH("/admin/startups/:id", h.UpdateStartup)
 	r.DELETE("/admin/startups/:id", h.DeleteStartup)
@@ -33,9 +34,9 @@ func TestStartupsHandler_FullCoverage(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusCreated, w.Code)
 
-	body := `{"name":"MyStartup","created_at":"2024-01-01"}`
+	body := `{"name":"MyStartup","email":"contact@my.tld","sector":"tech"}`
 	req = httptest.NewRequest(http.MethodPost, "/admin/startups", bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
 	w = httptest.NewRecorder()
@@ -67,13 +68,23 @@ func TestStartupsHandler_FullCoverage(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 
 	req = httptest.NewRequest(http.MethodPatch, "/admin/startups/1", bytes.NewBufferString(`{"name":"Updated"}`))
 	req.Header.Set("Content-Type", "application/json")
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
+
+	req = httptest.NewRequest(http.MethodPost, "/startups/1/views", nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	req = httptest.NewRequest(http.MethodPost, "/startups/999/views", nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusNotFound, w.Code)
 
 	req = httptest.NewRequest(http.MethodDelete, "/admin/startups/1", nil)
 	w = httptest.NewRecorder()

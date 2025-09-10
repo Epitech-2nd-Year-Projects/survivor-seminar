@@ -1,46 +1,47 @@
+"use client";
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import {
+  useStatistics,
+  useTopProjects,
+} from "@/lib/api/services/statistics/hooks";
+import { userMessageFromError } from "@/lib/api/http/messages";
 
-type ProjectStat = {
-  id: string;
-  name: string;
-  sector: string;
-  views: number;
-  engagement: number;
-};
-
-const data: {
-  project: ProjectStat[];
-} = {
-  project: [
-    {
-      id: "1",
-      name: "NeoCharge",
-      sector: "Energy",
-      views: 1120,
-      engagement: 61,
-    },
-    {
-      id: "2",
-      name: "AgriSense",
-      sector: "AgriTech",
-      views: 940,
-      engagement: 57,
-    },
-    {
-      id: "3",
-      name: "FleetAI",
-      sector: "Mobility",
-      views: 786,
-      engagement: 49,
-    },
-  ],
-};
+function round(n: number) {
+  return Math.round((n + Number.EPSILON) * 100) / 100;
+}
 
 export default function StatisticsPage() {
+  const {
+    data: stats,
+    isLoading: isLoadingStats,
+    isError: isErrorStats,
+    error: errorStats,
+  } = useStatistics();
+  const {
+    data: topProjects,
+    isLoading: isLoadingTopProjects,
+    isError: isErrorTopProjects,
+    error: errorTopProjects,
+  } = useTopProjects({ period: "weekly", limit: 3 });
+
+  if (isErrorStats) {
+    console.log(errorStats);
+    return <div>Error: {userMessageFromError(errorStats)}</div>;
+  }
+
+  if (isErrorTopProjects) {
+    console.log(errorTopProjects);
+    return <div>Error: {userMessageFromError(errorTopProjects)}</div>;
+  }
+
+  const showSkeletonsStats = isLoadingStats && !stats;
+  const showSkeletonsTopProjects = isLoadingTopProjects && !topProjects;
+
   return (
     <div className="flex flex-1 flex-col gap-6 p-4">
       <div>
@@ -54,9 +55,12 @@ export default function StatisticsPage() {
               <CardTitle>Projects</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">128</div>
+              <div className="text-3xl font-bold">
+                {stats?.totalProjects ?? 0}
+              </div>
               <p className="text-muted-foreground text-sm">
-                <span className="font-bold">+6</span> this week
+                <span className="font-bold">{stats?.projectsGrowth ?? 0}</span>{" "}
+                this week
               </p>
             </CardContent>
           </Card>
@@ -67,9 +71,12 @@ export default function StatisticsPage() {
             <CardTitle>Project views</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">4 920</div>
+            <div className="text-3xl font-bold">{stats?.totalViews ?? 0}</div>
             <p className="text-muted-foreground text-sm">
-              <span className="font-bold">+12%</span> vs the last week
+              <span className="font-bold">
+                {round(stats?.viewsGrowthPercent ?? 0)}%
+              </span>{" "}
+              vs the last week
             </p>
           </CardContent>
         </Card>
@@ -79,8 +86,13 @@ export default function StatisticsPage() {
             <CardTitle>Engagement rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">54%</div>
-            <Progress value={54} className="mt-2" />
+            <div className="text-3xl font-bold">
+              {round(stats?.engagementRatePercent ?? 0)}%
+            </div>
+            <Progress
+              value={stats?.engagementRatePercent ?? 0}
+              className="mt-2"
+            />
           </CardContent>
         </Card>
       </div>
@@ -95,19 +107,19 @@ export default function StatisticsPage() {
               <thead className="text-muted-foreground text-left">
                 <tr>
                   <th className="py-2">Project</th>
-                  <th className="py-2">Secteur</th>
                   <th className="py-2">View</th>
                   <th className="py-2">Engagement</th>
                 </tr>
               </thead>
-              {data.project.map((project) => {
+              {topProjects?.topProjects.map((project) => {
                 return (
-                  <tbody key={project.id}>
+                  <tbody key={project.projectId}>
                     <tr className="border-t">
-                      <td className="py-2">{project.name}</td>
-                      <td className="py-2">{project.sector}</td>
+                      <td className="py-2">{project.title}</td>
                       <td className="py-2">{project.views}</td>
-                      <td className="py-2">{project.engagement}</td>
+                      <td className="py-2">
+                        {round(project.engagementRatePercent)}%
+                      </td>
                     </tr>
                   </tbody>
                 );
