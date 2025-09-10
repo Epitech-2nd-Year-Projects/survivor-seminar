@@ -1,4 +1,3 @@
-// components/EditDialogUser.tsx
 "use client";
 
 import * as React from "react";
@@ -8,9 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
+  DialogFooter,
+} from "@/components/animate-ui/components/radix/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -72,15 +71,13 @@ export default function EditDialogUser({
   const [filePreviewUrl, setFilePreviewUrl] = React.useState<string>();
   const [pwError, setPwError] = React.useState<string | null>(null);
 
-  // Reset quand on change d'utilisateur
   React.useEffect(() => {
     setRole(undefined);
     setSelectedFile(null);
-    setFilePreviewUrl(undefined);
     setPwError(null);
+    setFilePreviewUrl(undefined);
   }, [user?.id]);
 
-  // Cleanup URL de preview
   React.useEffect(() => {
     return () => {
       if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
@@ -120,6 +117,7 @@ export default function EditDialogUser({
 
         <form
           className="grid gap-6"
+          autoComplete="off"
           onSubmit={async (e) => {
             e.preventDefault();
             if (!user) return;
@@ -129,37 +127,37 @@ export default function EditDialogUser({
             const emailInput = getFDString(fd, "email").trim();
             const pwd = getFDString(fd, "password");
             const pwdConfirm = getFDString(fd, "password_confirm");
+            const wantsPwdChange = pwd.length > 0 && pwdConfirm.length > 0;
 
-            // Validation password (si saisi)
-            if (pwd || pwdConfirm) {
-              if (pwd.length < 6) {
-                setPwError("Password must be at least 6 characters.");
-                return;
-              }
+            if (wantsPwdChange) {
               if (pwd !== pwdConfirm) {
                 setPwError("Passwords do not match.");
                 return;
               }
+              setPwError(null);
             } else {
               setPwError(null);
             }
-
             const finalRole: Role =
               role ?? (isRole(user.role) ? user.role : "member");
+            const body: UpdateUserBody = {} as UpdateUserBody;
 
-            // On n'envoie que les champs modifiés
-            const body: UpdateUserBody = {};
             if (nameInput && nameInput !== user.name) body.name = nameInput;
             if (emailInput && emailInput !== user.email)
               body.email = emailInput;
             if (finalRole !== user.role) body.role = finalRole;
-            if (pwd) body.password = pwd;
+            if (wantsPwdChange) body.password = pwd;
 
             if (selectedFile) {
               const base64 = await fileToBase64(selectedFile);
-              body.image = base64; // adapte si l'API veut le base64 "pur"
+              body.image = base64;
+              console.log(
+                "file to upload as base64:",
+                base64.slice(0, 30) + "...",
+              );
+              console.log("Full base64:", base64);
             }
-
+            if (Object.keys(body).length === 0) return;
             await onSubmit(user.id, body);
           }}
         >
@@ -170,6 +168,7 @@ export default function EditDialogUser({
               name="name"
               defaultValue=""
               placeholder={user?.name ?? ""}
+              autoComplete="name"
             />
           </div>
 
@@ -181,6 +180,7 @@ export default function EditDialogUser({
               type="email"
               defaultValue=""
               placeholder={user?.email ?? ""}
+              autoComplete="email"
             />
           </div>
 
@@ -202,10 +202,14 @@ export default function EditDialogUser({
             </Select>
           </div>
 
-          {/* Password (optionnel) */}
           <div className="grid gap-2">
-            <Label htmlFor="password">New password</Label>
-            <Input id="password" name="password" type="password" />
+            <Label htmlFor="password">New password (optional)</Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password_confirm">Confirm new password</Label>
@@ -213,13 +217,13 @@ export default function EditDialogUser({
               id="password_confirm"
               name="password_confirm"
               type="password"
+              autoComplete="new-password"
             />
             {pwError ? (
               <p className="text-destructive text-sm">{pwError}</p>
             ) : null}
           </div>
 
-          {/* Avatar upload */}
           <div className="grid gap-3">
             <Label>Profile picture</Label>
 

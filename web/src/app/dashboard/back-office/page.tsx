@@ -1,7 +1,7 @@
 // app/dashboard/back-office/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { Startup } from "@/lib/api/contracts/startups";
@@ -24,14 +24,15 @@ import TableSkeletonWide from "@/components/tablesSkeletonWide";
 import EditDialogUser from "@/components/editDialogUser";
 import EditDialogStartup from "@/components/editDialogStartup";
 import { useUpdateUser } from "@/lib/api/services/users/hooks";
-import { updateStartupClient } from "@/lib/api/services/startups/client";
-import { toast as sonnerToast } from "sonner";
+import { useUpdateStartup } from "@/lib/api/services/startups/hooks";
+import { CheckCircle2 } from "lucide-react";
 
-type ToastFn = (message: string) => void;
-const toast: ToastFn = (message) => {
-  (sonnerToast as unknown as (msg: string) => void)(message);
-};
+const ENTITIES = ["Users", "Startups"] as const;
+type Entity = (typeof ENTITIES)[number];
+const isEntity = (v: string): v is Entity =>
+  (ENTITIES as readonly string[]).includes(v);
 
+// ---- helpers (ESLint-safe) ----
 function getErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
   try {
@@ -47,10 +48,43 @@ function tryRefetch(refetch: unknown): void {
   }
 }
 
-const ENTITIES = ["Users", "Startups"] as const;
-type Entity = (typeof ENTITIES)[number];
-const isEntity = (v: string): v is Entity =>
-  (ENTITIES as readonly string[]).includes(v);
+function SuccessOverlay(props: { open: boolean; message: string | null }) {
+  const { open, message } = props;
+  if (!open || !message) return null;
+
+  return (
+    <>
+      <div className="pointer-events-none fixed inset-x-0 top-4 z-50 flex justify-center">
+        <div
+          className="flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-white shadow-lg"
+          style={{ animation: "popIn 220ms ease-out" }}
+          role="status"
+          aria-live="polite"
+        >
+          <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+          <span className="text-sm font-medium">{message}</span>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes popIn {
+          0% {
+            transform: scale(0.9);
+            opacity: 0;
+          }
+          60% {
+            transform: scale(1.03);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+      `}</style>
+    </>
+  );
+}
 
 export default function BackOfficePage() {
   const [entity, setEntity] = useState<Entity>("Startups");
@@ -72,8 +106,33 @@ export default function BackOfficePage() {
     error: updateUserErrObj,
   } = useUpdateUser(editingUser?.id ?? 0);
 
+  const {
+    mutateAsync: updateStartupAsync,
+    isError: isUpdateStartupError,
+    error: updateStartupErrObj,
+  } = useUpdateStartup(editingStartup?.id ?? 0);
+
   const listStartups = startupsQ.data?.data ?? [];
   const listUsers = usersQ.data?.data ?? [];
+
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function showSuccess(msg: string) {
+    setSuccessMsg(msg);
+    setSuccessOpen(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setSuccessOpen(false);
+    }, 1100);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const handleEditStartup = (startup: Startup) => {
     setEditingType("startup");
@@ -187,11 +246,11 @@ export default function BackOfficePage() {
           startup={editingStartup}
           onSubmit={async (id, body) => {
             try {
-              await updateStartupClient(id, body);
-              toast("Startup updated.");
+              await updateStartupAsync(body);
+              showSuccess("Startup updated");
               tryRefetch(startupsQ.refetch);
-            } catch (e: unknown) {
-              toast(`Failed to update startup: ${getErrorMessage(e)}`);
+            } catch (err: unknown) {
+              console.error("Failed to update startup:", err);
             } finally {
               closeEditors();
             }
@@ -212,10 +271,10 @@ export default function BackOfficePage() {
             if (!editingUser) return;
             try {
               await updateUserAsync(body);
-              toast("User updated.");
+              showSuccess("User updated");
               tryRefetch(usersQ.refetch);
-            } catch (e: unknown) {
-              toast(`Failed to update user: ${getErrorMessage(e)}`);
+            } catch (err: unknown) {
+              console.error("Failed to update user:", err);
             } finally {
               closeEditors();
             }
@@ -228,6 +287,12 @@ export default function BackOfficePage() {
           Update error: {getErrorMessage(updateUserErrObj)}
         </p>
       )}
+      {isUpdateStartupError && (
+        <p className="text-destructive text-sm break-all">
+          Update error: {getErrorMessage(updateStartupErrObj)}
+        </p>
+      )}
+      <SuccessOverlay open={successOpen} message={successMsg} />
     </main>
   );
 }

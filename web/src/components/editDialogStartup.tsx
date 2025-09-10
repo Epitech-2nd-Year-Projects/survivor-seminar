@@ -7,9 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
+  DialogFooter,
+} from "@/components/animate-ui/components/radix/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -84,18 +84,20 @@ export default function EditDialogStartup({
   onSubmit,
   description = "Edit the startup data",
 }: Props) {
-  const [legalStatus, setLegalStatus] = React.useState<string | undefined>();
-  const [sector, setSector] = React.useState<string | undefined>();
-  const [maturity, setMaturity] = React.useState<string | undefined>();
-  const [projectStatus, setProjectStatus] = React.useState<
+  const [legalStatusSel, setLegalStatusSel] = React.useState<
+    string | undefined
+  >();
+  const [sectorSel, setSectorSel] = React.useState<string | undefined>();
+  const [maturitySel, setMaturitySel] = React.useState<string | undefined>();
+  const [projectStatusSel, setProjectStatusSel] = React.useState<
     string | undefined
   >();
 
   React.useEffect(() => {
-    setLegalStatus(undefined);
-    setSector(undefined);
-    setMaturity(undefined);
-    setProjectStatus(undefined);
+    setLegalStatusSel(undefined);
+    setSectorSel(undefined);
+    setMaturitySel(undefined);
+    setProjectStatusSel(undefined);
   }, [startup?.id]);
 
   return (
@@ -114,47 +116,74 @@ export default function EditDialogStartup({
           <form
             id="edit-startup-form"
             className="grid gap-5"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               if (!startup) return;
 
               const fd = new FormData(e.currentTarget);
 
-              const nameInput = getFDString(fd, "name").trim();
-              const emailInput = getFDString(fd, "email").trim();
-              const phoneInput = getFDString(fd, "phone").trim();
-              const legalStatusInput = getFDString(fd, "legalStatus").trim();
-              const addressInput = getFDString(fd, "address").trim();
-              const websiteUrlInput = getFDString(fd, "websiteUrl").trim();
-              const socialUrlInput = getFDString(fd, "socialMediaUrl").trim();
-              const projectStatusInput = getFDString(
-                fd,
-                "projectStatus",
-              ).trim();
-              const needsInput = getFDString(fd, "needs").trim();
-              const sectorInput = getFDString(fd, "sector").trim();
-              const maturityInput = getFDString(fd, "maturity").trim();
+              const name = getFDString(fd, "name").trim();
+              const email = getFDString(fd, "email").trim();
+              const phone = getFDString(fd, "phone").trim();
+              const address = getFDString(fd, "address").trim();
+              const websiteUrl = getFDString(fd, "websiteUrl").trim();
+              const socialUrl = getFDString(fd, "socialMediaUrl").trim();
+              const needs = getFDString(fd, "needs").trim();
               const descriptionInput = getFDString(fd, "description").trim();
 
-              const startupBody: UpdateStartupBody = {
-                id: startup.id,
-                name: nameInput ?? startup.name,
-                email: emailInput ?? startup.email ?? null,
-                phone: phoneInput ?? startup.phone ?? null,
-                legal_status: legalStatusInput ?? startup.legalStatus ?? null,
-                address: addressInput ?? startup.address ?? null,
-                website_url: websiteUrlInput ?? startup.websiteUrl ?? null,
-                social_media_url:
-                  socialUrlInput ?? startup.socialMediaUrl ?? null,
-                project_status:
-                  projectStatusInput ?? startup.projectStatus ?? null,
-                needs: needsInput ?? startup.needs ?? null,
-                sector: sectorInput ?? startup.sector ?? null,
-                maturity: maturityInput ?? startup.maturity ?? null,
-                description: descriptionInput ?? startup.description ?? null,
-              };
+              const body: UpdateStartupBody = {} as UpdateStartupBody;
 
-              void onSubmit(startup.id, startupBody);
+              if (name && name !== (startup.name ?? "")) body.name = name;
+              if (email && email !== (startup.email ?? "")) body.email = email;
+              if (phone && phone !== (startup.phone ?? "")) body.phone = phone;
+
+              if (
+                typeof legalStatusSel !== "undefined" &&
+                legalStatusSel !== (startup.legalStatus ?? "")
+              ) {
+                body.legal_status = legalStatusSel;
+              }
+              if (address && address !== (startup.address ?? ""))
+                body.address = address;
+
+              if (websiteUrl && websiteUrl !== (startup.websiteUrl ?? ""))
+                body.website_url = websiteUrl;
+              if (socialUrl && socialUrl !== (startup.socialMediaUrl ?? ""))
+                body.social_media_url = socialUrl;
+
+              if (
+                typeof projectStatusSel !== "undefined" &&
+                projectStatusSel !== (startup.projectStatus ?? "")
+              ) {
+                body.project_status = projectStatusSel;
+              }
+
+              if (needs && needs !== (startup.needs ?? "")) body.needs = needs;
+
+              if (
+                typeof sectorSel !== "undefined" &&
+                sectorSel !== (startup.sector ?? "")
+              ) {
+                body.sector = sectorSel;
+              }
+              if (
+                typeof maturitySel !== "undefined" &&
+                maturitySel !== (startup.maturity ?? "")
+              ) {
+                body.maturity = maturitySel;
+              }
+
+              if (
+                descriptionInput &&
+                descriptionInput !== (startup.description ?? "")
+              ) {
+                body.description = descriptionInput;
+              }
+
+              // If nothing changed, do NOT call API
+              if (Object.keys(body).length === 0) return;
+
+              await onSubmit(startup.id, body);
             }}
           >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -195,7 +224,10 @@ export default function EditDialogStartup({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div className="grid gap-2">
                 <Label>Legal status</Label>
-                <Select value={legalStatus} onValueChange={setLegalStatus}>
+                <Select
+                  value={legalStatusSel}
+                  onValueChange={setLegalStatusSel}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue
                       placeholder={
@@ -211,16 +243,11 @@ export default function EditDialogStartup({
                     ))}
                   </SelectContent>
                 </Select>
-                <input
-                  type="hidden"
-                  name="legalStatus"
-                  value={legalStatus ?? ""}
-                />
               </div>
 
               <div className="grid gap-2">
                 <Label>Sector</Label>
-                <Select value={sector} onValueChange={setSector}>
+                <Select value={sectorSel} onValueChange={setSectorSel}>
                   <SelectTrigger className="w-full">
                     <SelectValue
                       placeholder={startup?.sector ?? "Select sector"}
@@ -234,12 +261,11 @@ export default function EditDialogStartup({
                     ))}
                   </SelectContent>
                 </Select>
-                <input type="hidden" name="sector" value={sector ?? ""} />
               </div>
 
               <div className="grid gap-2">
                 <Label>Maturity</Label>
-                <Select value={maturity} onValueChange={setMaturity}>
+                <Select value={maturitySel} onValueChange={setMaturitySel}>
                   <SelectTrigger className="w-full">
                     <SelectValue
                       placeholder={startup?.maturity ?? "Select maturity"}
@@ -253,7 +279,6 @@ export default function EditDialogStartup({
                     ))}
                   </SelectContent>
                 </Select>
-                <input type="hidden" name="maturity" value={maturity ?? ""} />
               </div>
             </div>
 
@@ -281,7 +306,10 @@ export default function EditDialogStartup({
 
               <div className="grid gap-2">
                 <Label>Project status</Label>
-                <Select value={projectStatus} onValueChange={setProjectStatus}>
+                <Select
+                  value={projectStatusSel}
+                  onValueChange={setProjectStatusSel}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue
                       placeholder={startup?.projectStatus ?? "Select status"}
@@ -295,11 +323,6 @@ export default function EditDialogStartup({
                     ))}
                   </SelectContent>
                 </Select>
-                <input
-                  type="hidden"
-                  name="projectStatus"
-                  value={projectStatus ?? ""}
-                />
               </div>
             </div>
 
