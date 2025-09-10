@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"slices"
 
@@ -268,7 +269,11 @@ func (h *UsersHandler) CreateUser(c *gin.Context) {
 	file, err := c.FormFile("image")
 	if err == nil {
 		f, _ := file.Open()
-		defer f.Close()
+		defer func(f multipart.File) {
+			err := f.Close()
+			if err != nil {
+			}
+		}(f)
 		data, _ := io.ReadAll(f)
 		contentType := file.Header.Get("Content-Type")
 		if contentType == "" {
@@ -344,7 +349,11 @@ func (h *UsersHandler) UpdateUser(c *gin.Context) {
 	file, err := c.FormFile("image")
 	if err == nil {
 		f, _ := file.Open()
-		defer f.Close()
+		defer func(f multipart.File) {
+			err := f.Close()
+			if err != nil {
+			}
+		}(f)
 		data, _ := io.ReadAll(f)
 		contentType := file.Header.Get("Content-Type")
 		if contentType == "" {
@@ -367,7 +376,6 @@ func (h *UsersHandler) UpdateUser(c *gin.Context) {
 		response.JSONError(c, http.StatusInternalServerError, "internal_error", "failed to update user", nil)
 		return
 	}
-
 	response.JSON(c, http.StatusOK, gin.H{"message": "user updated successfully", "data": user})
 }
 
