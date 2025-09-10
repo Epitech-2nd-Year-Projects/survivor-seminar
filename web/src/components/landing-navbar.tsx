@@ -90,7 +90,7 @@ const initialsFromName = (name?: string) => {
 };
 
 export function LandingNavbar({
-                                logo = { url: "/", src: "/Logo.png", alt: "logo", title: "Survivor" },
+                                logo = { url: "/", src: "/Logo.png", alt: "logo", title: "JEB" },
                                 menu = [
                                   { title: "Home", url: "#" },
                                   {
