@@ -36,10 +36,8 @@ export default async function LandingPage() {
   return (
     <main className="relative space-y-24 pb-24">
       <LandingParticles />
-      {/* Hero Parallax (Aceternity-inspired) */}
       <HeroParallax products={products} />
 
-      {/* KPIs */}
       <section className="mx-auto max-w-6xl px-6 sm:px-10">
         <div className="mx-auto mb-6 max-w-2xl text-center">
           <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">Our impact</h2>
@@ -53,7 +51,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Startups Marquee */}
       <section className="mx-auto max-w-6xl px-6 sm:px-10">
         <div className="mx-auto mb-6 max-w-2xl text-center">
           <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">Featured startups</h2>
@@ -79,7 +76,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Events and News with MagicUI Bento Grid (styled like example) */}
       <section className="mx-auto max-w-6xl px-6 sm:px-10">
         <BentoGrid>
           <BentoCard
@@ -133,7 +129,6 @@ export default async function LandingPage() {
 
       
 
-      {/* Partners logo cloud (placeholders) */}
       <section className="mx-auto max-w-6xl px-6 sm:px-10">
         <div className="mx-auto mb-6 max-w-2xl text-center">
           <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">Our partners</h2>
@@ -146,7 +141,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Animated testimonials */}
       <section className="mx-auto max-w-6xl px-6 sm:px-10">
         <div className="mx-auto mb-6 max-w-2xl text-center">
           <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">What people say</h2>
@@ -194,7 +188,6 @@ function StartupCard({ id, name, sector, description }: { id: number; name: stri
         )}
       >
         <div className="flex flex-row items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="rounded-full" width="32" height="32" alt="" src={img} />
           <div className="flex flex-col">
             <figcaption className="text-sm font-medium">{name}</figcaption>
@@ -232,7 +225,6 @@ function KpiCard({ value, label }: { value: string; label: string }) {
 function PartnerLogo() {
   return (
     <div className="flex h-16 w-32 items-center justify-center rounded-md border border-border/60 bg-card p-3 grayscale hover:grayscale-0">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/Logo.png" alt="Partner" className="max-h-full max-w-full object-contain opacity-80" />
     </div>
   );

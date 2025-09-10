@@ -16,7 +16,6 @@ type HeroParallaxProps = {
   className?: string;
 };
 
-// Lightweight Hero Parallax inspired by Aceternity UI
 export function HeroParallax({ items, className }: HeroParallaxProps) {
   const ref = React.useRef<HTMLDivElement | null>(null);
   const x = useMotionValue(0);
