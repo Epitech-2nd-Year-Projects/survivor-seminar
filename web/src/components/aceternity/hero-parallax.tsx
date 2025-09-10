@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
+import { motion, useMotionValue, useTransform, useSpring, type MotionValue } from "framer-motion";
 
 export type ParallaxItem = {
   title: string;
@@ -73,8 +73,8 @@ function ParallaxRow({
   offset,
 }: {
   items: ParallaxItem[];
-  rx: any;
-  ry: any;
+  rx: MotionValue<number>;
+  ry: MotionValue<number>;
   offset: number;
 }) {
   const translateX = useSpring(useTransform(ry, [-8, 8], [-20 - offset * 8, 20 + offset * 8]), {
@@ -126,4 +126,3 @@ function chunk<T>(arr: T[], size: number): T[][] {
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
   return out;
 }
-
