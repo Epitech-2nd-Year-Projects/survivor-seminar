@@ -192,13 +192,14 @@ func (h *StartupsHandler) CreateStartup(ctx *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        id      path   int    true  "Startup ID"
-// @Param        payload body   object true  "Fields to update"
+// @Param        payload body   requests.StartupUpdateRequest true  "Fields to update"
 // @Success      200 {object} response.StartupObjectResponse
 // @Failure      400 {object} response.ErrorBody
 // @Failure      401 {object} response.ErrorBody
 // @Failure      404 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
 // @Router       /admin/startups/{id} [patch]
+// @Router       /founder/startups/{id} [patch]
 func (h *StartupsHandler) UpdateStartup(ctx *gin.Context) {
 	id := ctx.Param("id")
 
@@ -311,6 +312,7 @@ func (h *StartupsHandler) UpdateStartup(ctx *gin.Context) {
 // @Failure      404 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
 // @Router       /admin/startups/{id} [delete]
+// @Router       /founder/startups/{id} [delete]
 func (h *StartupsHandler) DeleteStartup(ctx *gin.Context) {
 	id := ctx.Param("id")
 
