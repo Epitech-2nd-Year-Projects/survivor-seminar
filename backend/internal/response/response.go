@@ -1,6 +1,8 @@
 package response
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,6 +26,32 @@ type PageMeta struct {
 	HasNext bool `json:"has_next" example:"true"`
 	// Whether there is a previous page
 	HasPrev bool `json:"has_prev" example:"false"`
+}
+
+type StatisticsResponse struct {
+	TotalProjects         int64   `json:"total_projects" example:"123"`
+	ProjectsGrowth        int64   `json:"projects_growth" example:"10"`
+	TotalViews            int64   `json:"total_views" example:"4200"`
+	ViewsGrowthPercent    float64 `json:"views_growth_percent" example:"34.5"`
+	EngagementRatePercent float64 `json:"engagement_rate_percent" example:"12.3"`
+	Period                string  `json:"period" example:"weekly"`
+}
+
+type TopProject struct {
+	ProjectID             uint64  `json:"project_id" example:"1"`
+	Title                 string  `json:"title" example:"My Startup"`
+	Views                 int64   `json:"views" example:"120"`
+	Likes                 int64   `json:"likes" example:"45"`
+	Comments              int64   `json:"comments" example:"12"`
+	EngagementRatePercent float64 `json:"engagement_rate_percent" example:"23.4"`
+}
+
+type TopProjectsResponse struct {
+	Period      string       `json:"period" example:"week"`
+	Limit       int          `json:"limit" example:"10"`
+	Count       int          `json:"count" example:"3"`
+	TopProjects []TopProject `json:"top_projects"`
+	GeneratedAt time.Time    `json:"generated_at" example:"2025-09-10T18:24:00Z"`
 }
 
 func JSON(c *gin.Context, status int, data interface{}) {
