@@ -18,12 +18,16 @@ import {
 } from "./client";
 import type { ListStartupsParams } from "./shared";
 
-export function useStartupsList(p?: ListStartupsParams) {
+export function useStartupsList(
+  p?: ListStartupsParams,
+  opts?: { redirectOn401?: boolean },
+) {
   return useQuery({
     queryKey: startupsKeys.list(p),
     queryFn: () => listStartupsClient(p),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
+    meta: { redirectOn401: Boolean(opts?.redirectOn401) },
   });
 }
 
@@ -38,11 +42,12 @@ export function useInfiniteStartups(p: Omit<ListStartupsParams, "page"> = {}) {
   });
 }
 
-export function useStartup(id: number) {
+export function useStartup(id: number, opts?: { redirectOn401?: boolean }) {
   return useQuery({
     queryKey: startupsKeys.detail(id),
     queryFn: () => getStartupClient(id),
     placeholderData: keepPreviousData,
+    meta: { redirectOn401: Boolean(opts?.redirectOn401) },
   });
 }
 

@@ -30,8 +30,8 @@ export default function BackOfficePage() {
   const [entity, setEntity] = useState<Entity>("Startups");
   const router = useRouter();
 
-  const startupsQ = useStartupsList();
-  const usersQ = useUsersList();
+  const startupsQ = useStartupsList(undefined, { redirectOn401: true });
+  const usersQ = useUsersList(undefined, { redirectOn401: true });
 
   const listStartups = startupsQ.data?.data ?? [];
   const listUsers = usersQ.data?.data ?? [];

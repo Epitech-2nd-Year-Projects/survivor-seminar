@@ -6,7 +6,7 @@ import { Inter } from "next/font/google";
 import QueryProvider from "./providers/QueryProvider";
 
 export const metadata: Metadata = {
-  title: "Survivor",
+  title: "JEB",
   description: "Show case projects from startup incubator",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
