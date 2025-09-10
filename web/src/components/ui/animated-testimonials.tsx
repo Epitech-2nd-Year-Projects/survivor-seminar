@@ -39,8 +39,18 @@ export const AnimatedTestimonials = ({
     }
   }, [autoplay]);
 
-  const randomRotateY = () => {
-    return Math.floor(Math.random() * 21) - 10;
+  // Deterministic pseudo-random angle (SSR/CSR stable) based on testimonial ID
+  const seededAngle = (seed: string) => {
+    let h = 5381;
+    for (let i = 0; i < seed.length; i++) h = ((h << 5) + h) + seed.charCodeAt(i);
+    const mod = 21; // range size for [-10, 10]
+    const n = (h >>> 0) % mod; // 0..20
+    return n - 10; // -10..10
+  };
+
+  const randomRotateY = (index: number, phase: string) => {
+    const t = testimonials[index];
+    return seededAngle(`${t.src}|${t.name}|${index}|${phase}`);
   };
   return (
     <div className="mx-auto max-w-sm px-4 py-20 font-sans antialiased md:max-w-4xl md:px-8 lg:px-12">
@@ -55,13 +65,13 @@ export const AnimatedTestimonials = ({
                     opacity: 0,
                     scale: 0.9,
                     z: -100,
-                    rotate: randomRotateY(),
+                    rotate: randomRotateY(index, "initial"),
                   }}
                   animate={{
                     opacity: isActive(index) ? 1 : 0.7,
                     scale: isActive(index) ? 1 : 0.95,
                     z: isActive(index) ? 0 : -100,
-                    rotate: isActive(index) ? 0 : randomRotateY(),
+                    rotate: isActive(index) ? 0 : randomRotateY(index, "animate"),
                     zIndex: isActive(index)
                       ? 40
                       : testimonials.length + 2 - index,
@@ -71,7 +81,7 @@ export const AnimatedTestimonials = ({
                     opacity: 0,
                     scale: 0.9,
                     z: 100,
-                    rotate: randomRotateY(),
+                    rotate: randomRotateY(index, "exit"),
                   }}
                   transition={{
                     duration: 0.4,
