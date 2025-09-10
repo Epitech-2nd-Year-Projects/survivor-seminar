@@ -22,4 +22,9 @@ func RegisterStartups(r *gin.RouterGroup, cfg *config.Config, db *gorm.DB, logge
 	admin.POST("", h.CreateStartup)
 	admin.PATCH("/:id", h.UpdateStartup)
 	admin.DELETE("/:id", h.DeleteStartup)
+
+	founder := r.Group("/founder/startups")
+	founder.Use(middleware.AuthRequired(cfg), middleware.RequireFounderOfStartup(db, "id"))
+	founder.PATCH("/:id", h.UpdateStartup)
+	founder.DELETE("/:id", h.DeleteStartup)
 }

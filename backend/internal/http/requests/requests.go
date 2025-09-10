@@ -78,6 +78,8 @@ type UserUpdateRequest struct {
 	Password *string `form:"password" json:"password,omitempty" example:"newSecret123"`
 	// New avatar image file (binary upload)
 	Image string `form:"image" json:"image,omitempty" format:"binary" swagger:"desc(New avatar image file to upload)"`
+	// New associated founder profile ID (only if user's role is switch to founder)
+	StartupID *uint64 `json:"startup_id,omitempty" example:"1"`
 }
 
 // Startups
