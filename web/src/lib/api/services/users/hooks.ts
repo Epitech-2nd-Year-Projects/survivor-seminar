@@ -21,12 +21,16 @@ import {
 } from "./client";
 import type { ListUsersParams } from "./shared";
 
-export function useUsersList(p?: ListUsersParams) {
+export function useUsersList(
+  p?: ListUsersParams,
+  opts?: { redirectOn401?: boolean },
+) {
   return useQuery({
     queryKey: usersKeys.list(p),
     queryFn: () => listUsersClient(p),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
+    meta: { redirectOn401: Boolean(opts?.redirectOn401) },
   });
 }
 
@@ -41,17 +45,21 @@ export function useInfiniteUsers(p: Omit<ListUsersParams, "page"> = {}) {
   });
 }
 
-export function useUser(id: number) {
+export function useUser(id: number, opts?: { redirectOn401?: boolean }) {
   const enabled = typeof id === "number" && id > 0;
   return useQuery({
     queryKey: enabled ? usersKeys.detailById(id) : usersKeys.detailById(0),
     queryFn: () => getUserClient(id),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
+    meta: { redirectOn401: Boolean(opts?.redirectOn401) },
   });
 }
 
-export function useUserByEmail(email: string) {
+export function useUserByEmail(
+  email: string,
+  opts?: { redirectOn401?: boolean },
+) {
   const enabled = !!email;
   return useQuery({
     queryKey: enabled
@@ -60,15 +68,17 @@ export function useUserByEmail(email: string) {
     queryFn: () => getUserByEmailClient(email),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
+    meta: { redirectOn401: Boolean(opts?.redirectOn401) },
   });
 }
 
-export function useUserMe() {
+export function useUserMe(opts?: { redirectOn401?: boolean }) {
   return useQuery({
     queryKey: usersKeys.me(),
     queryFn: () => getUserMeClient(),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
+    meta: { redirectOn401: Boolean(opts?.redirectOn401) },
   });
 }
 

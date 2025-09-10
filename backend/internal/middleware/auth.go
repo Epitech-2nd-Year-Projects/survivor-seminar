@@ -7,7 +7,9 @@ import (
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/auth"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/config"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 const (
@@ -113,5 +115,41 @@ func RequireSelfOrAdminByEmailParam(param string) gin.HandlerFunc {
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"code": "forbidden", "message": "not your resource"})
+	}
+}
+
+// RequireFounderOfStartup ensures the authenticated user is a founder of the startup :id
+func RequireFounderOfStartup(db *gorm.DB, param string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims := GetClaims(c)
+		if claims == nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"code":    "unauthorized",
+				"message": "missing auth",
+			})
+			return
+		}
+
+		startupID := c.Param(param)
+		if startupID == "" {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"code":    "invalid_id",
+				"message": "missing startup id in path",
+			})
+			return
+		}
+
+		var count int64
+		if err := db.Model(&models.Founder{}).
+			Where("user_id = ? AND startup_id = ?", claims.UserID, startupID).
+			Count(&count).Error; err != nil || count == 0 {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"code":    "forbidden",
+				"message": "you are not a founder of this startup",
+			})
+			return
+		}
+
+		c.Next()
 	}
 }
