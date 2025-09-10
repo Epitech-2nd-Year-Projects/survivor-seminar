@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
@@ -43,13 +42,8 @@ func (r *GormStartupsRepo) UpsertBatch(ctx context.Context, items []UpstreamItem
 		return nil
 	}
 	for _, it := range items {
-		id64, err := strconv.ParseUint(it.ExternalID, 10, 64)
-		if err != nil {
-			return fmt.Errorf("strconv.ParseUint(it.ExternalID, 10, 64): %w", err)
-		}
 
 		m := models.Startup{
-			ID:             id64,
 			Name:           getString(it.Payload, "name"),
 			LegalStatus:    getStringPtr(it.Payload, "legal_status"),
 			Address:        getStringPtr(it.Payload, "address"),

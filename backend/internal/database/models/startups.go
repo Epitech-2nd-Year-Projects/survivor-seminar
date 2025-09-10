@@ -8,7 +8,7 @@ import (
 
 type Startup struct {
 	// Unique startup identifier
-	ID uint64 `gorm:"primaryKey" json:"id" example:"1"`
+	ID uint64 `gorm:"primaryKey;autoIncrement" json:"id" example:"1"`
 	// Startup name
 	Name string `gorm:"not null;index:idx_startups_name_ci,expression:LOWER(name)" json:"name" example:"Acme"`
 	// Legal status
