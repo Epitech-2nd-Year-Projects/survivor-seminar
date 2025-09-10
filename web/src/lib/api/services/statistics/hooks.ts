@@ -11,6 +11,7 @@ export function useStatistics(p?: GetStatisticsParams) {
     queryFn: () => getStatisticsClient(p),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
+    meta: { redirectOn401: true },
   });
 }
 
@@ -20,5 +21,6 @@ export function useTopProjects(p?: GetTopProjectsParams) {
     queryFn: () => getTopProjectsClient(p),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
+    meta: { redirectOn401: true },
   });
 }

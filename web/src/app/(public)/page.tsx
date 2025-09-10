@@ -1,9 +1,6 @@
 import Link from "next/link";
 import { HeroParallax } from "@/components/ui/hero-parallax";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Rocket, Zap } from "lucide-react";
-import { LandingGridBeams } from "@/components/landing/landing-grid-beams";
 import { listNewsServer } from "@/lib/api/services/news/server";
 import { listEventsServer } from "@/lib/api/services/events/server";
 import { listStartupsServer } from "@/lib/api/services/startups/server";

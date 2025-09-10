@@ -52,6 +52,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
 import { useMe } from "@/lib/api/services/auth/hooks";
 import { userMessageFromError } from "@/lib/api/http/messages";
+import { ApiError } from "@/lib/api/http/errors";
 
 type MenuItem = {
   title: string;
@@ -166,8 +167,9 @@ export function LandingNavbar({
   }, []);
 
   const { data: me, isError, error } = useMe();
-
-  if (isError) {
+  const is401 = isError && error instanceof ApiError && error.status === 401;
+  // For public pages: treat 401 as unauthenticated state, not as an error UI
+  if (isError && !is401) {
     console.log(error);
     return <div>Error: {userMessageFromError(error)}</div>;
   }
