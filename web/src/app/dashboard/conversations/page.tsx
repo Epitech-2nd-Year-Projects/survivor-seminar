@@ -450,12 +450,12 @@ function formatTime(d: Date) {
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
     if (isToday) {
-      return date.toLocaleTimeString([], {
+      return date.toLocaleTimeString("fr-FR", {
         hour: "2-digit",
         minute: "2-digit",
       });
     }
-    return date.toLocaleDateString();
+    return date.toLocaleDateString("fr-FR");
   } catch {
     return "";
   }

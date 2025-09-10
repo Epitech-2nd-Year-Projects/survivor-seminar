@@ -236,7 +236,7 @@ export default function MyStartupProfile(props: { startupId: number }) {
                   <div>
                     <h1 className="text-2xl font-semibold">{startup.name}</h1>
                     <p className="text-muted-foreground text-sm">
-                      {startup.createdAt.toLocaleDateString()}
+                      {startup.createdAt.toLocaleDateString("fr-FR")}
                     </p>
                   </div>
                 </div>
