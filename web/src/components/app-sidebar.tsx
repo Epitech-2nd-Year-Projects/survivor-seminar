@@ -74,18 +74,13 @@ const navData: {
       items: [
         {
           title: "My Profile",
-          href: "/dashboard/startup-area",
+          href: "/dashboard/my-profile",
           icon: <NotebookTextIcon />,
         },
         {
           title: "Conversations",
           href: "/dashboard/conversations",
           icon: <Mail />,
-        },
-        {
-          title: "Opportunities",
-          href: "/dashboard/startup-area/opportunities",
-          icon: <MilestoneIcon />,
         },
       ],
     },
