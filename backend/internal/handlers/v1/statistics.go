@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -36,12 +35,41 @@ func (h *StatisticsHandler) GetStatistics(c *gin.Context) {
 		return
 	}
 
+	var totalViews int64
+	if err := h.db.Model(&models.Startup{}).Select("SUM(views_count)").Scan(&totalViews).Error; err != nil {
+		h.log.WithError(err).Error("failed to sum views_count")
+		response.JSONError(c, http.StatusInternalServerError,
+			"internal_error", "failed to retrieve statistics", nil)
+		return
+	}
+
+	var projectsGrowth int64
+	since := time.Now().Add(-7 * 24 * time.Hour)
+	if period == "monthly" {
+		since = time.Now().Add(-30 * 24 * time.Hour)
+	}
+	if err := h.db.Model(&models.Startup{}).
+		Where("created_at >= ?", since).
+		Count(&projectsGrowth).Error; err != nil {
+		h.log.WithError(err).Error("failed to count startups growth")
+	}
+
+	avgViewsPerProject := float64(0)
+	if totalProjects > 0 {
+		avgViewsPerProject = float64(totalViews) / float64(totalProjects)
+	}
+
+	engagementRate := 0.0
+	if avgViewsPerProject > 0 {
+		engagementRate = (avgViewsPerProject / float64(totalViews+1)) * 100
+	}
+
 	stats := gin.H{
 		"total_projects":          totalProjects,
-		"projects_growth":         rand.Intn(100),
-		"total_views":             rand.Intn(100000),
-		"views_growth_percent":    rand.Float64() * 20.0,
-		"engagement_rate_percent": rand.Float64() * 15.0,
+		"projects_growth":         projectsGrowth,
+		"total_views":             totalViews,
+		"views_growth_percent":    avgViewsPerProject,
+		"engagement_rate_percent": engagementRate,
 		"period":                  period,
 	}
 	response.JSON(c, http.StatusOK, stats)
@@ -57,7 +85,7 @@ func (h *StatisticsHandler) GetTopProjects(c *gin.Context) {
 	}
 
 	var startups []models.Startup
-	if err := h.db.Limit(limit).Find(&startups).Error; err != nil {
+	if err := h.db.Order("views_count DESC").Limit(limit).Find(&startups).Error; err != nil {
 		h.log.WithError(err).Error("failed to fetch startups for top projects")
 		response.JSONError(c, http.StatusInternalServerError,
 			"internal_error", "failed to retrieve top projects", nil)
@@ -67,12 +95,12 @@ func (h *StatisticsHandler) GetTopProjects(c *gin.Context) {
 	var topProjects []gin.H
 	for _, s := range startups {
 		topProjects = append(topProjects, gin.H{
-			"project_id":               s.ID,
+			"project_id":              s.ID,
 			"title":                   s.Name,
-			"views":                   rand.Intn(5000) + 100,
-			"likes":                   rand.Intn(1000),
-			"comments":                rand.Intn(200),
-			"engagement_rate_percent": rand.Float64() * 50.0,
+			"views":                   s.ViewsCount,
+			"likes":                   0,
+			"comments":                0,
+			"engagement_rate_percent": float64(s.ViewsCount) / float64(1+s.ViewsCount) * 100,
 		})
 	}
 
