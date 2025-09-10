@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS founders (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    startup_id BIGINT NOT NULL REFERENCES startups(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    UNIQUE (user_id, startup_id)
+);

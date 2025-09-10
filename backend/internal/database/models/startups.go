@@ -1,8 +1,9 @@
 package models
 
 import (
-	"gorm.io/datatypes"
 	"time"
+
+	"gorm.io/datatypes"
 )
 
 type Startup struct {
@@ -36,4 +37,6 @@ type Startup struct {
 	Maturity *string `json:"maturity,omitempty" enums:"early,middle,late" example:"early"`
 	// Founders array (JSON)
 	Founders datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"founders" swaggertype:"object"`
+	// Views count
+	ViewsCount int64 `gorm:"not null;default:0" json:"views_count" example:"0"`
 }

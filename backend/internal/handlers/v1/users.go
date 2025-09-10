@@ -1,8 +1,11 @@
 package v1
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"slices"
 
@@ -10,6 +13,7 @@ import (
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/middleware"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/response"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/storage/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
@@ -17,8 +21,9 @@ import (
 )
 
 type UsersHandler struct {
-	db  *gorm.DB
-	log *logrus.Logger
+	db       *gorm.DB
+	log      *logrus.Logger
+	uploader s3.Uploader
 }
 
 var validUserSortFields = []string{
@@ -38,10 +43,11 @@ type listUsersParams struct {
 }
 
 // NewUsersHandler returns a new UsersHandler
-func NewUsersHandler(db *gorm.DB, log *logrus.Logger) *UsersHandler {
+func NewUsersHandler(db *gorm.DB, log *logrus.Logger, uploader s3.Uploader) *UsersHandler {
 	return &UsersHandler{
-		db:  db,
-		log: log,
+		db:       db,
+		log:      log,
+		uploader: uploader,
 	}
 }
 
@@ -236,30 +242,21 @@ func (h *UsersHandler) GetMe(c *gin.Context) {
 // @Router       /admin/users [post]
 func (h *UsersHandler) CreateUser(c *gin.Context) {
 	var req struct {
-		Email    string  `json:"email" binding:"required,email"`
-		Name     string  `json:"name" binding:"required"`
-		Role     string  `json:"role" binding:"required"`
-		Password string  `json:"password" binding:"required,min=6"`
-		ImageURL *string `json:"image_url,omitempty"`
+		Email    string `form:"email" binding:"required,email"`
+		Name     string `form:"name" binding:"required"`
+		Role     string `form:"role" binding:"required"`
+		Password string `form:"password" binding:"required,min=6"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.log.WithError(err).Warn(" c.ShouldBindJSON()")
-		response.JSON(c, http.StatusBadRequest, gin.H{
-			"code":    2100,
-			"message": "invalid request payload",
-			"errors":  err.Error(),
-		})
+	if err := c.ShouldBind(&req); err != nil {
+		response.JSONError(c, http.StatusBadRequest, "invalid_payload", "invalid request payload", err.Error())
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		h.log.WithError(err).Error("failed to hash password")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to process password",
-		})
+		response.JSONError(c, http.StatusInternalServerError, "internal_error", "failed to process password", nil)
 		return
 	}
 
@@ -268,23 +265,35 @@ func (h *UsersHandler) CreateUser(c *gin.Context) {
 		Name:         req.Name,
 		Role:         req.Role,
 		PasswordHash: string(hash),
-		ImageURL:     req.ImageURL,
+	}
+
+	file, err := c.FormFile("image")
+	if err == nil {
+		f, _ := file.Open()
+		defer func(f multipart.File) {
+			err := f.Close()
+			if err != nil {
+			}
+		}(f)
+		data, _ := io.ReadAll(f)
+		contentType := file.Header.Get("Content-Type")
+		if contentType == "" {
+			contentType = http.DetectContentType(data)
+		}
+		key := fmt.Sprintf("user_image/%s%s", req.Email, extFromContentType(contentType))
+		if url, upErr := h.uploader.Upload(c, key, contentType, data); upErr == nil {
+			user.ImageURL = &url
+		} else {
+			h.log.WithError(upErr).Warn("upload user image failed")
+		}
 	}
 
 	if err := h.db.Create(&user).Error; err != nil {
-		h.log.WithError(err).Error("h.db.Create().Error")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to create user",
-		})
+		response.JSONError(c, http.StatusInternalServerError, "internal_error", "failed to create user", nil)
 		return
 	}
 
-	h.log.WithField("id", user.ID).Info("user created successfully")
-	response.JSON(c, http.StatusCreated, gin.H{
-		"message": "user created successfully",
-		"data":    user,
-	})
+	response.JSON(c, http.StatusCreated, gin.H{"message": "user created successfully", "data": user})
 }
 
 // UpdateUser godoc
@@ -295,7 +304,7 @@ func (h *UsersHandler) CreateUser(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        id      path   int    true  "User ID"
-// @Param        payload body   requests.UserUpdateRequest true  "Fields to update" Example({"name":"Jane Doe","role":"user"})
+// @Param        payload body   requests.UserUpdateRequest true  "Fields to update" Example({"name":"Jane Doe","role":"founder","startup_id":1})
 // @Success      200 {object} response.UserObjectResponse
 // @Failure      400 {object} response.ErrorBody
 // @Failure      401 {object} response.ErrorBody
@@ -307,75 +316,99 @@ func (h *UsersHandler) UpdateUser(c *gin.Context) {
 
 	var user models.User
 	if err := h.db.Where("id = ?", id).First(&user).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			response.JSON(c, http.StatusNotFound, gin.H{
-				"code":    "not_found",
-				"message": "user not found",
-			})
-			return
-		}
-		h.log.WithError(err).Error("failed to fetch user for update")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to retrieve user",
-		})
+		response.JSONError(c, http.StatusNotFound,
+			"not_found", "user not found", nil)
 		return
 	}
 
 	var req struct {
-		Email    *string `json:"email,omitempty" binding:"omitempty,email"`
-		Name     *string `json:"name,omitempty"`
-		Role     *string `json:"role,omitempty"`
-		Password *string `json:"password,omitempty" binding:"omitempty,min=6"`
-		ImageURL *string `json:"image_url,omitempty"`
+		Email     *string `json:"email,omitempty" binding:"omitempty,email"`
+		Name      *string `json:"name,omitempty"`
+		Role      *string `json:"role,omitempty"`
+		Password  *string `json:"password,omitempty"`
+		StartupID *uint64 `json:"startup_id,omitempty"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.log.WithError(err).Warn("invalid request payload for user update")
-		response.JSON(c, http.StatusBadRequest, gin.H{
-			"code":    2100,
-			"message": "invalid request payload",
-			"errors":  err.Error(),
-		})
+		response.JSONError(c, http.StatusBadRequest,
+			"invalid_payload", "invalid request payload", err.Error())
 		return
 	}
 
 	updates := make(map[string]interface{})
 	if req.Email != nil {
 		updates["email"] = *req.Email
+		user.Email = *req.Email
 	}
 	if req.Name != nil {
 		updates["name"] = *req.Name
+		user.Name = *req.Name
 	}
 	if req.Role != nil {
 		updates["role"] = *req.Role
+		user.Role = *req.Role
 	}
 	if req.Password != nil {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
 		updates["password_hash"] = string(hash)
+		user.PasswordHash = string(hash)
 	}
-	if req.ImageURL != nil {
-		updates["image_url"] = *req.ImageURL
+
+	if req.Role != nil && *req.Role == "founder" {
+		if req.StartupID == nil {
+			response.JSONError(c, http.StatusBadRequest,
+				"missing_startup_id", "startup_id is required when assigning founder role", nil)
+			return
+		}
+		var startup models.Startup
+		if err := h.db.First(&startup, *req.StartupID).Error; err != nil {
+			response.JSONError(c, http.StatusNotFound,
+				"not_found", "startup not found", nil)
+			return
+		}
+
+		founder := models.Founder{
+			UserID:    user.ID,
+			StartupID: *req.StartupID,
+		}
+		if err := h.db.Create(&founder).Error; err != nil {
+			h.log.WithError(err).Error("h.db.Create(&founder).Error")
+			response.JSONError(c, http.StatusInternalServerError,
+				"internal_error", "failed to assign founder role", nil)
+			return
+		}
+
+		var founders []map[string]interface{}
+		if len(startup.Founders) > 0 {
+			_ = json.Unmarshal(startup.Founders, &founders)
+		}
+		founders = append(founders, map[string]interface{}{
+			"id":         founder.ID,
+			"name":       user.Name,
+			"startup_id": *req.StartupID,
+		})
+		updatedFounders, _ := json.Marshal(founders)
+		if err := h.db.Model(&startup).Update("founders", updatedFounders).Error; err != nil {
+			response.JSONError(c, http.StatusInternalServerError,
+				"internal_error", "failed to update startup founders", nil)
+			return
+		}
+
+		updates["founder_id"] = founder.ID
+		user.FounderID = &founder.ID
 	}
 
 	if len(updates) == 0 {
-		response.JSON(c, http.StatusBadRequest, gin.H{
-			"code":    2101,
-			"message": "no fields provided for update",
-		})
+		response.JSONError(c, http.StatusBadRequest, "no_fields", "no fields provided for update", nil)
 		return
 	}
 
 	if err := h.db.Model(&user).Updates(updates).Error; err != nil {
-		h.log.WithError(err).Error("failed to update user")
-		response.JSON(c, http.StatusInternalServerError, gin.H{
-			"code":    "internal_error",
-			"message": "failed to update user",
-		})
+		response.JSONError(c, http.StatusInternalServerError,
+			"internal_error", "failed to update user", nil)
 		return
 	}
 
-	h.log.WithField("id", id).Info("user updated successfully")
 	response.JSON(c, http.StatusOK, gin.H{
 		"message": "user updated successfully",
 		"data":    user,

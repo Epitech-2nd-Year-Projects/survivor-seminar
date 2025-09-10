@@ -3,20 +3,24 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/http/pagination"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/response"
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/storage/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type NewsHandler struct {
-	db  *gorm.DB
-	log *logrus.Logger
+	db       *gorm.DB
+	log      *logrus.Logger
+	uploader s3.Uploader
 }
 
 var validNewsSortFields = []string{
@@ -36,10 +40,11 @@ type listNewsParams struct {
 	NewsDate   string `form:"news_date" binding:"omitempty"`
 }
 
-func NewNewsHandler(db *gorm.DB, log *logrus.Logger) *NewsHandler {
+func NewNewsHandler(db *gorm.DB, log *logrus.Logger, uploader s3.Uploader) *NewsHandler {
 	return &NewsHandler{
-		db:  db,
-		log: log,
+		db:       db,
+		log:      log,
+		uploader: uploader,
 	}
 }
 
@@ -164,7 +169,6 @@ func (h *NewsHandler) CreateNews(c *gin.Context) {
 		Category    *string `json:"category,omitempty"`
 		StartupID   *uint64 `json:"startup_id,omitempty"`
 		Description string  `json:"description" binding:"required"`
-		ImageURL    *string `json:"image_url,omitempty"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -179,7 +183,30 @@ func (h *NewsHandler) CreateNews(c *gin.Context) {
 		Location:    req.Location,
 		Category:    req.Category,
 		StartupID:   req.StartupID,
-		ImageURL:    req.ImageURL,
+	}
+
+	if req.NewsDate != nil && *req.NewsDate != "" {
+		if t, err := time.Parse("2006-01-02", *req.NewsDate); err == nil {
+			news.NewsDate = &t
+		} else {
+			response.JSONError(c, http.StatusBadRequest, "invalid_date", "news_date must be YYYY-MM-DD", err.Error())
+			return
+		}
+	}
+
+	file, err := c.FormFile("image")
+	if err == nil {
+		f, _ := file.Open()
+		defer f.Close()
+		data, _ := io.ReadAll(f)
+		contentType := file.Header.Get("Content-Type")
+		if contentType == "" {
+			contentType = http.DetectContentType(data)
+		}
+		key := fmt.Sprintf("news_image/%d%s", news.ID, extFromContentType(contentType))
+		if url, upErr := h.uploader.Upload(c, key, contentType, data); upErr == nil {
+			news.ImageURL = &url
+		}
 	}
 
 	if err := h.db.Create(&news).Error; err != nil {
@@ -210,43 +237,37 @@ func (h *NewsHandler) CreateNews(c *gin.Context) {
 // @Failure      404 {object} response.ErrorBody
 // @Failure      500 {object} response.ErrorBody
 // @Router       /admin/news/{id} [patch]
+// UpdateNews godoc
 func (h *NewsHandler) UpdateNews(c *gin.Context) {
 	id := c.Param("id")
 
 	var news models.News
 	if err := h.db.Where("id = ?", id).First(&news).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			response.JSONError(c, http.StatusNotFound,
-				"not_found", "news not found", nil)
-			return
-		}
-		response.JSONError(c, http.StatusInternalServerError,
-			"internal_error", "failed to retrieve news", nil)
+		response.JSONError(c, http.StatusNotFound, "not_found", "news not found", nil)
 		return
 	}
 
 	var req struct {
-		Title       *string `json:"title,omitempty"`
-		NewsDate    *string `json:"news_date,omitempty"`
-		Location    *string `json:"location,omitempty"`
-		Category    *string `json:"category,omitempty"`
-		StartupID   *uint64 `json:"startup_id,omitempty"`
-		Description *string `json:"description,omitempty"`
-		ImageURL    *string `json:"image_url,omitempty"`
+		Title       *string `form:"title"`
+		NewsDate    *string `form:"news_date"`
+		Location    *string `form:"location"`
+		Category    *string `form:"category"`
+		StartupID   *uint64 `form:"startup_id"`
+		Description *string `form:"description"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.JSONError(c, http.StatusBadRequest,
-			"invalid_payload", "invalid request payload", err.Error())
+	if err := c.ShouldBind(&req); err != nil {
+		response.JSONError(c, http.StatusBadRequest, "invalid_payload", "invalid request payload", err.Error())
 		return
 	}
 
 	updates := make(map[string]interface{})
+
 	if req.Title != nil {
 		updates["title"] = *req.Title
 	}
-	if req.NewsDate != nil {
-		updates["news_date"] = *req.NewsDate
+	if req.Description != nil {
+		updates["description"] = *req.Description
 	}
 	if req.Location != nil {
 		updates["location"] = *req.Location
@@ -257,22 +278,41 @@ func (h *NewsHandler) UpdateNews(c *gin.Context) {
 	if req.StartupID != nil {
 		updates["startup_id"] = *req.StartupID
 	}
-	if req.Description != nil {
-		updates["description"] = *req.Description
-	}
-	if req.ImageURL != nil {
-		updates["image_url"] = *req.ImageURL
+	if req.NewsDate != nil && *req.NewsDate != "" {
+		if t, err := time.Parse("2006-01-02", *req.NewsDate); err == nil {
+			updates["news_date"] = &t
+		} else {
+			response.JSONError(c, http.StatusBadRequest, "invalid_date", "news_date must be YYYY-MM-DD", err.Error())
+			return
+		}
 	}
 
-	if len(updates) == 0 {
-		response.JSONError(c, http.StatusBadRequest,
-			"no_fields", "no fields provided for update", nil)
+	file, err := c.FormFile("image")
+	if err == nil {
+		f, _ := file.Open()
+		defer f.Close()
+		data, _ := io.ReadAll(f)
+
+		contentType := file.Header.Get("Content-Type")
+		if contentType == "" {
+			contentType = http.DetectContentType(data)
+		}
+
+		key := fmt.Sprintf("news_image/%s%s", id, extFromContentType(contentType))
+		if url, upErr := h.uploader.Upload(c, key, contentType, data); upErr == nil {
+			updates["image_url"] = url
+		} else {
+			h.log.WithError(upErr).Warn("failed to upload news image")
+		}
+	}
+
+	if len(updates) == 0 && err != nil {
+		response.JSONError(c, http.StatusBadRequest, "no_fields", "no fields provided for update", nil)
 		return
 	}
 
 	if err := h.db.Model(&news).Updates(updates).Error; err != nil {
-		response.JSONError(c, http.StatusInternalServerError,
-			"internal_error", "failed to update news", nil)
+		response.JSONError(c, http.StatusInternalServerError, "internal_error", "failed to update news", nil)
 		return
 	}
 
