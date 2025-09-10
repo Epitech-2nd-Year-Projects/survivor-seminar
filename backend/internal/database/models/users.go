@@ -4,7 +4,7 @@ import "time"
 
 type User struct {
 	// Unique user identifier
-	ID uint64 `json:"id" gorm:"primaryKey" example:"1"`
+	ID uint64 `json:"id" gorm:"primaryKey;autoIncrement" example:"1"`
 	// Email address (unique)
 	Email string `json:"email" gorm:"type:varchar(255);uniqueIndex;not null" format:"email" example:"user@example.com"`
 	// Display name

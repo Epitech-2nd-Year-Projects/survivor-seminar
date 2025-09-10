@@ -43,7 +43,6 @@ func (r *GormEventsRepo) UpsertBatch(ctx context.Context, items []UpstreamItem) 
 		}
 
 		m := models.Event{
-			ID:             id64,
 			Name:           getString(it.Payload, "name"),
 			Description:    getStringPtr(it.Payload, "description"),
 			EventType:      getStringPtr(it.Payload, "event_type"),

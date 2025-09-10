@@ -4,7 +4,7 @@ import "time"
 
 type Event struct {
 	// Unique event identifier
-	ID uint64 `json:"id" gorm:"primaryKey" example:"1"`
+	ID uint64 `json:"id" gorm:"primaryKey;autoIncrement" example:"1"`
 	// Event name
 	Name string `json:"name" gorm:"type:varchar(255);not null" example:"Conf 2025"`
 	// Short description

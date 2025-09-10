@@ -4,7 +4,7 @@ import "time"
 
 type Message struct {
 	// Unique message identifier
-	ID uint64 `json:"id" gorm:"primaryKey" example:"1"`
+	ID uint64 `json:"id" gorm:"primaryKey;autoIncrement" example:"1"`
 	// Conversation ID
 	ConversationID uint64 `json:"conversation_id" gorm:"not null;index" example:"1"`
 	// Sender user ID
