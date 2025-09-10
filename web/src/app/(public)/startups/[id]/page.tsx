@@ -13,6 +13,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { userMessageFromError } from "@/lib/api/http/messages";
 import { useStartup } from "@/lib/api/services/startups/hooks";
+import { generateStartupPdf } from "@/lib/generate-pdf";
 import {
   DownloadIcon,
   GlobeIcon,
@@ -113,16 +114,6 @@ export default function StartupPage({ params }: StartupPageProps) {
     notFound();
   }
 
-  const exportPDF = () => {
-    const url = "/pitch-deck.pdf";
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "pitch-deck.pdf");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div className="flex flex-col gap-4">
       <div>
@@ -152,7 +143,12 @@ export default function StartupPage({ params }: StartupPageProps) {
                   {data.address}
                 </Badge>
               ) : null}
-              <Button variant="secondary" onClick={exportPDF}>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  generateStartupPdf(data, { fileName: "startup-profile.pdf" })
+                }
+              >
                 <DownloadIcon className="h-4 w-4" />
                 Export PDF
               </Button>
