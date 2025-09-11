@@ -91,9 +91,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		FounderID:    req.FounderID,
 		InvestorID:   req.InvestorID,
 	}
-	println("\n\n\n\n\n")
-	println(u.ID)
-	println("\n\n\n\n\n")
 	if err := h.db.Create(&u).Error; err != nil {
 		h.log.WithError(err).Error("db create user")
 		response.JSON(c, http.StatusInternalServerError, gin.H{"code": "internal_error", "message": "failed to create user"})

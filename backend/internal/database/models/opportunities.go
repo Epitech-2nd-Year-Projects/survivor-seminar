@@ -4,7 +4,7 @@ import "time"
 
 type Opportunity struct {
 	// Unique opportunity identifier
-	ID uint `json:"id" gorm:"primaryKey;autoIncrement" example:"1"`
+	ID uint `json:"id" gorm:"primarykey" example:"1"`
 	// Opportunity title
 	Title string `json:"title" gorm:"type:varchar(255);not null" example:"AI Grant"`
 	// Opportunity type
