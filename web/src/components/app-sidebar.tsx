@@ -56,16 +56,6 @@ const navData: {
           href: "/dashboard/back-office",
           icon: <ShieldUser />,
         },
-        {
-          title: "Content Management",
-          href: "/dashboard/content-management",
-          icon: <Pencil />,
-        },
-        {
-          title: "User Management",
-          href: "/dashboard/user-management",
-          icon: <Users />,
-        },
       ],
     },
     {
