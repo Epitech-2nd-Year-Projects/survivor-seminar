@@ -24,10 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import type { User } from "@/lib/api/contracts/users";
 import type { UpdateUserBody } from "@/lib/api/services/users/client";
-
-type Role = "admin" | "manager" | "member" | "viewer";
-const isRole = (v: string): v is Role =>
-  v === "admin" || v === "manager" || v === "member" || v === "viewer";
+import { UserRole } from "@/lib/api/contracts/users";
 
 type Props = {
   open: boolean;
@@ -59,6 +56,11 @@ const fileToBase64 = (file: File) =>
     reader.readAsDataURL(file);
   });
 
+const ALL_USER_ROLES = Object.values(UserRole) as readonly UserRole[];
+
+const isUserRole = (v: string): v is UserRole =>
+  (ALL_USER_ROLES as readonly string[]).includes(v);
+
 export default function EditDialogUser({
   open,
   onOpenChange,
@@ -66,7 +68,7 @@ export default function EditDialogUser({
   onSubmit,
   description = "Edit the user's data",
 }: Props) {
-  const [role, setRole] = React.useState<Role | undefined>(undefined);
+  const [role, setRole] = React.useState<UserRole | undefined>(undefined);
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const [filePreviewUrl, setFilePreviewUrl] = React.useState<string>();
   const [pwError, setPwError] = React.useState<string | null>(null);
@@ -138,8 +140,9 @@ export default function EditDialogUser({
             } else {
               setPwError(null);
             }
-            const finalRole: Role =
-              role ?? (isRole(user.role) ? user.role : "member");
+
+            const finalRole: UserRole = role ?? user.role;
+
             const body: UpdateUserBody = {} as UpdateUserBody;
 
             if (nameInput && nameInput !== user.name) body.name = nameInput;
@@ -155,8 +158,8 @@ export default function EditDialogUser({
                 "file to upload as base64:",
                 base64.slice(0, 30) + "...",
               );
-              console.log("Full base64:", base64);
             }
+
             if (Object.keys(body).length === 0) return;
             await onSubmit(user.id, body);
           }}
@@ -188,16 +191,17 @@ export default function EditDialogUser({
             <Label>Role</Label>
             <Select
               value={role}
-              onValueChange={(v) => setRole(isRole(v) ? v : undefined)}
+              onValueChange={(v) => setRole(isUserRole(v) ? v : undefined)}
             >
               <SelectTrigger>
                 <SelectValue placeholder={user?.role ?? "Select a role"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">admin</SelectItem>
-                <SelectItem value="manager">manager</SelectItem>
-                <SelectItem value="member">member</SelectItem>
-                <SelectItem value="viewer">viewer</SelectItem>
+                {ALL_USER_ROLES.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {r}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
