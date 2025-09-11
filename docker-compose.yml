@@ -1,5 +1,3 @@
-version: "3.9"
-
 name: survivor-seminar
 
 services:
@@ -27,6 +25,8 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
+      GIN_MODE: release
+
       # Database connection
       DATABASE_URL: postgres://postgres:postgres@db:5432/jeb?sslmode=disable
 
@@ -35,7 +35,7 @@ services:
 
       # Optional integrations
       JEB_GROUP_TOKEN: ""
-      EMAIL_FROM: noreply@example.com
+      EMAIL_FROM: noreply@gmail.com
       SMTP_URL: ""
 
       # S3
@@ -43,17 +43,40 @@ services:
       S3_BUCKET: ""
       S3_REGION: ""
       S3_ENDPOINT: ""
+      AWS_EC2_METADATA_DISABLED: "true"
+      AWS_SDK_LOAD_CONFIG: "1"
+      AWS_PROFILE: ${AWS_PROFILE:-default}
+      AWS_SHARED_CREDENTIALS_FILE: /aws/credentials
+      AWS_CONFIG_FILE: /aws/config
+      AWS_REGION: ${AWS_REGION:-eu-north-1}
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     ports:
       - "1111:1111"
+    volumes:
+      - ${HOME}/.aws:/aws:ro
+    networks: [app-net]
+
+  migrate:
+    image: migrate/migrate:4
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/migrations:/migrations:ro
+    command: ["-path=/migrations", "-database=postgres://postgres:postgres@db:5432/jeb?sslmode=disable", "up"]
     networks: [app-net]
 
   web:
     build:
       context: ./web
       dockerfile: Dockerfile
+      args:
+        BACKEND_ORIGIN: http://backend:1111
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -73,4 +96,3 @@ networks:
 volumes:
   db-data:
     driver: local
-
