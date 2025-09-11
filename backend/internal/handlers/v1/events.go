@@ -173,6 +173,7 @@ func (h *EventsHandler) GetEvent(c *gin.Context) {
 // @Failure      400,401,500 {object} response.ErrorBody
 // @Router       /admin/events [post]
 func (h *EventsHandler) CreateEvent(c *gin.Context) {
+	_ = h.alignEventSequence()
 	var req struct {
 		Name           string     `form:"name" binding:"required,max=255"`
 		Description    *string    `form:"description"`
@@ -236,6 +237,19 @@ func (h *EventsHandler) CreateEvent(c *gin.Context) {
 		"message": "event created successfully",
 		"data":    event,
 	})
+}
+
+func (h *EventsHandler) alignEventSequence() error {
+	sql := `SELECT setval(
+        pg_get_serial_sequence('events','id'),
+        COALESCE((SELECT MAX(id) FROM events), 0) + 1,
+        false
+    )`
+	if err := h.db.Exec(sql).Error; err != nil {
+		h.log.WithError(err).Warn("alignEventSequence failed")
+		return err
+	}
+	return nil
 }
 
 // UpdateEvent godoc
