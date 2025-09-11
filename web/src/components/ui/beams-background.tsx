@@ -99,20 +99,34 @@ export function BeamsBackground({
       const primaryVar = rootStyle.getPropertyValue("--primary").trim();
       const colorWithAlpha = (a: number) => {
         const clamped = Math.max(0, Math.min(1, a));
-        return primaryVar ? `oklch(${primaryVar} / ${clamped})` : `rgba(99,102,241,${clamped})`;
+        if (!primaryVar) return `rgba(99,102,241,${clamped})`;
+        const v = primaryVar.replace(/\s+/g, " ");
+        if (/^oklch\(/i.test(v)) {
+          return v.replace(/\)$/i, ` / ${clamped})`);
+        }
+        return `rgba(99,102,241,${clamped})`;
       };
 
       const desiredBeams = prefersReducedMotion ? 0 : BEAMS_BY_INTENSITY[intensity];
-      beamsRef.current = Array.from({ length: desiredBeams }, (_, i) => {
+      const buildGradient = (len: number, useFallback = false) => {
+        const grad = ctx.createLinearGradient(0, 0, 0, len);
+        const make = (a: number) => (useFallback ? `rgba(99,102,241,${a})` : colorWithAlpha(a));
+        grad.addColorStop(0, make(0));
+        grad.addColorStop(0.1, make(0.5));
+        grad.addColorStop(0.4, make(1));
+        grad.addColorStop(0.6, make(1));
+        grad.addColorStop(0.9, make(0.5));
+        grad.addColorStop(1, make(0));
+        return grad;
+      };
+
+      beamsRef.current = Array.from({ length: desiredBeams }, () => {
         const b = createBeam(width, height, 0);
-        const g = ctx.createLinearGradient(0, 0, 0, b.length);
-        g.addColorStop(0, colorWithAlpha(0));
-        g.addColorStop(0.1, colorWithAlpha(0.5));
-        g.addColorStop(0.4, colorWithAlpha(1));
-        g.addColorStop(0.6, colorWithAlpha(1));
-        g.addColorStop(0.9, colorWithAlpha(0.5));
-        g.addColorStop(1, colorWithAlpha(0));
-        b.gradient = g;
+        try {
+          b.gradient = buildGradient(b.length, false);
+        } catch {
+          b.gradient = buildGradient(b.length, true);
+        }
         return b;
       });
     };

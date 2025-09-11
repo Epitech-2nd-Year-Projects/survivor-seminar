@@ -1,0 +1,98 @@
+name: survivor-seminar
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: jeb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jeb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [app-net]
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      GIN_MODE: release
+
+      # Database connection
+      DATABASE_URL: postgres://postgres:postgres@db:5432/jeb?sslmode=disable
+
+      # JWT & auth
+      JWT_SECRET: <secret>
+
+      # Optional integrations
+      JEB_GROUP_TOKEN: ""
+      EMAIL_FROM: noreply@gmail.com
+      SMTP_URL: ""
+
+      # S3
+      PUBLIC_BASE_URL: ""
+      S3_BUCKET: ""
+      S3_REGION: ""
+      S3_ENDPOINT: ""
+      AWS_EC2_METADATA_DISABLED: "true"
+      AWS_SDK_LOAD_CONFIG: "1"
+      AWS_PROFILE: ${AWS_PROFILE:-default}
+      AWS_SHARED_CREDENTIALS_FILE: /aws/credentials
+      AWS_CONFIG_FILE: /aws/config
+      AWS_REGION: ${AWS_REGION:-eu-north-1}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "1111:1111"
+    volumes:
+      - ${HOME}/.aws:/aws:ro
+    networks: [app-net]
+
+  migrate:
+    image: migrate/migrate:4
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/migrations:/migrations:ro
+    command: ["-path=/migrations", "-database=postgres://postgres:postgres@db:5432/jeb?sslmode=disable", "up"]
+    networks: [app-net]
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        BACKEND_ORIGIN: http://backend:1111
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: /api/v1
+      BACKEND_ORIGIN: http://backend:1111
+      SKIP_ENV_VALIDATION: "1"
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    networks: [app-net]
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  db-data:
+    driver: local
