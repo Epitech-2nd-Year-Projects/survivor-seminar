@@ -72,7 +72,7 @@ const navData: {
     },
     {
       title: "Messaging",
-      allowedRoles: [UserRole.Investor, UserRole.Founder],
+      allowedRoles: [UserRole.Admin, UserRole.Investor, UserRole.Founder],
       items: [
         {
           title: "Conversations",
