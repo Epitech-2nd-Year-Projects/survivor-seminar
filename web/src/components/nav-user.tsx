@@ -19,6 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { User } from "@/lib/api/contracts/users";
+import Link from "next/link";
 
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
@@ -75,7 +76,7 @@ export function NavUser({ user }: { user: User }) {
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <LogOut />
-              Log out
+              <Link href="/">Go back to public</Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
