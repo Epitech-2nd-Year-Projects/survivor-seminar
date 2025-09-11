@@ -50,9 +50,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
-import { useMe } from "@/lib/api/services/auth/hooks";
+import { useLogout, useMe } from "@/lib/api/services/auth/hooks";
 import { userMessageFromError } from "@/lib/api/http/messages";
 import { ApiError } from "@/lib/api/http/errors";
+import { useRouter } from "next/navigation";
 
 type MenuItem = {
   title: string;
@@ -159,6 +160,15 @@ export function LandingNavbar({
 }: LandingNavbarProps) {
   const [scrolled, setScrolled] = React.useState(false);
 
+  const router = useRouter();
+  const logout = useLogout();
+
+  const handleLogout = () => {
+    logout.mutate(undefined, {
+      onSuccess: () => router.push("/"),
+    });
+  };
+
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
     onScroll();
@@ -168,7 +178,6 @@ export function LandingNavbar({
 
   const { data: me, isError, error } = useMe();
   const is401 = isError && error instanceof ApiError && error.status === 401;
-  // For public pages: treat 401 as unauthenticated state, not as an error UI
   if (isError && !is401) {
     console.log(error);
     return <div>Error: {userMessageFromError(error)}</div>;
@@ -262,7 +271,7 @@ export function LandingNavbar({
                   <UserDropdown
                     userName={userName}
                     userAvatarUrl={userAvatarUrl}
-                    onLogout={onLogout}
+                    onLogout={handleLogout}
                   />
                 )}
               </div>
