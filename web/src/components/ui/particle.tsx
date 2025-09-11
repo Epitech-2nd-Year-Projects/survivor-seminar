@@ -40,22 +40,6 @@ interface ParticlesProps {
   vx?: number
   vy?: number
 }
-function hexToRgb(hex: string): number[] {
-  hex = hex.replace("#", "")
-
-  if (hex.length === 3) {
-    hex = hex
-      .split("")
-      .map((char) => char + char)
-      .join("")
-  }
-
-  const hexInt = parseInt(hex, 16)
-  const red = (hexInt >> 16) & 255
-  const green = (hexInt >> 8) & 255
-  const blue = hexInt & 255
-  return [red, green, blue]
-}
 
 const Particles: React.FC<ParticlesProps> = ({
                                                className = "",
@@ -168,16 +152,16 @@ const Particles: React.FC<ParticlesProps> = ({
     }
   }
 
-  const rgb = hexToRgb(color)
-
   const drawCircle = (circle: Circle, update = false) => {
     if (context.current) {
       const { x, y, translateX, translateY, size, alpha } = circle
       context.current.translate(translateX, translateY)
       context.current.beginPath()
       context.current.arc(x, y, size, 0, 2 * Math.PI)
-      context.current.fillStyle = `rgba(${rgb.join(", ")}, ${alpha})`
+      context.current.globalAlpha = alpha
+      context.current.fillStyle = color || "#ffffff"
       context.current.fill()
+      context.current.globalAlpha = 1
       context.current.setTransform(dpr, 0, 0, dpr, 0, 0)
 
       if (!update) {
