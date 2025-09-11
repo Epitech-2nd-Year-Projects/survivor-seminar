@@ -14,14 +14,14 @@ import { mapUser, type UserDTO } from "../../contracts/users";
 export async function listUsersServer(p?: ListUsersParams, revalidate = 60) {
   const res = await apiFetchServer<ListResponseDTO<UserDTO>>(
     `/users${toUsersQuery(p)}`,
-    { next: { revalidate, tags: ["events"] } },
+    { next: { revalidate, tags: ["users"] } },
   );
   return mapPaginatedUsers(res);
 }
 
 export async function getUserServer(id: number, revalidate = 60) {
   const res = await apiFetchServer<ItemResponseDTO<UserDTO>>(`/users/${id}`, {
-    next: { revalidate, tags: [`event:${id}`] },
+    next: { revalidate, tags: [`user:${id}`] },
   });
   return mapUser(res.data);
 }

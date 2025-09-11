@@ -17,7 +17,7 @@ export async function listPartnersServer(
 ) {
   const res = await apiFetchServer<ListResponseDTO<PartnerDTO>>(
     `/partners${toPartnersQuery(p)}`,
-    { next: { revalidate, tags: ["events"] } },
+    { next: { revalidate, tags: ["partners"] } },
   );
   return mapPaginatedPartners(res);
 }
@@ -25,7 +25,7 @@ export async function listPartnersServer(
 export async function getPartnerServer(id: number, revalidate = 60) {
   const res = await apiFetchServer<ItemResponseDTO<PartnerDTO>>(
     `/partners/${id}`,
-    { next: { revalidate, tags: [`event:${id}`] } },
+    { next: { revalidate, tags: [`partner:${id}`] } },
   );
   return mapPartner(res.data);
 }
