@@ -1,7 +1,7 @@
 app:
   name: jeb-backend
   env: development  # development | staging | production
-  port: 8080
+  port: 1111
   base_url: http://localhost:1111
   version: v1
 
@@ -33,7 +33,7 @@ sync:
 
 logging:
   level: info  # debug | info | warn | error
-  format: json
+  format: text
   request_id: true
 
 metrics:
@@ -60,20 +60,20 @@ security:
 
 storage:
   media:
-    provider: s3 # local | s3 | gcs
+    provider: s3 # local | s3
     local_path: ./uploads
-    public_base_url: https://<your-cloudfront-domain>
+    public_base_url: ${PUBLIC_BASE_URL}
     s3:
-      bucket: <your-bucket-name>
-      region: <aws-region>
-      endpoint: ""
+      bucket: ${S3_BUCKET}
+      region: ${S3_REGION}
+      endpoint: ${S3_ENDPOINT}
       force_path_style: false
 
 notifications:
   email:
     provider: smtp
-    from: <your-mail>
-    smtp_url: <your-smtp-link>
+    from: ${EMAIL_FROM}
+    smtp_url: ${SMTP_URL}
   in_app: true
 
 jobs:

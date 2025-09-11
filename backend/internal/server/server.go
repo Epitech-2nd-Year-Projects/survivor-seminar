@@ -110,8 +110,6 @@ func (s *HTTPServer) registerRoutes() {
 		s.log.WithError(err).Warn("failed to init S3 uploader")
 	}
 
-	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
 	v1routes.RegisterStartups(v1, s.cfg, s.db, s.log)
 	v1routes.RegisterInvestors(v1, s.cfg, s.db, s.log)
 	v1routes.RegisterUsers(v1, s.cfg, s.db, s.log, uploader)

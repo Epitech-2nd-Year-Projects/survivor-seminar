@@ -1,5 +1,8 @@
 MIGRATION_DIR ?= migrations
-DB_URL ?=
+
+-include .env
+DB_URL ?= $(DATABASE_URL)
+
 NAME = back
 
 build:
@@ -9,10 +12,20 @@ migrate-install:
 	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 migrate-up:
+	$(MAKE) check-db-url
 	migrate -path $(MIGRATION_DIR) -database "$(DB_URL)" up
 
 migrate-down:
+	$(MAKE) check-db-url
 	migrate -path $(MIGRATION_DIR) -database "$(DB_URL)" down
+
+check-db-url:
+	@if [ -z "$(DB_URL)" ]; then \
+		echo "Error: DB_URL is not set."; \
+		echo "- Define DATABASE_URL in .env"; \
+		echo "- Or pass DB_URL=postgres://user:pass@host:port/db?sslmode=disable"; \
+		exit 1; \
+	fi
 
 test:
 	go test ./... -coverprofile=coverage.out
@@ -26,3 +39,5 @@ openapi-install:
 
 openapi:
 	swag init -g ./cmd/jeb/main.go -o ./docs --outputTypes yaml --parseInternal
+
+.PHONY: check-db-url openapi openapi-install cover-html test check-db-url migrate-down migrate-up migrate-install build

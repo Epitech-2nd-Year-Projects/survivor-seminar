@@ -1,9 +1,13 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -143,15 +147,22 @@ type FeaturesConfig struct {
 }
 
 func NewConfig() (*Config, error) {
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./configs")
-	viper.SetConfigName("config")
+	_ = loadDotEnv(".env")
 
-	if err := viper.ReadInConfig(); err != nil {
-		viper.SetConfigName("config.example")
-		if err2 := viper.ReadInConfig(); err2 != nil {
-			return nil, fmt.Errorf("viper.ReadInConfig(): %w", err)
-		}
+	cfgPath, err := resolveConfigPath()
+	if err != nil {
+		return nil, err
+	}
+
+	raw, err := os.ReadFile(cfgPath)
+	if err != nil {
+		return nil, fmt.Errorf("read config file %s: %w", cfgPath, err)
+	}
+	expanded := os.ExpandEnv(string(raw))
+
+	viper.SetConfigType("yaml")
+	if err := viper.ReadConfig(bytes.NewBufferString(expanded)); err != nil {
+		return nil, fmt.Errorf("viper.ReadConfig(): %w", err)
 	}
 
 	var config *Config
@@ -162,4 +173,45 @@ func NewConfig() (*Config, error) {
 	}
 
 	return config, nil
+}
+
+// resolveConfigPath returns the best available config file path
+// Preference order: configs/config.yaml, configs/config.example.yaml
+func resolveConfigPath() (string, error) {
+	primary := filepath.Join("configs", "config.yaml")
+	if _, err := os.Stat(primary); err == nil {
+		return primary, nil
+	}
+	fallback := filepath.Join("configs", "config.example.yaml")
+	if _, err := os.Stat(fallback); err == nil {
+		return fallback, nil
+	}
+	return "", fmt.Errorf("no config file found (looked for %s and %s)", primary, fallback)
+}
+
+// loadDotEnv loads KEY=VALUE pairs from a .env file into the process environment
+func loadDotEnv(path string) error {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	lines := strings.Split(string(b), "\n")
+	for _, ln := range lines {
+		ln = strings.TrimSpace(ln)
+		if ln == "" || strings.HasPrefix(ln, "#") {
+			continue
+		}
+		if strings.HasPrefix(ln, "export ") {
+			ln = strings.TrimSpace(strings.TrimPrefix(ln, "export "))
+		}
+		kv := strings.SplitN(ln, "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		key := strings.TrimSpace(kv[0])
+		val := strings.TrimSpace(kv[1])
+		val = strings.Trim(val, "\"'")
+		_ = os.Setenv(key, val)
+	}
+	return nil
 }
