@@ -12,7 +12,10 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { userMessageFromError } from "@/lib/api/http/messages";
-import { useStartup } from "@/lib/api/services/startups/hooks";
+import {
+  useIncrementStartupViews,
+  useStartup,
+} from "@/lib/api/services/startups/hooks";
 import { generateStartupPdf } from "@/lib/generate-pdf";
 import {
   DownloadIcon,
@@ -22,7 +25,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { use } from "react";
+import { use, useEffect, useRef } from "react";
 
 type StartupPageProps = {
   params: Promise<{ id: string }>;
@@ -33,6 +36,16 @@ export default function StartupPage({ params }: StartupPageProps) {
   const projectId = Number(projectSlug);
 
   const { data, isLoading, isError, error } = useStartup(projectId);
+  const { mutate: incrementViews } = useIncrementStartupViews(projectId);
+
+  const didIncrement = useRef(false);
+
+  useEffect(() => {
+    if (data && !didIncrement.current) {
+      incrementViews();
+      didIncrement.current = true;
+    }
+  }, [data, incrementViews]);
 
   if (isError) {
     console.log(error);
