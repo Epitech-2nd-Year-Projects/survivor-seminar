@@ -10,14 +10,14 @@ import { mapNews, type NewsDTO } from "../../contracts/news";
 export async function listNewsServer(p?: ListNewsParams, revalidate = 60) {
   const res = await apiFetchServer<ListResponseDTO<NewsDTO>>(
     `/news${toNewsQuery(p)}`,
-    { next: { revalidate, tags: ["events"] } },
+    { next: { revalidate, tags: ["news"] } },
   );
   return mapPaginatedNews(res);
 }
 
 export async function getInvestorServer(id: number, revalidate = 60) {
   const res = await apiFetchServer<ItemResponseDTO<NewsDTO>>(`/news/${id}`, {
-    next: { revalidate, tags: [`event:${id}`] },
+    next: { revalidate, tags: [`news:${id}`] },
   });
   return mapNews(res.data);
 }

@@ -20,7 +20,7 @@ export async function listOpportunitiesServer(
 ) {
   const res = await apiFetchServer<ListResponseDTO<OpportunityDTO>>(
     `/opportunities${toOpportunitiesQuery(p)}`,
-    { next: { revalidate, tags: ["events"] } },
+    { next: { revalidate, tags: ["opportunities"] } },
   );
   return mapPaginatedOpportunities(res);
 }
@@ -28,7 +28,7 @@ export async function listOpportunitiesServer(
 export async function getOpportunityServer(id: number, revalidate = 60) {
   const res = await apiFetchServer<ItemResponseDTO<OpportunityDTO>>(
     `/opportunities/${id}`,
-    { next: { revalidate, tags: [`event:${id}`] } },
+    { next: { revalidate, tags: [`opportunity:${id}`] } },
   );
   return mapOpportunity(res.data);
 }

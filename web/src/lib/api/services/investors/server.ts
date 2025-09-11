@@ -17,7 +17,7 @@ export async function listInvestorsServer(
 ) {
   const res = await apiFetchServer<ListResponseDTO<InvestorDTO>>(
     `/investors${toInvestorsQuery(p)}`,
-    { next: { revalidate, tags: ["events"] } },
+    { next: { revalidate, tags: ["investors"] } },
   );
   return mapPaginatedInvestors(res);
 }
@@ -25,7 +25,7 @@ export async function listInvestorsServer(
 export async function getInvestorServer(id: number, revalidate = 60) {
   const res = await apiFetchServer<ItemResponseDTO<InvestorDTO>>(
     `/investors/${id}`,
-    { next: { revalidate, tags: [`event:${id}`] } },
+    { next: { revalidate, tags: [`investor:${id}`] } },
   );
   return mapInvestor(res.data);
 }

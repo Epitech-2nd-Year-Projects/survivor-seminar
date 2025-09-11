@@ -17,7 +17,7 @@ export async function listStartupsServer(
 ) {
   const res = await apiFetchServer<ListResponseDTO<StartupDTO>>(
     `/startups${toStartupsQuery(p)}`,
-    { next: { revalidate, tags: ["events"] } },
+    { next: { revalidate, tags: ["startups"] } },
   );
   return mapPaginatedStartups(res);
 }
@@ -25,7 +25,7 @@ export async function listStartupsServer(
 export async function getStartupServer(id: number, revalidate = 60) {
   const res = await apiFetchServer<ItemResponseDTO<StartupDTO>>(
     `/startups/${id}`,
-    { next: { revalidate, tags: [`event:${id}`] } },
+    { next: { revalidate, tags: [`startup:${id}`] } },
   );
   return mapStartup(res.data);
 }
