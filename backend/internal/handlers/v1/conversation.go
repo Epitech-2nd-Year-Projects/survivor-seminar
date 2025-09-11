@@ -116,7 +116,7 @@ func (h *ConversationsHandler) GetConversations(c *gin.Context) {
 		return
 	}
 
-	var result []response.ConversationWithUnreadCountResponse
+	result := make([]response.ConversationWithUnreadCountResponse, 0)
 	for _, conv := range conversations {
 		unreadCount := h.getUnreadCount(claims.UserID, conv.ID)
 		result = append(result, response.ConversationWithUnreadCountResponse{
