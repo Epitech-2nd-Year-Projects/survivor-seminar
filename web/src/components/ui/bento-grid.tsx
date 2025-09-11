@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { CheckCircle, Clock, Star, TrendingUp, Video, Globe, Mail, Phone } from "lucide-react";
+import { CheckCircle, TrendingUp, Video, Globe, Mail, Phone } from "lucide-react";
 import Link from "next/link";
 
 export interface BentoItem {
@@ -71,7 +71,7 @@ function BentoGrid({ items = itemsSample, className }: BentoGridProps) {
           "group relative overflow-hidden rounded-xl p-4 transition-all duration-300",
           "border border-border bg-card/50 backdrop-blur-sm text-card-foreground",
           "hover:shadow-md hover:-translate-y-0.5 will-change-transform",
-          item.colSpan || "col-span-1",
+          item.colSpan ?? "col-span-1",
           item.colSpan === 2 ? "md:col-span-2" : "",
           { "shadow-md -translate-y-0.5": item.hasPersistentHover },
         );
@@ -116,7 +116,7 @@ function BentoGrid({ items = itemsSample, className }: BentoGridProps) {
                     "transition-colors duration-300 group-hover:bg-muted/30",
                   )}
                 >
-                  {item.status || "Active"}
+                  {item.status ?? "Active"}
                 </span>
               </div>
 
@@ -145,7 +145,7 @@ function BentoGrid({ items = itemsSample, className }: BentoGridProps) {
                 </div>
                 {/* Bottom-right: hover Explore CTA */}
                 <span className="text-xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-                  {item.cta || "Explore →"}
+                  {item.cta ?? "Explore →"}
                 </span>
               </div>
             </div>
