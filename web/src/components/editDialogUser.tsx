@@ -22,15 +22,12 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-import {
-  mapUserRoleLabel,
-  UserRole,
-  type User,
-} from "@/lib/api/contracts/users";
+import type { User } from "@/lib/api/contracts/users";
 import type { UpdateUserBody } from "@/lib/api/services/users/client";
 
-type Role = UserRole;
-const allRoles = Object.values(UserRole);
+type Role = "admin" | "manager" | "member" | "viewer";
+const isRole = (v: string): v is Role =>
+  v === "admin" || v === "manager" || v === "member" || v === "viewer";
 
 type Props = {
   open: boolean;
@@ -62,12 +59,6 @@ const fileToBase64 = (file: File) =>
     reader.readAsDataURL(file);
   });
 
-function getExistingStartupId(u: User | null): number | undefined {
-  if (!u) return undefined;
-  const sid = (u as unknown as { startup_id?: unknown }).startup_id;
-  return typeof sid === "number" ? sid : undefined;
-}
-
 export default function EditDialogUser({
   open,
   onOpenChange,
@@ -76,22 +67,15 @@ export default function EditDialogUser({
   description = "Edit the user's data",
 }: Props) {
   const [role, setRole] = React.useState<Role | undefined>(undefined);
-
-  const [startupId, setStartupId] = React.useState<number | undefined>(
-    undefined,
-  );
-  const [startupErr, setStartupErr] = React.useState<string | null>(null);
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const [filePreviewUrl, setFilePreviewUrl] = React.useState<string>();
-
   const [pwError, setPwError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    setRole(user?.role);
+    setRole(undefined);
     setSelectedFile(null);
     setPwError(null);
-    setStartupErr(null);
-    setStartupId(undefined);
+    setFilePreviewUrl(undefined);
   }, [user?.id]);
 
   React.useEffect(() => {
@@ -123,12 +107,6 @@ export default function EditDialogUser({
 
   const previewUrl = filePreviewUrl;
 
-  const shouldShowStartupField =
-    (role ?? (isRole(user?.role ?? "") ? (user?.role as Role) : undefined)) ===
-    "founder";
-
-  const existingStartupId = getExistingStartupId(user);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -149,8 +127,8 @@ export default function EditDialogUser({
             const emailInput = getFDString(fd, "email").trim();
             const pwd = getFDString(fd, "password");
             const pwdConfirm = getFDString(fd, "password_confirm");
-
             const wantsPwdChange = pwd.length > 0 && pwdConfirm.length > 0;
+
             if (wantsPwdChange) {
               if (pwd !== pwdConfirm) {
                 setPwError("Passwords do not match.");
@@ -160,25 +138,9 @@ export default function EditDialogUser({
             } else {
               setPwError(null);
             }
-
             const finalRole: Role =
               role ?? (isRole(user.role) ? user.role : "member");
-
-            const switchingToFounder =
-              user.role !== "founder" && finalRole === "founder";
-            if (finalRole === "founder") {
-              const chosenOrExisting =
-                typeof startupId === "number" ? startupId : existingStartupId;
-              if (switchingToFounder && typeof chosenOrExisting !== "number") {
-                setStartupErr("Please select a startup_id.");
-                return;
-              }
-              setStartupErr(null);
-            } else {
-              setStartupErr(null);
-            }
-
-            const body: UpdateUserBody = {};
+            const body: UpdateUserBody = {} as UpdateUserBody;
 
             if (nameInput && nameInput !== user.name) body.name = nameInput;
             if (emailInput && emailInput !== user.email)
@@ -189,16 +151,13 @@ export default function EditDialogUser({
             if (selectedFile) {
               const base64 = await fileToBase64(selectedFile);
               body.image = base64;
+              console.log(
+                "file to upload as base64:",
+                base64.slice(0, 30) + "...",
+              );
+              console.log("Full base64:", base64);
             }
-
-            if (finalRole === "founder" && typeof startupId === "number") {
-              if (startupId !== existingStartupId) {
-                body.startup_id = startupId;
-              }
-            }
-
             if (Object.keys(body).length === 0) return;
-
             await onSubmit(user.id, body);
           }}
         >
@@ -227,47 +186,21 @@ export default function EditDialogUser({
 
           <div className="grid gap-2">
             <Label>Role</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
+            <Select
+              value={role}
+              onValueChange={(v) => setRole(isRole(v) ? v : undefined)}
+            >
               <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    user ? mapUserRoleLabel(user.role) : "Select a role"
-                  }
-                />
+                <SelectValue placeholder={user?.role ?? "Select a role"} />
               </SelectTrigger>
               <SelectContent>
-                {allRoles.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {mapUserRoleLabel(r)}
-                  </SelectItem>
-                ))}
+                <SelectItem value="admin">admin</SelectItem>
+                <SelectItem value="manager">manager</SelectItem>
+                <SelectItem value="member">member</SelectItem>
+                <SelectItem value="viewer">viewer</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          {shouldShowStartupField ? (
-            <div className="grid gap-2">
-              <Label htmlFor="startup_id">Startup ID</Label>
-              <Input
-                id="startup_id"
-                name="startup_id"
-                type="number"
-                inputMode="numeric"
-                placeholder={
-                  typeof existingStartupId === "number"
-                    ? String(existingStartupId)
-                    : "Enter startup id"
-                }
-                onChange={(e) => {
-                  const n = Number(e.currentTarget.value);
-                  setStartupId(Number.isFinite(n) ? n : undefined);
-                }}
-              />
-              {startupErr ? (
-                <p className="text-destructive text-sm">{startupErr}</p>
-              ) : null}
-            </div>
-          ) : null}
 
           <div className="grid gap-2">
             <Label htmlFor="password">New password (optional)</Label>
@@ -293,6 +226,7 @@ export default function EditDialogUser({
 
           <div className="grid gap-3">
             <Label>Profile picture</Label>
+
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
                 {previewUrl ? (
@@ -306,6 +240,7 @@ export default function EditDialogUser({
                 {previewUrl ? "Preview" : "No picture chosen"}
               </span>
             </div>
+
             <div className="grid gap-2">
               <Label htmlFor="image_file">Upload an image (PNG/JPG/SVG)</Label>
               <Input
