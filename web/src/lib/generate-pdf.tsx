@@ -156,9 +156,9 @@ function StartupPdfTemplate(props: { s: Startup; logoUrl?: string }) {
   ];
 
   const chips: string[] = [
-    s.sector || "",
-    s.maturity || "",
-    s.projectStatus || "",
+    s.sector ?? "",
+    s.maturity ?? "",
+    s.projectStatus ?? "",
   ].filter(Boolean);
 
   return (
@@ -181,8 +181,9 @@ function StartupPdfTemplate(props: { s: Startup; logoUrl?: string }) {
             ) : null}
           </div>
           <div className="pdf-logo-wrap">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={logoUrl || "/LoginImage.png"}
+              src={logoUrl ?? "/LoginImage.png"}
               alt="Logo"
               className="pdf-logo"
               crossOrigin="anonymous"
@@ -216,9 +217,7 @@ function StartupPdfTemplate(props: { s: Startup; logoUrl?: string }) {
           <div className="pdf-card">
             <div className="pdf-section">
               <h3 className="pdf-section-title">Summary</h3>
-              <p className="pdf-text">
-                {s.description || "No description provided."}
-              </p>
+              <p className="pdf-text">{s.description ?? "No description provided."}</p>
             </div>
             {(website || social) ? (
               <div className="pdf-section">
@@ -333,7 +332,7 @@ export async function generateStartupPdf(
   const contentWidthPx = opts.contentWidthPx ?? Math.round(pageWidthPt / pxToPt);
 
   const fileName =
-    opts.fileName ?? `${safeFileName(startup.name || "startup")}-profile.pdf`;
+    opts.fileName ?? `${safeFileName(startup.name ?? "startup")}-profile.pdf`;
 
   const host = document.createElement("div");
   Object.assign(host.style, {
