@@ -3,6 +3,7 @@ package response
 import (
 	"time"
 
+	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -52,6 +53,14 @@ type TopProjectsResponse struct {
 	Count       int          `json:"count" example:"3"`
 	TopProjects []TopProject `json:"top_projects"`
 	GeneratedAt time.Time    `json:"generated_at" example:"2025-09-10T18:24:00Z"`
+}
+
+type FounderObjectResponse struct {
+	Data models.Founder `json:"data"`
+}
+type FounderListResponse struct {
+	Data       []models.Founder `json:"data"`
+	Pagination PageMeta         `json:"pagination"`
 }
 
 func JSON(c *gin.Context, status int, data interface{}) {
