@@ -11,11 +11,11 @@ import {
 import { mapUser, type UserDTO } from "../../contracts/users";
 
 export type CreateUserBody = {
-  id: number;
   email: string;
   name: string;
   role: string;
   password: string;
+  startup_id?: number;
   image?: string;
 };
 
