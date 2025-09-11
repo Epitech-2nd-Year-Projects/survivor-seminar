@@ -329,7 +329,7 @@ func (h *ConversationsHandler) GetMessages(c *gin.Context) {
 	if err := h.db.
 		Preload("Sender").
 		Where("conversation_id = ? AND deleted_at IS NULL", id).
-		Order("created_at DESC").
+		Order("created_at ASC").
 		Offset(offset).
 		Limit(params.PerPage).
 		Find(&messages).Error; err != nil {
