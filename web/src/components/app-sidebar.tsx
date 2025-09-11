@@ -21,11 +21,8 @@ import {
 import {
   LayoutDashboard,
   Mail,
-  MilestoneIcon,
   NotebookTextIcon,
-  Pencil,
   ShieldUser,
-  Users,
 } from "lucide-react";
 import { useMe } from "@/lib/api/services/auth/hooks";
 import { UserRole } from "@/lib/api/contracts/users";
@@ -38,7 +35,7 @@ type NavItem = {
 
 type NavGroup = {
   title: string;
-  requiredRole?: UserRole;
+  allowedRoles?: UserRole[];
   items: NavItem[];
 };
 
@@ -48,9 +45,13 @@ const navData: {
   navMain: [
     {
       title: "Admin",
-      requiredRole: UserRole.Admin,
+      allowedRoles: [UserRole.Admin],
       items: [
-        { title: "Dashboard", href: "/dashboard/", icon: <LayoutDashboard /> },
+        {
+          title: "Statistics",
+          href: "/dashboard/statistics",
+          icon: <LayoutDashboard />,
+        },
         {
           title: "Back Office",
           href: "/dashboard/back-office",
@@ -60,13 +61,19 @@ const navData: {
     },
     {
       title: "Startup",
-      requiredRole: UserRole.Founder,
+      allowedRoles: [UserRole.Admin, UserRole.Founder],
       items: [
         {
           title: "My Profile",
           href: "/dashboard/my-profile",
           icon: <NotebookTextIcon />,
         },
+      ],
+    },
+    {
+      title: "Messaging",
+      allowedRoles: [UserRole.Admin, UserRole.Investor, UserRole.Founder],
+      items: [
         {
           title: "Conversations",
           href: "/dashboard/conversations",
@@ -77,10 +84,10 @@ const navData: {
   ],
 };
 
-function canAccessGroup(userRole: UserRole, groupRole?: UserRole) {
-  if (!groupRole) return true;
-  if (userRole === UserRole.Admin) return true;
-  return userRole === groupRole;
+function canAccessGroup(userRole: UserRole, groupRoles?: UserRole[]) {
+  if (!groupRoles) return true;
+  const groupRole = groupRoles.find((role) => role === userRole);
+  return groupRole !== undefined;
 }
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
@@ -112,7 +119,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader></SidebarHeader>
       <SidebarContent>
         {navData.navMain
-          .filter((group) => canAccessGroup(user.role, group.requiredRole))
+          .filter((group) => canAccessGroup(user.role, group.allowedRoles))
           .map((group) => (
             <SidebarGroup key={group.title}>
               <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
