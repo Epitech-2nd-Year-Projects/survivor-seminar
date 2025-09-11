@@ -42,6 +42,12 @@ export async function getStartupClient(id: number) {
   return mapStartup(res.data);
 }
 
+export async function incrementStartupViewsClient(id: number) {
+  await apiFetchClient<void>(`/startups/${id}/views`, {
+    method: "POST",
+  });
+}
+
 export async function createStartupClient(body: CreateStartupBody) {
   const res = await apiFetchClient<ItemResponseDTO<StartupDTO>>(
     `/admin/startups`,

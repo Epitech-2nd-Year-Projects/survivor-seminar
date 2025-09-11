@@ -13,6 +13,7 @@ export type StartupDTO = {
   needs?: string | null;
   sector?: string | null;
   maturity?: string | null;
+  views_count: number;
 };
 
 export type Startup = {
@@ -30,6 +31,7 @@ export type Startup = {
   needs?: string | null;
   sector?: string | null;
   maturity?: string | null;
+  viewsCount: number;
 };
 
 export const mapStartup = (dto: StartupDTO): Startup => ({
@@ -47,4 +49,5 @@ export const mapStartup = (dto: StartupDTO): Startup => ({
   needs: dto.needs,
   sector: dto.sector,
   maturity: dto.maturity,
+  viewsCount: dto.views_count,
 });

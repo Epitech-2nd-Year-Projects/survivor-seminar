@@ -12,6 +12,7 @@ import {
   createStartupClient,
   deleteStartupClient,
   getStartupClient,
+  incrementStartupViewsClient,
   listStartupsClient,
   updateStartupClient,
   type CreateStartupBody,
@@ -49,6 +50,18 @@ export function useStartup(id: number, opts?: { redirectOn401?: boolean }) {
     queryFn: () => getStartupClient(id),
     placeholderData: keepPreviousData,
     meta: { redirectOn401: Boolean(opts?.redirectOn401) },
+  });
+}
+
+export function useIncrementStartupViews(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => incrementStartupViewsClient(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: startupsKeys.detail(id) }).catch(
+        console.error,
+      );
+    },
   });
 }
 
