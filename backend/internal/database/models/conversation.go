@@ -4,7 +4,7 @@ import "time"
 
 type Conversation struct {
 	// Unique conversation identifier
-	ID uint64 `json:"id" gorm:"primaryKey;autoIncrement" example:"1"`
+	ID uint64 `json:"id" gorm:"primaryKey" example:"1"`
 	// Conversation title (optional, useful for group chats)
 	Title *string `json:"title,omitempty" gorm:"type:varchar(255)" example:"Project Discussion"`
 	// Whether this is a group conversation

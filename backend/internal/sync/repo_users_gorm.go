@@ -48,6 +48,7 @@ func (r *GormUsersRepo) UpsertBatch(ctx context.Context, items []UpstreamItem) e
 		}
 
 		m := models.User{
+			ID:           id64,
 			Email:        email,
 			Name:         getString(it.Payload, "name"),
 			Role:         getString(it.Payload, "role"),

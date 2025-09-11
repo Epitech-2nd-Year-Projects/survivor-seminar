@@ -4,7 +4,7 @@ import "time"
 
 type MessageRead struct {
 	// Unique read identifier
-	ID uint64 `json:"id" gorm:"primaryKey;autoIncrement" example:"1"`
+	ID uint64 `json:"id" gorm:"primaryKey" example:"1"`
 	// Message ID
 	MessageID uint64 `json:"message_id" gorm:"not null;index" example:"1"`
 	// User ID who read the message

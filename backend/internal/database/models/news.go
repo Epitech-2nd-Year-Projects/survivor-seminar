@@ -4,7 +4,7 @@ import "time"
 
 type News struct {
 	// Unique news identifier
-	ID uint64 `json:"id" gorm:"primaryKey;autoIncrement" example:"1"`
+	ID uint64 `json:"id" gorm:"primaryKey" example:"1"`
 	// Title
 	Title string `json:"title" gorm:"type:varchar(255);not null" example:"Funding round"`
 	// Publication date

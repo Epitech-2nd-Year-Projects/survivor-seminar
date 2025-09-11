@@ -40,6 +40,7 @@ func (r *GormNewsRepo) UpsertBatch(ctx context.Context, items []UpstreamItem) er
 		}
 
 		m := models.News{
+			ID:          id64,
 			Title:       getString(it.Payload, "title"),
 			Location:    getStringPtr(it.Payload, "location"),
 			Category:    getStringPtr(it.Payload, "category"),
