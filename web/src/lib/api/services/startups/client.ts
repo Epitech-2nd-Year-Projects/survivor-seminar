@@ -11,7 +11,6 @@ import {
 import { mapStartup, type StartupDTO } from "../../contracts/startups";
 
 export type CreateStartupBody = {
-  id: number;
   name: string;
   email?: string | null;
   phone?: string | null;

@@ -15,6 +15,7 @@ import {
   listEventsClient,
   updateEventClient,
   type CreateEventBody,
+  type UpdateEventBody,
 } from "./client";
 import type { ListEventsParams } from "./shared";
 
@@ -59,7 +60,7 @@ export function useCreateEvent() {
 export function useUpdateEvent(id: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: CreateEventBody) => updateEventClient(id, body),
+    mutationFn: (body: UpdateEventBody) => updateEventClient(id, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: eventsKeys.all }).catch(console.error);
       qc.invalidateQueries({ queryKey: eventsKeys.detail(id) }).catch(

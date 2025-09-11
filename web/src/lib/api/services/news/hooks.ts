@@ -15,6 +15,7 @@ import {
   listNewsClient,
   updateNewsClient,
   type CreateNewsBody,
+  type UpdateNewsBody,
 } from "./client";
 import type { ListNewsParams } from "./shared";
 
@@ -59,7 +60,7 @@ export function useCreateNews() {
 export function useUpdateNews(id: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: CreateNewsBody) => updateNewsClient(id, body),
+    mutationFn: (body: UpdateNewsBody) => updateNewsClient(id, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: newsKeys.all }).catch(console.error);
       qc.invalidateQueries({ queryKey: newsKeys.detail(id) }).catch(

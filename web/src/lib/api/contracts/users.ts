@@ -5,6 +5,7 @@ export type UserDTO = {
   role: string;
   founder_id?: number | null;
   investor_id?: number | null;
+  startup_id?: number | null;
   image_url?: string | null;
   email_verified: boolean;
   created_at: string;
@@ -18,6 +19,7 @@ export type User = {
   role: string;
   founderId?: number | null;
   investorId?: number | null;
+  startupId?: number | null;
   imageUrl?: string | null;
   emailVerified: boolean;
   createdAt: Date;
