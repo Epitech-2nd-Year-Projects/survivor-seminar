@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "next-themes";
 import { Particles } from "@/components/ui/particle";
 
@@ -9,12 +9,15 @@ export function LandingParticles() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Avoid hydration mismatch; choose color after mount
-  // Higher contrast for readability: bright in dark mode, darker in light mode
-  const color = resolvedTheme === "dark" ? "#ffffff" : "#0f172a";
+  const color = useMemo(() => {
+    if (!mounted) return undefined;
+    const root = document.documentElement;
+    const v = getComputedStyle(root).getPropertyValue("--primary").trim();
+    return v || (resolvedTheme === "dark" ? "#ffffff" : "#0f172a");
+  }, [mounted, resolvedTheme]);
 
   return (
-    <div className="absolute inset-0 -z-10">
+    <div className="fixed inset-0 -z-10 pointer-events-none">
       {mounted ? (
         <Particles
           className="absolute inset-0"

@@ -27,7 +27,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
-import type { User } from "@/lib/api/contracts/users";
+import {
+  mapUserRoleLabel,
+  UserRole,
+  type User,
+} from "@/lib/api/contracts/users";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type Props = {
@@ -170,14 +174,14 @@ export default function UsersTable({
                       <TableCell className="hidden md:table-cell">
                         <Badge
                           variant={
-                            user.role === "manager"
+                            user.role === UserRole.Founder
                               ? "secondary"
-                              : user.role === "member"
+                              : user.role === UserRole.Investor
                                 ? "outline"
                                 : "default"
                           }
                         >
-                          {user.role}
+                          {mapUserRoleLabel(user.role)}
                         </Badge>
                       </TableCell>
 

@@ -35,7 +35,7 @@ export function RegisterForm({
     const email = getString(form, "email");
     const name = getString(form, "name");
     const password = getString(form, "password");
-    const role = "investor";
+    const role = "founder";
 
     try {
       await mutateAsync({ email, password, name, role });

@@ -12,7 +12,11 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { userMessageFromError } from "@/lib/api/http/messages";
-import { useStartup } from "@/lib/api/services/startups/hooks";
+import {
+  useIncrementStartupViews,
+  useStartup,
+} from "@/lib/api/services/startups/hooks";
+import { generateStartupPdf } from "@/lib/generate-pdf";
 import {
   DownloadIcon,
   GlobeIcon,
@@ -21,7 +25,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { use } from "react";
+import { use, useEffect, useRef } from "react";
 
 type StartupPageProps = {
   params: Promise<{ id: string }>;
@@ -32,6 +36,16 @@ export default function StartupPage({ params }: StartupPageProps) {
   const projectId = Number(projectSlug);
 
   const { data, isLoading, isError, error } = useStartup(projectId);
+  const { mutate: incrementViews } = useIncrementStartupViews(projectId);
+
+  const didIncrement = useRef(false);
+
+  useEffect(() => {
+    if (data && !didIncrement.current) {
+      incrementViews();
+      didIncrement.current = true;
+    }
+  }, [data, incrementViews]);
 
   if (isError) {
     console.log(error);
@@ -113,16 +127,6 @@ export default function StartupPage({ params }: StartupPageProps) {
     notFound();
   }
 
-  const exportPDF = () => {
-    const url = "/pitch-deck.pdf";
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "pitch-deck.pdf");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div className="flex flex-col gap-4">
       <div>
@@ -152,7 +156,12 @@ export default function StartupPage({ params }: StartupPageProps) {
                   {data.address}
                 </Badge>
               ) : null}
-              <Button variant="secondary" onClick={exportPDF}>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  generateStartupPdf(data, { fileName: "startup-profile.pdf" })
+                }
+              >
                 <DownloadIcon className="h-4 w-4" />
                 Export PDF
               </Button>

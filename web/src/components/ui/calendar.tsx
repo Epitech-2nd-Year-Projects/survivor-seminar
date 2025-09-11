@@ -41,7 +41,7 @@ function Calendar({
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+          date.toLocaleString("fr-FR", { month: "short" }),
         ...formatters,
       }}
       classNames={{
@@ -194,7 +194,8 @@ function CalendarDayButton({
       ref={ref}
       variant="ghost"
       size="icon"
-      data-day={day.date.toLocaleDateString()}
+      // Stable, locale-agnostic identifier for day cells to prevent hydration mismatches
+      data-day={day.date.toISOString().slice(0, 10)}
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&

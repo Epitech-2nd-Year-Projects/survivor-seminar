@@ -24,6 +24,17 @@ func NewStatisticsHandler(db *gorm.DB, log *logrus.Logger) *StatisticsHandler {
 	}
 }
 
+// GetStatistics godoc
+// @Summary      Get general statistics
+// @Description  Retrieves various statistics about projects and engagement.
+// @Tags         Admin/Statistics
+// @Security     CookieAuth
+// @Param        period  query string false "Time period for growth calculation" Enums(weekly,monthly) default(weekly)
+// @Success      200 {object} response.StatisticsResponse
+// @Failure      401 {object} response.ErrorBody
+// @Failure      403 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/statistics [get]
 func (h *StatisticsHandler) GetStatistics(c *gin.Context) {
 	period := c.DefaultQuery("period", "weekly")
 
@@ -75,6 +86,18 @@ func (h *StatisticsHandler) GetStatistics(c *gin.Context) {
 	response.JSON(c, http.StatusOK, stats)
 }
 
+// GetTopProjects godoc
+// @Summary      Get top projects
+// @Description  Returns a list of top projects based on views count for a given period.
+// @Tags         Admin/Statistics
+// @Security     CookieAuth
+// @Param        limit   query int    false "Number of top projects to return" default(10)
+// @Param        period  query string false "Time period for top projects" Enums(week,month,all) default(week)
+// @Success      200 {object} response.TopProjectsResponse
+// @Failure      401 {object} response.ErrorBody
+// @Failure      403 {object} response.ErrorBody
+// @Failure      500 {object} response.ErrorBody
+// @Router       /admin/statistics/top [get]
 func (h *StatisticsHandler) GetTopProjects(c *gin.Context) {
 	limitStr := c.DefaultQuery("limit", "10")
 	period := c.DefaultQuery("period", "week")

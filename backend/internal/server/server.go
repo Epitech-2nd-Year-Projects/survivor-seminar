@@ -8,6 +8,7 @@ import (
 
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/config"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/database"
+	_ "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/docs"
 	v1handlers "github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/handlers/v1"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/middleware"
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/notifications/email"
@@ -16,6 +17,8 @@ import (
 	"github.com/Epitech-2nd-Year-Projects/survivor-seminar/internal/sync"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 )
 
@@ -106,6 +109,8 @@ func (s *HTTPServer) registerRoutes() {
 	if err != nil {
 		s.log.WithError(err).Warn("failed to init S3 uploader")
 	}
+
+	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	v1routes.RegisterStartups(v1, s.cfg, s.db, s.log)
 	v1routes.RegisterInvestors(v1, s.cfg, s.db, s.log)
