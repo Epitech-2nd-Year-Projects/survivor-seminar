@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { BeamsBackground } from "@/components/ui/beams-background";
 import OpportunitiesClient from "./OpportunitiesClient";
 
 function PageSkeleton() {
@@ -16,8 +17,15 @@ function PageSkeleton() {
 
 export default function OpportunitiesPage() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
-      <OpportunitiesClient />
-    </Suspense>
+    <div className="relative">
+      <BeamsBackground
+        intensity="medium"
+        hue={300}
+        className="pointer-events-none fixed inset-0 -z-10 w-full h-full"
+      />
+      <Suspense fallback={<PageSkeleton />}>
+        <OpportunitiesClient />
+      </Suspense>
+    </div>
   );
 }

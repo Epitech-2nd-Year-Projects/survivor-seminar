@@ -11,6 +11,7 @@ import { AnimatedTestimonials } from "@/components/ui/animated-testimonials";
 import { BentoGrid, BentoCard } from "@/components/magicui/bento-grid";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, FileTextIcon } from "@radix-ui/react-icons";
+import { BeamsBackground } from "@/components/ui/beams-background";
 
 export default async function LandingPage() {
   const [news, events, startups] = await Promise.all([
@@ -32,6 +33,7 @@ export default async function LandingPage() {
   const products = [...newsProducts, ...eventProducts].slice(0, 15);
   return (
     <main className="relative space-y-24">
+      <BeamsBackground hue={300} intensity="medium" className="pointer-events-none fixed inset-0 -z-20 w-full h-full" />
       <LandingParticles />
       <HeroParallax products={products} />
 
