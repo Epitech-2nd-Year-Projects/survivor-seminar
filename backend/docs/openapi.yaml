@@ -390,6 +390,10 @@ definitions:
         example: https://x.com/acme
         format: uri
         type: string
+      views_count:
+        description: Views count
+        example: 0
+        type: integer
       website_url:
         description: Website URL
         example: https://acme.tld
@@ -522,86 +526,6 @@ definitions:
     type: object
   requests.ConversationCreateRequest:
     type: object
-  requests.EventCreateRequest:
-    properties:
-      capacity:
-        description: Capacity (seats)
-        example: 300
-        type: integer
-      description:
-        description: Short description
-        example: Annual conference
-        type: string
-      end_date:
-        description: End date/time (RFC3339)
-        format: date-time
-        type: string
-      event_type:
-        description: Type (conference, meetup, ...)
-        example: conference
-        type: string
-      image_url:
-        description: Image URL
-        example: https://cdn.example.com/events/1.png
-        format: uri
-        type: string
-      location:
-        description: Venue or city
-        example: Paris
-        type: string
-      name:
-        description: Event name
-        example: Conf 2025
-        type: string
-      start_date:
-        description: Start date/time (RFC3339)
-        format: date-time
-        type: string
-      target_audience:
-        description: Intended audience
-        example: Startups
-        type: string
-    type: object
-  requests.EventUpdateRequest:
-    properties:
-      capacity:
-        description: New capacity
-        example: 350
-        type: integer
-      description:
-        description: New description
-        example: Updated agenda
-        type: string
-      end_date:
-        description: New end date/time
-        format: date-time
-        type: string
-      event_type:
-        description: New type
-        example: meetup
-        type: string
-      image_url:
-        description: New image URL
-        example: https://cdn.example.com/events/2.png
-        format: uri
-        type: string
-      location:
-        description: New location
-        example: Lille
-        type: string
-      name:
-        description: New name
-        example: Conf 2025
-        type: string
-      start_date:
-        description: New start date/time
-        format: date-time
-        type: string
-      target_audience:
-        description: New target audience
-        example: Developers
-        type: string
-    type: object
   requests.InvestorCreateRequest:
     properties:
       address:
@@ -703,10 +627,9 @@ definitions:
         description: Body text
         example: Series A raised
         type: string
-      image_url:
-        description: Image URL
-        example: https://cdn.example.com/news/1.png
-        format: uri
+      image:
+        description: Image file (binary upload)
+        format: binary
         type: string
       location:
         description: Location (if relevant)
@@ -725,6 +648,9 @@ definitions:
         description: News title
         example: Funding round
         type: string
+    required:
+    - description
+    - title
     type: object
   requests.NewsUpdateRequest:
     properties:
@@ -736,10 +662,9 @@ definitions:
         description: New body text
         example: Updated description
         type: string
-      image_url:
-        description: New image URL
-        example: https://cdn.example.com/news/2.png
-        format: uri
+      image:
+        description: New image file (binary upload)
+        format: binary
         type: string
       location:
         description: New location
@@ -863,16 +788,32 @@ definitions:
         example: +33 6 12 34 56 78
         type: string
     type: object
-  requests.StartupCreateRequest:
+  requests.StartupUpdateRequest:
     properties:
+      address:
+        description: Mailing address
+        example: 12 Avenue République, Paris
+        type: string
       description:
         description: Short description
-        example: AI platform for SMBs
+        example: New description
         type: string
       email:
         description: Contact email
-        example: contact@acme.tld
+        example: hello@acme.tld
         format: email
+        type: string
+      founders:
+        description: Founders array
+        example:
+        - '["Alice"'
+        - ' "Bob"]'
+        items:
+          type: string
+        type: array
+      legal_status:
+        description: Legal status
+        example: SARL
         type: string
       maturity:
         description: Maturity stage
@@ -880,18 +821,26 @@ definitions:
         - early
         - middle
         - late
-        example: early
+        example: late
         type: string
       name:
-        description: Startup name
-        example: Acme
+        description: New startup name
+        example: Acme Updated
+        type: string
+      needs:
+        description: Stated needs
+        example: Funding only
+        type: string
+      phone:
+        description: Contact phone
+        example: +33 6 12 34 56 78
         type: string
       project_status:
         description: Project status
         enum:
         - ongoing
         - completed
-        example: ongoing
+        example: completed
         type: string
       sector:
         description: Business sector
@@ -899,46 +848,17 @@ definitions:
         - tech
         - health
         - finance
-        example: tech
+        example: finance
         type: string
-    type: object
-  requests.StartupUpdateRequest:
-    properties:
-      description:
-        description: New description
-        example: Updated description
+      social_media_url:
+        description: Social media URL
+        example: https://linkedin.com/acme
+        format: uri
         type: string
-      email:
-        description: New contact email
-        example: hello@acme.tld
-        format: email
-        type: string
-      maturity:
-        description: New maturity
-        enum:
-        - early
-        - middle
-        - late
-        example: middle
-        type: string
-      name:
-        description: New name
-        example: Acme Corp
-        type: string
-      project_status:
-        description: New project status
-        enum:
-        - ongoing
-        - completed
-        example: completed
-        type: string
-      sector:
-        description: New sector
-        enum:
-        - tech
-        - health
-        - finance
-        example: tech
+      website_url:
+        description: Website URL
+        example: https://new-acme.tld
+        format: uri
         type: string
     type: object
   requests.UserCreateRequest:
@@ -948,10 +868,9 @@ definitions:
         example: jane@doe.tld
         format: email
         type: string
-      image_url:
-        description: Optional avatar URL
-        example: https://cdn.example.com/avatars/jane.png
-        format: uri
+      image:
+        description: Avatar image file (binary upload)
+        format: binary
         type: string
       name:
         description: Display name
@@ -960,6 +879,7 @@ definitions:
       password:
         description: Initial password
         example: secret123
+        minLength: 6
         type: string
       role:
         description: Role to assign
@@ -970,6 +890,11 @@ definitions:
         - founder
         example: admin
         type: string
+    required:
+    - email
+    - name
+    - password
+    - role
     type: object
   requests.UserUpdateRequest:
     properties:
@@ -978,10 +903,9 @@ definitions:
         example: jane@newmail.tld
         format: email
         type: string
-      image_url:
-        description: New avatar URL
-        example: https://cdn.example.com/avatars/jane2.png
-        format: uri
+      image:
+        description: New avatar image file (binary upload)
+        format: binary
         type: string
       name:
         description: New display name
@@ -1000,6 +924,11 @@ definitions:
         - founder
         example: user
         type: string
+      startup_id:
+        description: New associated founder profile ID (only if user's role is switch
+          to founder)
+        example: 1
+        type: integer
     type: object
   response.AuthLoginResponse:
     properties:
@@ -1188,6 +1117,27 @@ definitions:
       data:
         $ref: '#/definitions/models.Startup'
     type: object
+  response.StatisticsResponse:
+    properties:
+      engagement_rate_percent:
+        example: 12.3
+        type: number
+      period:
+        example: weekly
+        type: string
+      projects_growth:
+        example: 10
+        type: integer
+      total_projects:
+        example: 123
+        type: integer
+      total_views:
+        example: 4200
+        type: integer
+      views_growth_percent:
+        example: 34.5
+        type: number
+    type: object
   response.SyncStatusResponse:
     properties:
       lastFull:
@@ -1198,6 +1148,46 @@ definitions:
         type: integer
       running:
         type: boolean
+    type: object
+  response.TopProject:
+    properties:
+      comments:
+        example: 12
+        type: integer
+      engagement_rate_percent:
+        example: 23.4
+        type: number
+      likes:
+        example: 45
+        type: integer
+      project_id:
+        example: 1
+        type: integer
+      title:
+        example: My Startup
+        type: string
+      views:
+        example: 120
+        type: integer
+    type: object
+  response.TopProjectsResponse:
+    properties:
+      count:
+        example: 3
+        type: integer
+      generated_at:
+        example: "2025-09-10T18:24:00Z"
+        type: string
+      limit:
+        example: 10
+        type: integer
+      period:
+        example: week
+        type: string
+      top_projects:
+        items:
+          $ref: '#/definitions/response.TopProject'
+        type: array
     type: object
   response.UserListResponse:
     properties:
@@ -1233,15 +1223,46 @@ paths:
   /admin/events:
     post:
       consumes:
-      - application/json
+      - multipart/form-data
       description: Creates an event (admin required).
       parameters:
-      - description: Event
-        in: body
-        name: payload
+      - description: Event name
+        in: formData
+        name: name
         required: true
-        schema:
-          $ref: '#/definitions/requests.EventCreateRequest'
+        type: string
+      - description: Description
+        in: formData
+        name: description
+        type: string
+      - description: Type (conference, meetup, ...)
+        in: formData
+        name: event_type
+        type: string
+      - description: Location
+        in: formData
+        name: location
+        type: string
+      - description: Target audience
+        in: formData
+        name: target_audience
+        type: string
+      - description: Start date (RFC3339)
+        in: formData
+        name: start_date
+        type: string
+      - description: End date (RFC3339)
+        in: formData
+        name: end_date
+        type: string
+      - description: Capacity
+        in: formData
+        name: capacity
+        type: integer
+      - description: Event image
+        in: formData
+        name: image
+        type: file
       produces:
       - application/json
       responses:
@@ -1299,7 +1320,7 @@ paths:
       - Events
     patch:
       consumes:
-      - application/json
+      - multipart/form-data
       description: Updates an event (admin required).
       parameters:
       - description: Event ID
@@ -1307,12 +1328,42 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Fields to update
-        in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/requests.EventUpdateRequest'
+      - description: Event name
+        in: formData
+        name: name
+        type: string
+      - description: Description
+        in: formData
+        name: description
+        type: string
+      - description: Type
+        in: formData
+        name: event_type
+        type: string
+      - description: Location
+        in: formData
+        name: location
+        type: string
+      - description: Audience
+        in: formData
+        name: target_audience
+        type: string
+      - description: Start date (RFC3339)
+        in: formData
+        name: start_date
+        type: string
+      - description: End date (RFC3339)
+        in: formData
+        name: end_date
+        type: string
+      - description: Capacity
+        in: formData
+        name: capacity
+        type: integer
+      - description: Event image
+        in: formData
+        name: image
+        type: file
       produces:
       - application/json
       responses:
@@ -1752,7 +1803,7 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/requests.StartupCreateRequest'
+          $ref: '#/definitions/models.Startup'
       produces:
       - application/json
       responses:
@@ -1852,6 +1903,81 @@ paths:
       summary: Update startup
       tags:
       - Startups
+  /admin/statistics:
+    get:
+      description: Retrieves various statistics about projects and engagement.
+      parameters:
+      - default: weekly
+        description: Time period for growth calculation
+        enum:
+        - weekly
+        - monthly
+        in: query
+        name: period
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StatisticsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+      security:
+      - CookieAuth: []
+      summary: Get general statistics
+      tags:
+      - Admin/Statistics
+  /admin/statistics/top:
+    get:
+      description: Returns a list of top projects based on views count for a given
+        period.
+      parameters:
+      - default: 10
+        description: Number of top projects to return
+        in: query
+        name: limit
+        type: integer
+      - default: week
+        description: Time period for top projects
+        enum:
+        - week
+        - month
+        - all
+        in: query
+        name: period
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.TopProjectsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+      security:
+      - CookieAuth: []
+      summary: Get top projects
+      tags:
+      - Admin/Statistics
   /admin/sync/full:
     post:
       description: Queues a full synchronization.
@@ -2615,6 +2741,81 @@ paths:
       summary: Get event
       tags:
       - Events
+  /founder/startups/{id}:
+    delete:
+      description: Deletes a startup by ID (admin required).
+      parameters:
+      - description: Startup ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+      security:
+      - CookieAuth: []
+      summary: Delete startup
+      tags:
+      - Startups
+    patch:
+      consumes:
+      - application/json
+      description: Updates a startup by ID (admin required).
+      parameters:
+      - description: Startup ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fields to update
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/requests.StartupUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StartupObjectResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+      security:
+      - CookieAuth: []
+      summary: Update startup
+      tags:
+      - Startups
   /health:
     get:
       description: Returns dependencies state (DB, etc.), uptime, environment and
@@ -2717,31 +2918,6 @@ paths:
       summary: Get investor
       tags:
       - Investors
-  /me:
-    get:
-      description: Returns the current authenticated user's profile.
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.UserObjectResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.ErrorBody'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.ErrorBody'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrorBody'
-      security:
-      - CookieAuth: []
-      summary: My profile
-      tags:
-      - Users
   /news:
     get:
       description: Returns a paginated list of news with filters and sorting.
@@ -3092,6 +3268,31 @@ paths:
       summary: Get startup
       tags:
       - Startups
+  /startups/{id}/views:
+    post:
+      description: Increments the views counter of a startup.
+      parameters:
+      - description: Startup ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StartupObjectResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+      summary: Increment views count
+      tags:
+      - Startups
   /users:
     get:
       description: Returns a paginated list of users with optional filters.
@@ -3219,6 +3420,31 @@ paths:
       security:
       - CookieAuth: []
       summary: Get user by email
+      tags:
+      - Users
+  /users/me:
+    get:
+      description: Returns the current authenticated user's profile.
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.UserObjectResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorBody'
+      security:
+      - CookieAuth: []
+      summary: My profile
       tags:
       - Users
 swagger: "2.0"

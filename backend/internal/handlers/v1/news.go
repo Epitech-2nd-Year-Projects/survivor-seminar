@@ -162,6 +162,7 @@ func (h *NewsHandler) GetNewsItem(c *gin.Context) {
 // @Failure      500 {object} response.ErrorBody
 // @Router       /admin/news [post]
 func (h *NewsHandler) CreateNews(c *gin.Context) {
+	_ = h.alignNewsSequence()
 	var req struct {
 		Title       string  `json:"title" binding:"required"`
 		NewsDate    *string `json:"news_date,omitempty"`
@@ -220,6 +221,19 @@ func (h *NewsHandler) CreateNews(c *gin.Context) {
 		"message": "news created successfully",
 		"data":    news,
 	})
+}
+
+func (h *NewsHandler) alignNewsSequence() error {
+	sql := `SELECT setval(
+        pg_get_serial_sequence('news','id'),
+        COALESCE((SELECT MAX(id) FROM news), 0) + 1,
+        false
+    )`
+	if err := h.db.Exec(sql).Error; err != nil {
+		h.log.WithError(err).Warn("alignNewsSequence failed")
+		return err
+	}
+	return nil
 }
 
 // UpdateNews godoc

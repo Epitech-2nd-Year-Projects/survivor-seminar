@@ -81,6 +81,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	_ = h.alignUserSequence()
+
 	hash, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	u := models.User{
 		Email:        req.Email,
@@ -391,6 +393,19 @@ func (h *AuthHandler) alignInvestorSequence() error {
     )`
 	if err := h.db.Exec(sql).Error; err != nil {
 		h.log.WithError(err).Warn("alignInvestorSequence failed")
+		return err
+	}
+	return nil
+}
+
+func (h *AuthHandler) alignUserSequence() error {
+	sql := `SELECT setval(
+        pg_get_serial_sequence('users','id'),
+        COALESCE((SELECT MAX(id) FROM users), 0) + 1,
+        false
+    )`
+	if err := h.db.Exec(sql).Error; err != nil {
+		h.log.WithError(err).Warn("alignUserSequence failed")
 		return err
 	}
 	return nil
