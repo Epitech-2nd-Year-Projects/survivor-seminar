@@ -1,23 +1,15 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { DropdownMenu } from "@/components/ui/dropdown-menu-style";
-import { Skeleton } from "@/components/ui/skeleton";
 import { userMessageFromError } from "@/lib/api/http/messages";
 import { useStartupsList } from "@/lib/api/services/startups/hooks";
 import { capitalize } from "@/lib/utils";
-import { GlobeIcon, ListRestartIcon, MailIcon } from "lucide-react";
+import { ListRestartIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import { BentoGrid, type BentoItem } from "@/components/ui/bento-grid";
+import { Globe, Star } from "lucide-react";
 
 function useUrlState() {
   const sp = useSearchParams();
@@ -125,6 +117,26 @@ export default function StartupsClient() {
 
   const showSkeletons = isLoading && !data;
 
+  const toItems = (items: typeof visibleStartups): BentoItem[] =>
+    items.map((s) => {
+      const city = s.address?.split(",").pop()?.trim();
+      const desc = (s.description ?? "No description provided.").trim();
+      const truncated = desc.length > 140 ? `${desc.slice(0, 140)}…` : desc;
+      const title = s.name.length > 48 ? `${s.name.slice(0, 48)}…` : s.name;
+      return {
+        title,
+        meta: s.sector ?? city ?? "",
+        description: truncated,
+        icon: <Globe className="w-4 h-4" />,
+        status: s.maturity ? capitalize(s.maturity) : "Active",
+        tags: [s.sector, city].filter(Boolean).slice(0, 2) as string[],
+        href: `/startups/${s.id}`,
+        hasWebsite: !!s.websiteUrl,
+        hasEmail: !!s.email,
+        hasPhone: !!s.phone,
+      };
+    });
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
@@ -191,71 +203,20 @@ export default function StartupsClient() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {showSkeletons
-          ? Array.from({ length: 12 }).map((_, i) => (
-              <Card key={i}>
-                <CardHeader>
-                  <CardTitle>
-                    <Skeleton className="h-5 w-3/4" />
-                  </CardTitle>
-                  <CardDescription>
-                    <Skeleton className="h-4 w-1/2" />
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-6 w-5/6" />
-                </CardContent>
-              </Card>
-            ))
-          : visibleStartups.map((startup) => (
-              <Card
-                key={startup.id}
-                className="focus:ring-primary transform cursor-pointer transition duration-200 ease-out hover:scale-105 hover:shadow-lg focus:scale-105 focus:ring-2 focus:outline-none"
-                onClick={() => router.push(`/startups/${startup.id}`)}
-              >
-                <CardHeader>
-                  <CardTitle>{startup.name}</CardTitle>
-                  <CardDescription className="flex gap-1">
-                    <Badge variant="secondary">
-                      {startup.address ?? "No address provided"}
-                    </Badge>
-                  </CardDescription>
-                  <CardAction className="flex gap-2">
-                    {startup.email && (
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="size-8"
-                      >
-                        <a href={`mailto:${startup.email}`}>
-                          <MailIcon />
-                        </a>
-                      </Button>
-                    )}
-                    {startup.websiteUrl ? (
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="size-8"
-                      >
-                        <a
-                          href={startup.websiteUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <GlobeIcon />
-                        </a>
-                      </Button>
-                    ) : null}
-                  </CardAction>
-                </CardHeader>
-                <CardContent>
-                  {startup.description ?? "No description provided."}
-                </CardContent>
-              </Card>
-            ))}
-      </div>
+      {showSkeletons ? (
+        <BentoGrid
+          items={Array.from({ length: 12 }).map((_, i) => ({
+            title: "Loading…",
+            meta: "",
+            description: "Fetching startups data…",
+            icon: <Star className="w-4 h-4 text-gray-400" />,
+            status: "",
+            tags: [],
+          }))}
+        />
+      ) : (
+        <BentoGrid items={toItems(visibleStartups)} />
+      )}
     </div>
   );
 }

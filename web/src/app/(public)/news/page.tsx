@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { BeamsBackground } from "@/components/ui/beams-background";
 import NewsClient from "./NewsClient";
 
 function PageSkeleton() {
@@ -16,8 +17,15 @@ function PageSkeleton() {
 
 export default function NewsPage() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
-      <NewsClient />
-    </Suspense>
+    <div className="relative">
+      <BeamsBackground
+        intensity="medium"
+        hue={300}
+        className="pointer-events-none fixed inset-0 -z-10 w-full h-full"
+      />
+      <Suspense fallback={<PageSkeleton />}>
+        <NewsClient />
+      </Suspense>
+    </div>
   );
 }
