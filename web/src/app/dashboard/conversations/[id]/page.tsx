@@ -34,6 +34,7 @@ export default function ConversationPage({ params }: PageProps) {
 
   const {
     data: messagesPages,
+    refetch: refetchMessages,
     isLoading: isLoadingMessages,
     isError: isErrorMessages,
     error: errorMessages,
@@ -81,6 +82,7 @@ export default function ConversationPage({ params }: PageProps) {
     if (!text) return;
     await sendMessage({ content: text });
     setContent("");
+    await refetchMessages();
     setTimeout(() => {
       endRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 50);
