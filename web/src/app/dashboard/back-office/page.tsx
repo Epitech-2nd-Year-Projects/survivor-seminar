@@ -21,16 +21,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { useUsersList } from "@/lib/api/services/users/hooks";
-import { useStartupsList } from "@/lib/api/services/startups/hooks";
-import { useEventsList } from "@/lib/api/services/events/hooks";
-import { useNewsList } from "@/lib/api/services/news/hooks";
+import { useCreateUser, useUsersList } from "@/lib/api/services/users/hooks";
+import {
+  useCreateStartup,
+  useStartupsList,
+} from "@/lib/api/services/startups/hooks";
+import { useCreateEvent, useEventsList } from "@/lib/api/services/events/hooks";
+import { useCreateNews, useNewsList } from "@/lib/api/services/news/hooks";
 
 import TableSkeletonWide from "@/components/tablesSkeletonWide";
 import EditDialogUser from "@/components/editDialogUser";
 import EditDialogStartup from "@/components/editDialogStartup";
 import EditDialogEvent from "@/components/editDialogEvent";
 import EditDialogNews from "@/components/editDialogNews";
+import CreateDialogEvent from "@/components/createDialogEvent";
+import CreateDialogNews from "@/components/createDialogNews";
+import CreateDialogStartup from "@/components/createDialogStartup";
+import CreateDialogUser from "@/components/createDialogUser";
 
 import { useUpdateUser, useDeleteUser } from "@/lib/api/services/users/hooks";
 import {
@@ -112,6 +119,10 @@ export default function BackOfficePage() {
   const eventsQ = useEventsList(undefined);
   const newsQ = useNewsList(undefined);
 
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creatingType, setCreatingType] = useState<
+    "startup" | "user" | "event" | "news" | null
+  >(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editingType, setEditingType] = useState<
     "startup" | "user" | "event" | "news" | null
@@ -122,11 +133,21 @@ export default function BackOfficePage() {
   const [editingNews, setEditingNews] = useState<News | null>(null);
 
   const {
+    mutateAsync: createUserAsync,
+    isError: isCreateUserError,
+    error: createUserErrObj,
+  } = useCreateUser();
+  const {
     mutateAsync: deleteUserAsync,
     isError: isDeleteUserError,
     error: deleteUserErrObj,
   } = useDeleteUser();
 
+  const {
+    mutateAsync: createStartupAsync,
+    isError: isCreateStartupError,
+    error: createStartupErrObj,
+  } = useCreateStartup();
   const {
     mutateAsync: deleteStartupAsync,
     isError: isDeleteStartupError,
@@ -134,11 +155,21 @@ export default function BackOfficePage() {
   } = useDeleteStartup();
 
   const {
+    mutateAsync: createEventAsync,
+    isError: isCreateEventError,
+    error: createEventErrObj,
+  } = useCreateEvent();
+  const {
     mutateAsync: deleteEventAsync,
     isError: isDeleteEventError,
     error: deleteEventErrObj,
   } = useDeleteEvent();
 
+  const {
+    mutateAsync: createNewsAsync,
+    isError: isCreateNewsError,
+    error: createNewsErrObj,
+  } = useCreateNews();
   const {
     mutateAsync: deleteNewsAsync,
     isError: isDeleteNewsError,
@@ -220,6 +251,10 @@ export default function BackOfficePage() {
     setEditingNews(null);
     setEditingType(null);
   };
+  const closeCreators = () => {
+    setCreateOpen(false);
+    setCreatingType(null);
+  };
 
   return (
     <main className="max-w-7xl space-y-4 p-4 sm:p-6">
@@ -262,7 +297,10 @@ export default function BackOfficePage() {
           {listStartups && (
             <ProjectsTable
               projects={listStartups}
-              onCreate={() => router.push("/projects/new")}
+              onCreate={() => {
+                setCreatingType("startup");
+                setCreateOpen(true);
+              }}
               onView={(s) => router.push(`/projects/${s.id}`)}
               onEdit={handleEditStartup}
               onDelete={async (s) => {
@@ -298,7 +336,10 @@ export default function BackOfficePage() {
           {listUsers && (
             <UsersTable
               users={listUsers}
-              onCreate={() => router.push("/users/new")}
+              onCreate={() => {
+                setCreatingType("user");
+                setCreateOpen(true);
+              }}
               onView={(u) => router.push(`/users/${u.id}`)}
               onEdit={handleEditUser}
               onDelete={async (u) => {
@@ -334,7 +375,10 @@ export default function BackOfficePage() {
           {listEvents && (
             <EventsTable
               events={listEvents}
-              onCreate={() => router.push("/events/new")}
+              onCreate={() => {
+                setCreatingType("event");
+                setCreateOpen(true);
+              }}
               onView={(e) => router.push(`/events/${e.id}`)}
               onEdit={handleEditEvent}
               onDelete={async (e) => {
@@ -370,7 +414,10 @@ export default function BackOfficePage() {
           {listNews && (
             <NewsTable
               news={listNews}
-              onCreate={() => router.push("/news/new")}
+              onCreate={() => {
+                setCreatingType("news");
+                setCreateOpen(true);
+              }}
               onView={(n) => router.push(`/news/${n.id}`)}
               onEdit={handleEditNews}
               onDelete={async (n) => {
@@ -387,6 +434,94 @@ export default function BackOfficePage() {
             />
           )}
         </>
+      )}
+
+      {creatingType === "startup" && (
+        <CreateDialogStartup
+          key="create-startup"
+          open={createOpen}
+          onOpenChange={(o) => {
+            setCreateOpen(o);
+            if (!o) setCreatingType(null);
+          }}
+          onSubmit={async (body) => {
+            try {
+              await createStartupAsync(body);
+              showSuccess("Startup created");
+              tryRefetch(startupsQ.refetch);
+            } catch (err) {
+              console.error("Failed to create startup:", err);
+            } finally {
+              closeCreators();
+            }
+          }}
+        />
+      )}
+
+      {creatingType === "user" && (
+        <CreateDialogUser
+          key="create-user"
+          open={createOpen}
+          onOpenChange={(o) => {
+            setCreateOpen(o);
+            if (!o) setCreatingType(null);
+          }}
+          onSubmit={async (body) => {
+            try {
+              await createUserAsync(body);
+              showSuccess("User created");
+              tryRefetch(usersQ.refetch);
+            } catch (err) {
+              console.error("Failed to create user:", err);
+            } finally {
+              closeCreators();
+            }
+          }}
+        />
+      )}
+
+      {creatingType === "event" && (
+        <CreateDialogEvent
+          key="create-event"
+          open={createOpen}
+          onOpenChange={(o) => {
+            setCreateOpen(o);
+            if (!o) setCreatingType(null);
+          }}
+          onSubmit={async (body) => {
+            try {
+              await createEventAsync(body);
+              showSuccess("Event created");
+              tryRefetch(eventsQ.refetch);
+            } catch (err) {
+              console.error("Failed to create event:", err);
+            } finally {
+              closeCreators();
+            }
+          }}
+        />
+      )}
+
+      {creatingType === "news" && (
+        <CreateDialogNews
+          key="create-news"
+          open={createOpen}
+          onOpenChange={(o) => {
+            setCreateOpen(o);
+            if (!o) setCreatingType(null);
+          }}
+          onSubmit={async (body) => {
+            try {
+              await createNewsAsync(body);
+              showSuccess("News created");
+              tryRefetch(newsQ.refetch);
+            } catch (err) {
+              console.error("Failed to create news:", err);
+            } finally {
+              closeCreators();
+            }
+          }}
+        />
       )}
 
       {editingType === "startup" && (
@@ -485,6 +620,11 @@ export default function BackOfficePage() {
         />
       )}
 
+      {isCreateUserError && (
+        <p className="text-destructive text-sm break-all">
+          Create error: {getErrorMessage(createUserErrObj)}
+        </p>
+      )}
       {isUpdateUserError && (
         <p className="text-destructive text-sm break-all">
           Update error: {getErrorMessage(updateUserErrObj)}
@@ -493,6 +633,11 @@ export default function BackOfficePage() {
       {isDeleteUserError && (
         <p className="text-destructive text-sm break-all">
           Delete error: {getErrorMessage(deleteUserErrObj)}
+        </p>
+      )}
+      {isCreateStartupError && (
+        <p className="text-destructive text-sm break-all">
+          Create error: {getErrorMessage(createStartupErrObj)}
         </p>
       )}
       {isUpdateStartupError && (
@@ -505,6 +650,11 @@ export default function BackOfficePage() {
           Delete error: {getErrorMessage(deleteStartupErrObj)}
         </p>
       )}
+      {isCreateEventError && (
+        <p className="text-destructive text-sm break-all">
+          Create error: {getErrorMessage(createEventErrObj)}
+        </p>
+      )}
       {isUpdateEventError && (
         <p className="text-destructive text-sm break-all">
           Update error: {getErrorMessage(updateEventErrObj)}
@@ -513,6 +663,11 @@ export default function BackOfficePage() {
       {isDeleteEventError && (
         <p className="text-destructive text-sm break-all">
           Delete error: {getErrorMessage(deleteEventErrObj)}
+        </p>
+      )}
+      {isCreateNewsError && (
+        <p className="text-destructive text-sm break-all">
+          Create error: {getErrorMessage(createNewsErrObj)}
         </p>
       )}
       {isUpdateNewsError && (
